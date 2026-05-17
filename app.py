@@ -6,7 +6,11 @@ import os
 
 # 1. Initialize the native Google Gemini client
 # Replace this with the real API key you got from Google AI Studio
-GOOGLE_API_KEY = os.environ.get("GEMINI_API_KEY")
+# 1. Clear out any previous setups and explicitly define your key string
+GOOGLE_API_KEY = "AIzaSyD1VtHA5zzLlMOfEI7UxUvJuJrB5GpbRag"
+
+# 2. Directly pass that variable into the configuration function
+genai.configure(api_key=GOOGLE_API_KEY)
 
 st.title("🤖 Yonsei CS Course Consultant")
 st.caption("Let's figure out your perfect schedule together before setting your mileage!")
