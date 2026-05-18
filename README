@@ -1,3 +1,19 @@
 python3 -m streamlit run app.pys
 
 windows - python -m streamlit run app.py
+
+Storing personal API Keys
+
+1. Pull the latest updates
+Open your VS Code terminal and run:
+
+Bash
+git pull origin main
+2. Create your local secrets folder
+In the root directory of our project folder, create a new folder named exactly .streamlit and a file inside it named secrets.toml.
+
+3. Add your free Groq API Key
+Go to Groq Cloud Console, make a free account, grab a key, and paste it into your new secrets.toml file exactly like this:
+
+Ini, TOML
+GROQ_API_KEY = "gsk_your_actual_key_here"
