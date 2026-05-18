@@ -1,16 +1,9 @@
 import streamlit as st
-import google.generativeai as genai
+from groq import Groq
 from database import CS_COURSES
 import json
-import os
 
-# 1. Initialize the native Google Gemini client
-# Replace this with the real API key you got from Google AI Studio
-# 1. Clear out any previous setups and explicitly define your key string
-GOOGLE_API_KEY = "AIzaSyD1VtHA5zzLlMOfEI7UxUvJuJrB5GpbRag"
-
-# 2. Directly pass that variable into the configuration function
-genai.configure(api_key=GOOGLE_API_KEY)
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 st.title("🤖 Yonsei CS Course Consultant")
 st.caption("Let's figure out your perfect schedule together before setting your mileage!")
@@ -27,16 +20,11 @@ CRITICAL RULES:
 4. Keep your responses conversational, natural, and student-friendly.
 """
 
-# 3. Initialize chat history in Streamlit's memory if it doesn't exist
-if "chat_session" not in st.session_state:
-    # Set up the model configuration with our custom instructions
-    model = genai.GenerativeModel(
-        model_name="gemini-2.5-flash",
-        system_instruction=SYSTEM_INSTRUCTION
-    )
-    # Start a live conversational chat session
-    st.session_state.chat_session = model.start_chat(history=[])
-    st.session_state.display_messages = []
+# 3. Initialize chat history in Streamlit's memory
+if "messages" not in st.session_state:
+    # Groq is stateless — we maintain history ourselves as a list of dicts
+    st.session_state.messages = []          # sent to Groq API (includes system msg)
+    st.session_state.display_messages = []  # shown in the UI
 
 # 4. Display past chat messages on the screen
 for msg in st.session_state.display_messages:
@@ -45,20 +33,29 @@ for msg in st.session_state.display_messages:
 
 # 5. Handle new user input
 if user_input := st.chat_input("Ask about courses, list your current picks, or describe your ideal workload..."):
-    
+
     # Display user's message in the UI
     with st.chat_message("user"):
         st.write(user_input)
     st.session_state.display_messages.append({"role": "user", "content": user_input})
-    
-    # Send the message to the live Gemini session and display the streaming response
+    st.session_state.messages.append({"role": "user", "content": user_input})
+
+    # Send full conversation history to Groq (stateless API requires this)
     with st.chat_message("assistant"):
         response_placeholder = st.empty()
-        
-        response = st.session_state.chat_session.send_message(user_input)
-        ai_response = response.text
-        
+
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",   # or "mixtral-8x7b-32768", "gemma2-9b-it"
+            messages=[
+                {"role": "system", "content": SYSTEM_INSTRUCTION},
+                *st.session_state.messages      # full history injected every call
+            ],
+            max_tokens=1024,
+            temperature=0.7,
+        )
+        ai_response = response.choices[0].message.content
         response_placeholder.write(ai_response)
-        
-    # Save the AI response to display memory
+
+    # Save the AI response to both histories
+    st.session_state.messages.append({"role": "assistant", "content": ai_response})
     st.session_state.display_messages.append({"role": "assistant", "content": ai_response})
