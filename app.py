@@ -1,8 +1,7 @@
 import streamlit as st
-import google.generativeai as genai
+from groq import Groq
 from database import CS_COURSES
 import json
-import os
 
 # 1. Initialize the native Google Gemini client
 # Replace this with the real API key you got from Google AI Studio
