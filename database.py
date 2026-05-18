@@ -5,7 +5,7 @@ CS_COURSES = {
         "name": "객체지향프로그래밍 (OBJECT-ORIENTED PROGRAMMING)",
         "workload": "Medium",
         "difficulty": "Medium",
-        "professor": "이세윤 (Lee Sheayun)",
+        "professor": "이시윤 (Lee Sheayun)",
         "language medium": "Korean",
         "lecture type": "In-person",
         "major requirement": True,
@@ -15,13 +15,14 @@ CS_COURSES = {
         "credits": 3, 
         "time": "Tue 2, Thu 2,3",
         "location": "공D504 (EngHD504)",
-        "grading scheme": "",
+        "grading scheme": "30% midterm, 40% final, 25% individual assignment, 5% attendance",
         "evaluation type": "relative",
         "prerequisites": [],
-        "added by in ETA": "", 
-        "review": "",
+        "added by in ETA": "74",
+        "max students" : "", 
+        "review": "No previous reviews.",
         "review from other courses": "",
-        "keywords": ["oop", "programming", "object-oriented", "java", "c++"]
+        "keywords": ["oop", "programming", "object-oriented", "c++", "adt", "classes", "inheritance", "polymorphism", "virtual functions"]
     },
     "CAS2101-01": {
         "name": "이산구조 (DISCRETE MATHEMATICS)",
@@ -37,13 +38,14 @@ CS_COURSES = {
         "credits": 3, 
         "time": "Tue 8,9, Thu 7",
         "location": "공D508 (EngHD508)",
-        "grading scheme": "",
+        "grading scheme": "20% midterm, 40% final, 20% individual assignment, 10% attendance, 10% other",
         "evaluation type": "absolute",
         "prerequisites": [],
-        "added by in ETA": "", 
+        "added by in ETA": "70", 
         "review": "",
         "review from other courses": "",
-        "keywords": ["math", "discrete", "logic", "proofs"]
+        "keywords": ["math", "discrete", "logic", "proofs", "sets", "calculus", "induction", "recursion", "permutation", "combination", "graphs"]
+        
     },
     "CAS2101-02": {
         "name": "이산구조 (DISCRETE MATHEMATICS)",
@@ -59,13 +61,13 @@ CS_COURSES = {
         "credits": 3, 
         "time": "Tue 8,9, Thu 7",
         "location": "공D408 (EngHD408)",
-        "grading scheme": "",
+        "grading scheme": "30% midterm, 30% final, 40% individual assignment",
         "evaluation type": "absolute",
         "prerequisites": [],
-        "added by in ETA": "", 
+        "added by in ETA": "85", 
         "review": "",
         "review from other courses": "",
-        "keywords": ["math", "discrete", "logic", "proofs"]
+        "keywords": ["math", "discrete", "logic", "proofs", "sets", "calculus", "induction", "recursion", "permutation", "combination", "graphs"]
     },
     "CAS2103-01": {
         "name": "자료구조 (DATA STRUCTURE)",
@@ -81,13 +83,13 @@ CS_COURSES = {
         "credits": 3, 
         "time": "Wed 5, Fri 5,6",
         "location": "EngHD408",
-        "grading scheme": "",
+        "grading scheme": "35% midterm, 40% final, 20% individual assignment, 5% attendance",
         "evaluation type": "absolute",
         "prerequisites": [],
-        "added by in ETA": "", 
+        "added by in ETA": "74", 
         "review": "",
         "review from other courses": "",
-        "keywords": ["data structures", "algorithms", "arrays", "trees", "coding"]
+        "keywords": ["data structures", "algorithms", "java", "complexity", "asymptotic notation", "stacks", "queues", "lists", "trees", "graphs", "sorting", "hashing"]
     },
     "CAS2103-02": {
         "name": "자료구조 (DATA STRUCTURE)",
@@ -103,13 +105,13 @@ CS_COURSES = {
         "credits": 3, 
         "time": "Wed 5, Fri 5,6",
         "location": "EngHD504",
-        "grading scheme": "",
+        "grading scheme": "30% midterm, 30% final, 30% individual assignment, 10% attendance",
         "evaluation type": "absolute",
         "prerequisites": [],
-        "added by in ETA": "", 
+        "added by in ETA": "92", 
         "review": "",
         "review from other courses": "",
-        "keywords": ["data structures", "algorithms", "arrays", "trees", "coding"]
+        "keywords": ["data structures", "algorithms", "python", "complexity", "asymptotic notation", "stacks", "queues", "lists", "trees", "graphs", "sorting", "hashing"]
     },
     "CAS2103-03": {
         "name": "자료구조 (DATA STRUCTURE)",
@@ -125,13 +127,13 @@ CS_COURSES = {
         "credits": 3, 
         "time": "Wed 5, Fri 5,6",
         "location": "공D508 (EngHD508)",
-        "grading scheme": "",
+        "grading scheme": "35% midterm, 40% final, 3% quiz, 17% individual assignment, 5% attendance",
         "evaluation type": "absolute",
         "prerequisites": [],
-        "added by in ETA": "", 
+        "added by in ETA": "79", 
         "review": "",
         "review from other courses": "",
-        "keywords": ["data structures", "algorithms", "arrays", "trees", "coding"]
+        "keywords": ["data structures", "algorithms", "c++", "c", "complexity", "asymptotic notation", "stacks", "queues", "lists", "trees", "graphs", "sorting", "hashing"]
     },
     "CAS2106-01": {
         "name": "컴퓨터과학입문 (INTRODUCTION TO COMPUTER SCIENCE)",
@@ -146,17 +148,17 @@ CS_COURSES = {
         "major year": 2,
         "credits": 3, 
         "time": "Tue 7 / Thu 12,13",
-        "location": "EngHD504 / Pre-recorded lecture",
-        "grading scheme": "",
+        "location": "공D504 (EngHD504) / Pre-recorded lecture",
+        "grading scheme": "35% midterm, 35% final, 20% quiz, 10% attendance",
         "evaluation type": "relative",
         "prerequisites": [],
-        "added by in ETA": "", 
+        "added by in ETA": "108", 
         "review": "",
         "review from other courses": "",
-        "keywords": ["cs", "computer science", "intro", "foundations"]
+        "keywords": ["computer science", "intro", "foundations", "data storage", "data manipulation", "operating systems", "networking", "algorithms", "programming languages", "software engineering", "data abstractions", "databases", "artificial intelligence", "theory of computation"]
     },
     "CAS2109-01": {
-        "name": "인터넷프러그래밍 (INTERNET PROGRAMMING)",
+        "name": "인터넷프로그래밍 (INTERNET PROGRAMMING)",
         "workload": "Medium",
         "difficulty": "Medium",
         "professor": "Lee, Kyong Ho",
@@ -169,35 +171,13 @@ CS_COURSES = {
         "credits": 3, 
         "time": "Tue 5,6 / Thu 11",
         "location": "공D504 (EngHD504) / Pre-recorded lecture",
-        "grading scheme": "",
+        "grading scheme": "25% midterm, 25% final, 45% individual assignment, 5% attendance",
         "evaluation type": "relative",
         "prerequisites": [],
-        "added by in ETA": "", 
+        "added by in ETA": "47", 
         "review": "",
         "review from other courses": "",
         "keywords": ["web", "internet", "html", "css", "javascript", "programming"]
-    },
-    "CAS3101-01": {
-        "name": "운영체제 (OPERATING SYSTEM)",
-        "workload": "Medium",
-        "difficulty": "Medium",
-        "professor": "차호중 (Cha Hojung)",
-        "language medium": "Korean",
-        "lecture type": "In-person",
-        "major requirement": True,
-        "major basic": False,
-        "major elective": False, 
-        "major year": 3,
-        "credits": 3, 
-        "time": "Mon 7,8, Wed 8",
-        "location": "공D504 (EngHD504)",
-        "grading scheme": "",
-        "evaluation type": "relative",
-        "prerequisites": [],
-        "added by in ETA": "", 
-        "review": "",
-        "review from other courses": "",
-        "keywords": ["os", "operating system", "kernel", "processes", "threads"]
     },
     "CAS3101-02": {
         "name": "운영체제 (OPERATING SYSTEM)",
@@ -213,16 +193,16 @@ CS_COURSES = {
         "credits": 3, 
         "time": "Mon 7,8, Wed 8",
         "location": "EngHB039",
-        "grading scheme": "",
+        "grading scheme": "20% midterm, 25% final, 45% individual assignment, 10% attendance",
         "evaluation type": "relative",
         "prerequisites": [],
-        "added by in ETA": "", 
+        "added by in ETA": "169", 
         "review": "",
         "review from other courses": "",
-        "keywords": ["os", "operating system", "kernel", "processes", "threads"]
+        "keywords": ["os", "operating system", "processes", "cpu scheduling", "virtual memory", "paging", "threads", "synchronization", "semaphores", "file systems", "linux", "c programming"]
     },
     "CAS3102-01": {
-        "name": "컴퓨터아키택처 (ARCHITECTURE OF COMPUTERS)",
+        "name": "컴퓨터아키텍쳐 (ARCHITECTURE OF COMPUTERS)",
         "workload": "Medium",
         "difficulty": "Medium",
         "professor": "이경우 (Lee Kyoungwoo)",
@@ -235,13 +215,14 @@ CS_COURSES = {
         "credits": 3, 
         "time": "Mon 5,6 / Wed 6",
         "location": "공D504 (EngHD504) / Pre-recorded lecture",
-        "grading scheme": "",
+        "grading scheme": "0% midterm, 20% final, 40% quiz, 40% individual assignment",
         "evaluation type": "relative",
         "prerequisites": [],
-        "added by in ETA": "", 
-        "review": "Flipped classroom layout requires pre-class video viewing before live participation.",
+        "added by in ETA": "80", 
+        "review": "",
         "review from other courses": "",
-        "keywords": ["architecture", "hardware", "mips", "cpu", "computer architecture"]
+        "keywords": ["architecture", "computer architecture", "assembly", "mips", "isa", "pipelining", "hazards", "caches", "virtual memory", "out-of-order execution", "tomasulo", "superscalar", "multi-threading", "multi-core"],
+        "notes": "Flipped classroom layout requires pre-class video viewing before live participation."
     },
     
     "CAS4102-01-00": {
