@@ -17,3 +17,4 @@ Go to Groq Cloud Console, make a free account, grab a key, and paste it into you
 
 Ini, TOML
 GROQ_API_KEY = "gsk_your_actual_key_here"
+
