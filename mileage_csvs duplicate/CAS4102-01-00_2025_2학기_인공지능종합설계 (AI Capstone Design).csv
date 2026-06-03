@@ -1,0 +1,15 @@
+﻿no,rank,mileage_bid,전공자(전공자정원_포함여부),num_courses_applied,graduation_applicant,first_time_enrollment,total_credit_ratio,prev_semester_credit_ratio,grade_year,enrolled,특수교육대상자,course_code,course_name,year,semester
+,,,,,,,,,,,,CAS4102-01-00,인공지능종합설계 (AI Capstone Design),2025,2
+1,0,12,Y(Y),6,Y,Y,0.9857,1,4,Y,Y,CAS4102-01-00,인공지능종합설계 (AI Capstone Design),2025,2
+2,1,11,Y(Y),6,N,Y,0.7923,0.8333,4,Y,N,CAS4102-01-00,인공지능종합설계 (AI Capstone Design),2025,2
+3,2,10,Y(Y),6,Y,N,0.8428,0.7894,4,Y,N,CAS4102-01-00,인공지능종합설계 (AI Capstone Design),2025,2
+4,3,2,Y(Y),5,N,Y,0.8153,1,4,Y,N,CAS4102-01-00,인공지능종합설계 (AI Capstone Design),2025,2
+5,4,2,Y(Y),3,Y,Y,1,1,4,Y,N,CAS4102-01-00,인공지능종합설계 (AI Capstone Design),2025,2
+6,5,1,Y(Y),6,Y,Y,1,1,4,Y,N,CAS4102-01-00,인공지능종합설계 (AI Capstone Design),2025,2
+7,6,1,Y(Y),6,Y,Y,0.9,0.8333,4,Y,N,CAS4102-01-00,인공지능종합설계 (AI Capstone Design),2025,2
+8,7,1,Y(Y),6,Y,Y,0.8714,0.1578,4,Y,N,CAS4102-01-00,인공지능종합설계 (AI Capstone Design),2025,2
+9,8,1,Y(Y),6,N,Y,0.8928,1,4,Y,N,CAS4102-01-00,인공지능종합설계 (AI Capstone Design),2025,2
+10,9,1,Y(Y),6,N,Y,0.7615,1,4,Y,N,CAS4102-01-00,인공지능종합설계 (AI Capstone Design),2025,2
+11,10,1,Y(Y),6,N,Y,0.7153,0.8333,4,Y,N,CAS4102-01-00,인공지능종합설계 (AI Capstone Design),2025,2
+12,11,1,Y(Y),5,Y,Y,0.9076,1,4,Y,N,CAS4102-01-00,인공지능종합설계 (AI Capstone Design),2025,2
+13,12,1,Y(Y),5,N,Y,0.8576,1,4,,N,CAS4102-01-00,인공지능종합설계 (AI Capstone Design),2025,2
