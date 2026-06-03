@@ -31,7 +31,7 @@ st.set_page_config(
 # ── Imports ───────────────────────────────────────────────────────────────────
 from feature_extractor import load_features, flatten_json
 from synthetic_data_generator import FEATURE_COLS
-from model import load_model, predict_competition_score, explain_bid
+from model import load_model, predict_threshold, explain_bid
 from optimizer import CourseInput, allocate_bids, strategy_summary
 
 # ── Constants ─────────────────────────────────────────────────────────────────
