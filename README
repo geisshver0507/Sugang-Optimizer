@@ -27,3 +27,7 @@ Model Framework
 4. brew install libomp
 5. python3 install shap
 6. python3 model.py --train
+
+
+Model Testing Optimizer
+python3 -m streamlit run optimizer_testing.py
