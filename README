@@ -22,3 +22,8 @@ GROQ_API_KEY = "gsk_your_actual_key_here"
 
 Model Framework
 1. pip3 install xgboost
+2. /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+3. eval "$(/opt/homebrew/bin/brew shellenv)"
+4. brew install libomp
+5. python3 install shap
+6. python3 model.py --train
