@@ -1,4 +1,4 @@
-python3 -m streamlit run app.pys
+python3 -m streamlit run app.py
 
 windows - python -m streamlit run app.py
 
@@ -17,4 +17,3 @@ Go to Groq Cloud Console, make a free account, grab a key, and paste it into you
 
 Ini, TOML
 GROQ_API_KEY = "gsk_your_actual_key_here"
-
