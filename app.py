@@ -3,8 +3,37 @@ from groq import Groq
 import json
 import os
 
+# import base64
+
 # ── 0. Page config (must be first Streamlit call) ───────────────────────────
 st.set_page_config(page_title="Yonsei Course Assistant", layout="wide")
+
+# def set_background(image_file):
+#     """Encodes a local image and injects it as the Streamlit app background."""
+#     with open(image_file, "rb") as file:
+#         encoded_string = base64.b64encode(file.read()).decode()
+    
+#     css = f"""
+#     <style>
+#     .stApp {{
+#         background-image: url("data:image/jpeg;base64,{encoded_string}");
+#         background-size: cover;
+#         background-position: center;
+#         background-attachment: fixed;
+#     }}
+#     /* Optional: Adds a slight dark overlay so your text remains readable */
+#     .stApp > header {{
+#         background-color: transparent;
+#     }}
+#     </style>
+#     """
+#     st.markdown(css, unsafe_allow_html=True)
+
+# Call this right after your Session State init (Section 3)
+# if os.path.exists("Night_Sky.jpg"):
+#     set_background("Night_Sky.jpg")
+# else:
+#     st.warning("Background image 'Night_Sky.jpg' not found in directory.")
 
 # ── 1. Groq client ──────────────────────────────────────────────────────────
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
@@ -98,7 +127,7 @@ def call_llm(system, messages):
         model="llama-3.3-70b-versatile",
         messages=groq_messages,
         max_tokens=1024,
-        temperature=0.7,
+        temperature=0.3,
     )
     return response.choices[0].message.content
 
@@ -117,34 +146,63 @@ CS_TREE = load_tree_database()
 
 # ── 4. INTAKE SCREEN ─────────────────────────────────────────────────────────
 if not st.session_state.intake_done:
-    st.title("🎓 Yonsei Course Assistant")
-    st.markdown("Customize your targets to extract your optimal course alignment.")
+    
+    st.markdown("""
+        <div style='text-align: center; margin-bottom: 25px;'>
+            <h1 style='margin-bottom: 0px; font-size: 3rem;'> Hi! I'm NightHawk AI 🦅</h1>
+            <h5 style='color: #cbd5e1; margin-top: 4px; font-weight: 500;'>Yonsei Course Assistant - Customize your targets to extract your optimal course alignment.</h3>
+        </div>
+    """, unsafe_allow_html=True)
 
     st.markdown("""
         <style>
+        /* Your existing multiselect styling */
         .stMultiSelect [data-baseweb="tag"] {
             background-color: #2b5c8f !important;
             color: white !important;
+        }
+        
+        /* 🚨 NEW: Override Streamlit's default top/bottom padding 🚨 */
+        .block-container {
+            padding-top: 2rem !important;
+            padding-bottom: 1rem !important;
+            max-width: 90vw;
+        }
+
+        /* 🚨 NEW: Hide default Streamlit footer to save space 🚨 */
+        footer {
+            visibility: hidden;
         }
         </style>
     """, unsafe_allow_html=True)
 
     with st.form("intake_form"):
-        col1, col2 = st.columns(2)
+        # Create an asymmetrical column layout
+        col_inputs, col_timetable = st.columns([1.1, 1.3])
 
-        with col1:
-            st.subheader("📋 Core Parameters")
-            language = st.radio("Language Medium", ["Any", "English", "Korean"], horizontal=True)
-            lecture_type = st.radio("Lecture Type", ["Both", "Offline", "Blended"], horizontal=True)
-            major_year = st.selectbox("Target Major Year", ["Any", "2nd", "3rd", "4th"])
+        # ── LEFT SIDE: All Parameters Compressed ──
+        with col_inputs:
+            st.subheader("📋 Search Parameters")
             
-            st.markdown("**Course Categories** *(Select all that apply)*")
-            cat_req = st.checkbox("Major Requirement", value=True)
-            cat_elec = st.checkbox("Major Elective", value=True)
-            cat_basic = st.checkbox("Major Basic", value=True)
+            # Nested columns to save vertical space
+            inner_left, inner_right = st.columns(2)
+            
+            with inner_left:
+                language = st.radio("Language Medium", ["Any", "English", "Korean"], horizontal=True)
+                lecture_type = st.radio("Lecture Type", ["Both", "Offline", "Blended"], horizontal=True)
+                
+            with inner_right:
+                st.markdown("**Course Categories**")
+                cat_req = st.checkbox("Major Requirement", value=True)
+                cat_elec = st.checkbox("Major Elective", value=True)
+                cat_basic = st.checkbox("Major Basic", value=True)
 
-        with col2:
-            st.subheader("🎯 Context & Interests")
+            # Target Major Year and Mileage side-by-side
+            year_mil_col1, year_mil_col2 = st.columns(2)
+            with year_mil_col1:
+                major_year = st.selectbox("Target Major Year", ["Any", "2nd", "3rd", "4th"], index=2)
+            with year_mil_col2:
+                mileage = st.number_input("Available Mileage Points", min_value=0, max_value=72, value=72, step=1)
             
             st.markdown("**Planned Credit Range**")
             cred_col1, cred_col2 = st.columns(2)
@@ -163,141 +221,141 @@ if not st.session_state.intake_done:
                     "Human & Security (Human-Computer Interaction, Computer Security)"
                 ],
             )
-            
-            mileage = st.number_input("Your Available Mileage Points", min_value=0, max_value=500, value=72, step=1)
 
-        # ── 4b. INTERACTIVE TIMETABLE UI ──────────────────────────────────────
-        st.markdown("---")
-        st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Preferred Class Time Slots</h3>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #666; font-size: 14px;'>Click and drag across time slots to map out your ideal schedule window.</p>", unsafe_allow_html=True)
+        # ── RIGHT SIDE: Timetable UI ──
+        with col_timetable:
+            st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Preferred Class Time Slots</h3>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; color: #666; font-size: 14px;'>Click and drag across time slots to map out your ideal schedule window.</p>", unsafe_allow_html=True)
 
-        timetable_html = """
-        <div id="timetable-container" style="
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            user-select: none; 
-            max-width: 900px; 
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(8px);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            padding: 20px;
-            overflow-x: auto;
-        ">
-            <table style="width: 100%; border-collapse: separate; border-spacing: 4px; text-align: center; font-size: 13px;">
-                <thead>
-                    <tr>
-                        <th style="padding: 10px; width: 80px; color: #495057; font-weight: 600;">Time</th>
-                        <th style="padding: 10px; color: #1c3879; font-weight: 700; background: rgba(28, 56, 121, 0.05); border-radius: 6px;">Mon <span id="count-Mon" style="font-size:10px; display:block; color:#868e96; font-weight:400;">0h</span></th>
-                        <th style="padding: 10px; color: #1c3879; font-weight: 700; background: rgba(28, 56, 121, 0.05); border-radius: 6px;">Tue <span id="count-Tue" style="font-size:10px; display:block; color:#868e96; font-weight:400;">0h</span></th>
-                        <th style="padding: 10px; color: #1c3879; font-weight: 700; background: rgba(28, 56, 121, 0.05); border-radius: 6px;">Wed <span id="count-Wed" style="font-size:10px; display:block; color:#868e96; font-weight:400;">0h</span></th>
-                        <th style="padding: 10px; color: #1c3879; font-weight: 700; background: rgba(28, 56, 121, 0.05); border-radius: 6px;">Thu <span id="count-Thu" style="font-size:10px; display:block; color:#868e96; font-weight:400;">0h</span></th>
-                        <th style="padding: 10px; color: #1c3879; font-weight: 700; background: rgba(28, 56, 121, 0.05); border-radius: 6px;">Fri <span id="count-Fri" style="font-size:10px; display:block; color:#868e96; font-weight:400;">0h</span></th>
-                    </tr>
-                </thead>
-                <tbody id="timetable-body">
-                </tbody>
-            </table>
-            <input type="hidden" id="timetable-output" name="timetable_output" value="{}">
-        </div>
+            timetable_html = """
+            <div id="timetable-container" style="
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+                user-select: none; 
+                max-width: 900px; 
+                margin: 0 auto;
+                background: rgba(255, 255, 255, 0.85); /* Slightly more opaque for readability against the starry sky */
+                backdrop-filter: blur(10px);
+                border-radius: 12px;
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                padding: 12px; /* Reduced from 20px */
+                overflow-x: auto;
+            ">
+                <table style="width: 100%; border-collapse: separate; border-spacing: 3px; text-align: center; font-size: 11px;"> <!-- Reduced font size & spacing -->
+                    <thead>
+                        <tr>
+                            <th style="padding: 6px; width: 60px; color: #495057; font-weight: 600;">Time</th>
+                            <th style="padding: 6px; color: #1c3879; font-weight: 700; background: rgba(28, 56, 121, 0.05); border-radius: 4px;">Mon <span id="count-Mon" style="font-size:9px; display:block; color:#868e96; font-weight:400;">0h</span></th>
+                            <th style="padding: 6px; color: #1c3879; font-weight: 700; background: rgba(28, 56, 121, 0.05); border-radius: 4px;">Tue <span id="count-Tue" style="font-size:9px; display:block; color:#868e96; font-weight:400;">0h</span></th>
+                            <th style="padding: 6px; color: #1c3879; font-weight: 700; background: rgba(28, 56, 121, 0.05); border-radius: 4px;">Wed <span id="count-Wed" style="font-size:9px; display:block; color:#868e96; font-weight:400;">0h</span></th>
+                            <th style="padding: 6px; color: #1c3879; font-weight: 700; background: rgba(28, 56, 121, 0.05); border-radius: 4px;">Thu <span id="count-Thu" style="font-size:9px; display:block; color:#868e96; font-weight:400;">0h</span></th>
+                            <th style="padding: 6px; color: #1c3879; font-weight: 700; background: rgba(28, 56, 121, 0.05); border-radius: 4px;">Fri <span id="count-Fri" style="font-size:9px; display:block; color:#868e96; font-weight:400;">0h</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="timetable-body">
+                    </tbody>
+                </table>
+                <input type="hidden" id="timetable-output" name="timetable_output" value="{}">
+            </div>
 
-        <script>
-        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-        const hours = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
-        const tbody = document.getElementById('timetable-body');
-        let isMouseDown = false;
-        let isSelecting = true;
-        let selectedSlots = {};
+            <script>
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+            const hours = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+            const tbody = document.getElementById('timetable-body');
+            let isMouseDown = false;
+            let isSelecting = true;
+            let selectedSlots = {};
 
-        days.forEach(day => selectedSlots[day] = []);
+            days.forEach(day => selectedSlots[day] = []);
 
-        hours.forEach((hour) => {
-            const tr = document.createElement('tr');
-            const tdTime = document.createElement('td');
-            tdTime.innerText = hour;
-            tdTime.style.padding = '8px';
-            tdTime.style.fontWeight = '600';
-            tdTime.style.color = '#495057';
-            tdTime.style.background = '#f8f9fa';
-            tdTime.style.borderRadius = '6px';
-            tr.appendChild(tdTime);
+            hours.forEach((hour) => {
+                const tr = document.createElement('tr');
+                const tdTime = document.createElement('td');
+                tdTime.innerText = hour;
+                tdTime.style.padding = '4px'; /* Reduced padding */
+                tdTime.style.fontWeight = '600';
+                tdTime.style.color = '#495057';
+                tdTime.style.background = '#f8f9fa';
+                tdTime.style.borderRadius = '4px';
+                tr.appendChild(tdTime);
 
-            days.forEach(day => {
-                const td = document.createElement('td');
-                td.style.height = '32px';
-                td.style.cursor = 'pointer';
-                td.style.backgroundColor = '#f1f3f5'; 
-                td.style.borderRadius = '6px';
-                td.style.transition = 'all 0.15s ease';
-                td.dataset.day = day;
-                td.dataset.hour = hour;
+                days.forEach(day => {
+                    const td = document.createElement('td');
+                    td.style.height = '24px'; /* Reduced height from 32px to save ~80px total vertical space */
+                    td.style.cursor = 'pointer';
+                    td.style.backgroundColor = '#f1f3f5'; 
+                    td.style.borderRadius = '4px';
+                    td.style.transition = 'all 0.15s ease';
+                    td.dataset.day = day;
+                    td.dataset.hour = hour;
 
-                td.addEventListener('mouseenter', () => {
-                    if(!td.classList.contains('active')) {
-                        td.style.backgroundColor = '#e3fafc';
-                    }
-                });
-                td.addEventListener('mouseleave', () => {
-                    if(!td.classList.contains('active')) {
-                        td.style.backgroundColor = '#f1f3f5';
-                    }
-                });
+                    td.addEventListener('mouseenter', () => {
+                        if(!td.classList.contains('active')) {
+                            td.style.backgroundColor = '#e3fafc';
+                        }
+                    });
+                    td.addEventListener('mouseleave', () => {
+                        if(!td.classList.contains('active')) {
+                            td.style.backgroundColor = '#f1f3f5';
+                        }
+                    });
 
-                td.addEventListener('mousedown', (e) => {
-                    isMouseDown = true;
-                    isSelecting = !td.classList.contains('active');
-                    executeToggle(td, isSelecting);
-                    e.preventDefault();
-                });
-                
-                td.addEventListener('mouseover', () => {
-                    if (isMouseDown) {
+                    td.addEventListener('mousedown', (e) => {
+                        isMouseDown = true;
+                        isSelecting = !td.classList.contains('active');
                         executeToggle(td, isSelecting);
-                    }
+                        e.preventDefault();
+                    });
+                    
+                    td.addEventListener('mouseover', () => {
+                        if (isMouseDown) {
+                            executeToggle(td, isSelecting);
+                        }
+                    });
+
+                    tr.appendChild(td);
                 });
-
-                tr.appendChild(td);
+                tbody.appendChild(tr);
             });
-            tbody.appendChild(tr);
-        });
 
-        window.addEventListener('mouseup', () => {
-            if (isMouseDown) {
-                isMouseDown = false;
-                updateOutput();
-            }
-        });
-
-        function executeToggle(cell, forceSelect) {
-            const day = cell.dataset.day;
-            const hour = cell.dataset.hour;
-            
-            if (forceSelect) {
-                cell.classList.add('active');
-                cell.style.backgroundColor = '#1c3879';
-                cell.style.boxShadow = 'inset 0 0 8px rgba(0,0,0,0.2)';
-                if (!selectedSlots[day].includes(hour)) {
-                    selectedSlots[day].push(hour);
+            window.addEventListener('mouseup', () => {
+                if (isMouseDown) {
+                    isMouseDown = false;
+                    updateOutput();
                 }
-            } else {
-                cell.classList.remove('active');
-                cell.style.backgroundColor = '#f1f3f5';
-                cell.style.boxShadow = 'none';
-                selectedSlots[day] = selectedSlots[day].filter(h => h !== hour);
+            });
+
+            function executeToggle(cell, forceSelect) {
+                const day = cell.dataset.day;
+                const hour = cell.dataset.hour;
+                
+                if (forceSelect) {
+                    cell.classList.add('active');
+                    cell.style.backgroundColor = '#1c3879';
+                    cell.style.boxShadow = 'inset 0 0 8px rgba(0,0,0,0.2)';
+                    if (!selectedSlots[day].includes(hour)) {
+                        selectedSlots[day].push(hour);
+                    }
+                } else {
+                    cell.classList.remove('active');
+                    cell.style.backgroundColor = '#f1f3f5';
+                    cell.style.boxShadow = 'none';
+                    selectedSlots[day] = selectedSlots[day].filter(h => h !== hour);
+                }
+                document.getElementById(`count-${day}`).innerText = `${selectedSlots[day].length}h`;
             }
-            document.getElementById(`count-${day}`).innerText = `${selectedSlots[day].length}h`;
-        }
 
-        function updateOutput() {
-            const output = document.getElementById('timetable-output');
-            output.value = JSON.stringify(selectedSlots);
-            output.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        </script>
-        """
-        st.components.v1.html(timetable_html, height=480, scrolling=False)
+            function updateOutput() {
+                const output = document.getElementById('timetable-output');
+                output.value = JSON.stringify(selectedSlots);
+                output.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            </script>
+            """
+            st.components.v1.html(timetable_html, height=410, scrolling=False)
 
+        # ── BOTTOM: Submit Button ──
+        # Putting it back in the main form context so it spans the entire width beneath the columns
         submitted = st.form_submit_button("Generate Strategic Schedule Matching Preferences →", use_container_width=True)
 
         if submitted:
@@ -384,6 +442,13 @@ else:
 
     system_prompt = f"""
 You are an expert Yonsei University course registration advisor assisting a computer science student with allocating mileage pool points strategically based on historic enrollment pressure profiles.
+
+Trust and evidence rules:
+- Use only the retrieved course data below. Do not invent prerequisites, professors, schedules, reviews, or mileage cutoffs.
+- If the retrieved data is missing or weak, say that clearly and give a cautious recommendation.
+- Treat Historical Competitive Bids (ETA) as an evidence signal, not a guaranteed admission threshold.
+- Separate facts from recommendations. Explain the reason for every recommended bid or course choice.
+- If the user asks for exact enrollment certainty, refuse certainty and provide a risk estimate instead.
 
 Student Profile & Targets:
 - Major Year Preference Tier: {p['major_year']}

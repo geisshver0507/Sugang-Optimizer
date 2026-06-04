@@ -66,9 +66,9 @@ FEATURE_LABELS = {
 
 # ── Train ──────────────────────────────────────────────────────────────────────
 
-def train(save: bool = True):
+def train(json_path: str = "segmented_cs_courses.json", save: bool = True):
     print("Building training data...")
-    df = build(verbose=True)
+    df = build(json_path=json_path, verbose=True)
 
     X = df[FEATURE_COLS].values
     y = df[TARGET_COL].values
@@ -122,10 +122,28 @@ def load_model():
     if not MODEL_PATH.exists():
         print("No saved model found — training now...")
         return train()
-    with open(MODEL_PATH, "rb") as f:
-        model = pickle.load(f)
-    with open(EXPLAINER_PATH, "rb") as f:
-        explainer = pickle.load(f)
+    try:
+        with open(MODEL_PATH, "rb") as f:
+            model = pickle.load(f)
+    except Exception as e:
+        print(f"Saved model could not be loaded ({e}) - retraining now...")
+        return train()
+
+    explainer = None
+    if EXPLAINER_PATH.exists():
+        try:
+            with open(EXPLAINER_PATH, "rb") as f:
+                explainer = pickle.load(f)
+        except Exception as e:
+            print(f"Saved SHAP explainer could not be loaded ({e}) - rebuilding it...")
+
+    if explainer is None:
+        explainer = shap.TreeExplainer(model)
+        try:
+            with open(EXPLAINER_PATH, "wb") as f:
+                pickle.dump(explainer, f)
+        except Exception as e:
+            print(f"Could not save rebuilt SHAP explainer ({e}); continuing in memory.")
     return model, explainer
 
 

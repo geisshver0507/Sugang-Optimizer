@@ -31,7 +31,12 @@ st.set_page_config(
 # ── Imports ───────────────────────────────────────────────────────────────────
 from feature_extractor import load_features, flatten_json
 from synthetic_data_generator import FEATURE_COLS
-from model import load_model, predict_threshold, explain_bid
+from model import (
+    load_model,
+    predict_threshold,
+    explain_threshold,
+    feature_importance_df,
+)
 from optimizer import CourseInput, allocate_bids, strategy_summary
 
 # ── Constants ─────────────────────────────────────────────────────────────────
@@ -154,7 +159,6 @@ with tab_manual:
 
     if not selected_display:
         st.info("Select at least 2 courses to see a strategy.")
-        st.stop()
 
     selected_codes = [course_options[d] for d in selected_display]
 
@@ -195,7 +199,7 @@ with tab_manual:
                 feat_row["priority_ratio"] = (len(rank_data) - rank + 1) / len(rank_data)
                 feat_row["budget_ratio"] = total_mileage / 500.0
 
-                pred_bid, shap_breakdown = predict_competition_score(
+                pred_bid, shap_breakdown = predict_threshold(
                     model, explainer, feat_row
                 )
 
@@ -204,7 +208,7 @@ with tab_manual:
                     code=code,
                     name=c_info.get("name", code),
                     rank=rank,
-                    predicted_winning_bid=pred_bid,
+                    predicted_threshold=pred_bid,
                     is_major_req=(c_info.get("category") == "major_requirement"),
                     shap_breakdown=shap_breakdown,
                 ))
@@ -243,7 +247,7 @@ with tab_manual:
                 col_a.markdown(f"**#{r.rank}**")
                 col_b.markdown(f"**{r.name}**  \n`{r.code}`")
                 col_c.metric("Bid", f"{r.recommended_bid} pts",
-                              delta=f"predicted threshold: ~{int(r.predicted_winning_bid)} pts",
+                              delta=f"predicted threshold: ~{int(r.predicted_threshold)} pts",
                               delta_color="off")
                 col_d.metric(
                     "Risk",
@@ -257,8 +261,8 @@ with tab_manual:
 
                 # SHAP explanation expandable
                 with st.expander("Why this bid? (AI reasoning)"):
-                    explanation = explain_bid(
-                        r.recommended_bid, r.shap_breakdown, r.name
+                    explanation = explain_threshold(
+                        r.predicted_threshold, r.shap_breakdown, r.name
                     )
                     st.markdown(explanation)
 
@@ -359,8 +363,8 @@ with tab_insights:
         "of competition — NOT what you hardcoded."
     )
 
-    from model import feature_importance_summary, FEATURE_LABELS
-    fi_df = feature_importance_summary(model)
+    from model import FEATURE_LABELS
+    fi_df = feature_importance_df(model)
 
     st.bar_chart(
         fi_df.set_index("label")["importance"].head(12),
