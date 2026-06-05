@@ -1,6 +1,13 @@
 """Prompt construction for the grounded course assistant."""
 
-from course_utils import clean_focus_area, clip_text, format_field
+from course_utils import clean_focus_area, clip_text, expand_course_time, format_field
+
+
+def display_major_years(prefs):
+    selected_years = prefs.get("major_years")
+    if selected_years:
+        return ", ".join(selected_years)
+    return prefs.get("major_year", "Any")
 
 
 def build_candidate_catalog(filtered_courses):
@@ -11,7 +18,8 @@ def build_candidate_catalog(filtered_courses):
         meta = data.get("metadata", {})
         rows.append(
             f"{code}: {format_field(meta.get('name'))} | {format_field(meta.get('professor'))} | "
-            f"{format_field(meta.get('credits'))} credits | {format_field(meta.get('time'))}"
+            f"{format_field(meta.get('credits'))} credits | raw time: {format_field(meta.get('time'))} | "
+            f"expanded time: {expand_course_time(meta.get('time'))}"
         )
     return "\n".join(rows)
 
@@ -24,6 +32,8 @@ def format_course_context(selected_courses):
     for code, data in selected_courses.items():
         meta = data.get("metadata", {})
         text_chunks = data.get("text_chunks", {})
+        raw_time = format_field(meta.get("time"))
+        expanded_time = expand_course_time(meta.get("time"))
         chunks.append(f"""
 [COURSE {code}]
 Name: {format_field(meta.get('name'))}
@@ -31,7 +41,8 @@ Professor: {format_field(meta.get('professor'))}
 Language: {format_field(meta.get('language_medium'))}
 Lecture type: {format_field(meta.get('lecture_type'))}
 Credits: {format_field(meta.get('credits'))}
-Time/location: {format_field(meta.get('time'))} / {format_field(meta.get('location'))}
+Raw database time/location: {raw_time} / {format_field(meta.get('location'))}
+Expanded clock time: {expanded_time}
 Evaluation: {format_field(meta.get('evaluation_type'))}
 Workload/difficulty: {format_field(meta.get('workload'))} / {format_field(meta.get('difficulty'))}
 Prerequisites: {format_field(meta.get('prerequisites'))}
@@ -54,16 +65,17 @@ Grounding rules:
 - This is a closed-book task. Use only the COURSE EVIDENCE block for course-specific facts.
 - The CANDIDATE CATALOG is only an index of courses that passed the user's filters. Do not infer extra facts from a catalog row.
 - Never invent professors, prerequisites, schedules, reviews, grading policies, locations, mileage cutoffs, or enrollment certainty.
+- Use Expanded clock time when explaining schedules. Do not convert period numbers yourself.
 - Treat historical mileage ETA as a rough competitiveness signal, not a guaranteed winning bid.
 - If evidence is missing, say "Not listed in the retrieved data" instead of guessing.
-- If the user asks about a course outside the active filters, say it is not in the current filtered candidate set and suggest resetting filters.
+- If the user asks about a course outside the active filters, say it is not in the current filtered candidate set and suggest adjusting filters.
 - When recommending courses, name each course as "CODE - Name" and explain Fit, Evidence, and Caveat.
 - Keep answers concise and course-grounded. Prefer 3 to 6 recommendations unless the user asks for a full list.
 
 Student profile from filters:
 - Language: {prefs.get('language')}
 - Lecture type: {prefs.get('lecture_type')}
-- Major year: {prefs.get('major_year')}
+- Major years: {display_major_years(prefs)}
 - Credit window: {prefs.get('min_credits')} to {prefs.get('max_credits')}
 - Focus areas: {', '.join(clean_focus_area(a) for a in prefs.get('focus_areas', [])) or 'All'}
 - Available mileage points: {prefs.get('mileage')}
