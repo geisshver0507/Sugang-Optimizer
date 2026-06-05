@@ -31,6 +31,7 @@ Professor: {format_field(meta.get('professor'))}
 Language: {format_field(meta.get('language_medium'))}
 Lecture type: {format_field(meta.get('lecture_type'))}
 Credits: {format_field(meta.get('credits'))}
+Course type: {format_field(meta.get('course_type'))}
 Time/location: {format_field(meta.get('time'))} / {format_field(meta.get('location'))}
 Evaluation: {format_field(meta.get('evaluation_type'))}
 Workload/difficulty: {format_field(meta.get('workload'))} / {format_field(meta.get('difficulty'))}
