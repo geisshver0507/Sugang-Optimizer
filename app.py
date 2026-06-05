@@ -293,6 +293,7 @@ if not st.session_state.intake_done:
                 "language": language,
                 "lecture_type": lecture_type,
                 "major_year": major_year,
+                "major_years": [] if major_year == "Any" else [major_year],
                 "cat_req": cat_req,
                 "cat_elec": cat_elec,
                 "cat_basic": cat_basic,
@@ -317,21 +318,77 @@ if not st.session_state.intake_done:
 # ── 5. CHAT SCREEN ───────────────────────────────────────────────────────────
 else:
     with st.sidebar:
-        st.markdown("### Active Constraints")
         p = st.session_state.prefs
+        year_options = ["1st", "2nd", "3rd", "4th"]
+        language_options = ["Any", "English", "Korean"]
+
+        current_years = p.get("major_years")
+        if current_years is None:
+            current_years = [] if p.get("major_year") == "Any" else [p.get("major_year", "3rd")]
+        current_years = [year for year in current_years if year in year_options]
+        default_years = current_years if current_years else year_options
+
+        current_language = p.get("language", "Any")
+        if current_language not in language_options:
+            current_language = "Any"
+
+        st.markdown("### Dynamic Filters")
+        selected_years = st.multiselect(
+            "Major Years",
+            year_options,
+            default=default_years,
+            key="chat_major_years",
+        )
+        selected_language = st.radio(
+            "Language Medium",
+            language_options,
+            index=language_options.index(current_language),
+            key="chat_language",
+        )
+
+        stored_years = current_years if current_years else year_options
+        filters_changed = (
+            selected_language != p.get("language", "Any")
+            or selected_years != stored_years
+        )
+
+        if filters_changed:
+            updated_p = dict(p)
+            updated_p["language"] = selected_language
+            updated_p["major_years"] = selected_years
+            if not selected_years or set(selected_years) == set(year_options):
+                updated_p["major_year"] = "Any"
+            elif len(selected_years) == 1:
+                updated_p["major_year"] = selected_years[0]
+            else:
+                updated_p["major_year"] = ", ".join(selected_years)
+
+            updated_filtered = filter_tree_courses(CS_TREE, updated_p)
+            st.session_state.prefs = updated_p
+            st.session_state.filtered_courses = updated_filtered
+            st.session_state.retrieved_course_codes = []
+            p = updated_p
+
+            if not updated_filtered:
+                st.warning("No courses match the current sidebar filters.")
+
+        st.divider()
+        st.markdown("### Active Constraints")
+        display_years = p.get("major_years") or year_options
         st.write(f"Language: **{p['language']}**")
         st.write(f"Format: **{p['lecture_type']}**")
-        st.write(f"Target Year: **{p['major_year']}**")
+        st.write(f"Target Years: **{', '.join(display_years)}**")
         st.write(f"Allowed Credits: **{p['min_credits']} - {p['max_credits']} pts**")
         st.write(f"Interests Specified: **{', '.join([a.split(' (')[0] for a in p['focus_areas']]) if p['focus_areas'] else 'All'}**")
         st.write(f"Bidding Capacity: **{p['mileage']} Max Points**")
-        st.divider()
         st.metric("Filtered Candidates", len(st.session_state.filtered_courses))
         
-        if st.button("← Reset Filters & Availability"):
+        if st.button("Reset Filters & Availability"):
             st.session_state.intake_done = False
             st.session_state.messages = []
             st.session_state.retrieved_course_codes = []
+            st.session_state.pop("chat_major_years", None)
+            st.session_state.pop("chat_language", None)
             st.rerun()
 
     st.title("🎓 Yonsei Course Assistant")

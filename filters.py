@@ -3,6 +3,8 @@
 from course_utils import clean_focus_area, course_search_blob, normalize_text
 
 
+YEAR_MAP = {"1st": "major_year_1", "2nd": "major_year_2", "3rd": "major_year_3", "4th": "major_year_4"}
+
 FOCUS_KEYWORD_MAP = {
     "theory & mathematics": {
         "math", "discrete", "logic", "proofs", "linear algebra", "probability", "statistics",
@@ -78,6 +80,19 @@ def focus_matches(focus_areas, course_obj):
     return False
 
 
+def selected_year_keys(tree_db, prefs):
+    selected_years = prefs.get("major_years")
+    if selected_years is None:
+        single_year = prefs.get("major_year", "Any")
+        selected_years = [] if single_year == "Any" else [single_year]
+
+    selected_years = [year for year in selected_years if year and year != "Any"]
+    if not selected_years:
+        return list(tree_db.keys())
+
+    return [YEAR_MAP[year] for year in selected_years if year in YEAR_MAP]
+
+
 def selected_categories(prefs):
     categories = []
     if prefs["cat_req"]:
@@ -92,9 +107,7 @@ def selected_categories(prefs):
 
 
 def filter_tree_courses(tree_db, prefs):
-    year_map = {"2nd": "major_year_2", "3rd": "major_year_3", "4th": "major_year_4"}
-    target_year_key = year_map.get(prefs["major_year"])
-    years_to_scan = [target_year_key] if target_year_key else list(tree_db.keys())
+    years_to_scan = selected_year_keys(tree_db, prefs)
     categories_to_scan = selected_categories(prefs)
 
     matched_results = {}

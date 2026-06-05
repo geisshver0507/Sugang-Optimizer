@@ -7,6 +7,7 @@
           "professor": "이시윤 (Lee Sheayun)",
           "language_medium": "Korean",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
@@ -39,6 +40,7 @@
           "professor": "안형찬 (An Hyung-Chan)",
           "language_medium": "English",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
@@ -74,6 +76,7 @@
           "professor": "황성재 (Hwang Seong Jae)",
           "language_medium": "English",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
@@ -111,6 +114,7 @@
           "professor": "이시윤 (Lee Sheayun)",
           "language_medium": "Korean",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
@@ -143,6 +147,7 @@
           "professor": "안형찬 (An Hyung-Chan)",
           "language_medium": "English",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
@@ -178,6 +183,7 @@
           "professor": "황성재 (Hwang Seong Jae)",
           "language_medium": "English",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
@@ -213,6 +219,7 @@
           "professor": "김지응 (Kim Jieung)",
           "language_medium": "English",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
@@ -253,6 +260,7 @@
           "professor": "이진규 (Lee Jinkyu)",
           "language_medium": "English",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
@@ -287,6 +295,7 @@
           "professor": "이종민 (Lee Jongmin)",
           "language_medium": "English",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
@@ -321,6 +330,7 @@
           "professor": "최장열 (Jangyeol Choi)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
@@ -353,6 +363,7 @@
           "professor": "김현정 (Hyunjung Kim)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
@@ -391,6 +402,7 @@
           "time": "Mon 9,10 / Wed 10",
           "location": "공학월170E",
           "evaluation_type": "relative",
+          "course_type": "major requirement",
           "prerequisites": [],
           "mileage_historical_eta": 92,
           "keywords": [
@@ -426,6 +438,7 @@
           "evaluation_type": "absolute",
           "prerequisites": [],
           "mileage_historical_eta": 70,
+          "course_type": "major requirement",
           "keywords": [
             "math",
             "discrete",
@@ -460,6 +473,7 @@
           "evaluation_type": "absolute",
           "prerequisites": [],
           "mileage_historical_eta": 85,
+          "course_type": "major requirement",
           "keywords": [
             "math",
             "discrete",
@@ -494,6 +508,7 @@
           "evaluation_type": "relative",
           "prerequisites": [],
           "mileage_historical_eta": 93,
+          "course_type": "major requirement",
           "keywords": [
             "probability",
             "statistics",
@@ -526,6 +541,7 @@
           "evaluation_type": "relative",
           "prerequisites": [],
           "mileage_historical_eta": 74,
+          "course_type": "major requirement",
           "keywords": [
             "probability",
             "statistics",
@@ -558,6 +574,7 @@
           "evaluation_type": "relative",
           "prerequisites": [],
           "mileage_historical_eta": 92,
+          "course_type": "major requirement",
           "keywords": [
             "linear algebra",
             "vector space",
@@ -591,6 +608,7 @@
           "evaluation_type": "relative",
           "prerequisites": [],
           "mileage_historical_eta": 108,
+          "course_type": "major elective",
           "keywords": [
             "computer science",
             "intro",
@@ -628,6 +646,7 @@
           "evaluation_type": "relative",
           "prerequisites": [],
           "mileage_historical_eta": 47,
+          "course_type": "major elective",
           "keywords": [
             "web",
             "internet",
@@ -661,6 +680,7 @@
           "evaluation_type": "relative",
           "prerequisites": [],
           "mileage_historical_eta": 169,
+          "course_type": "major requirement",
           "keywords": [
             "os",
             "operating system",
@@ -696,6 +716,7 @@
           "evaluation_type": "relative",
           "prerequisites": [],
           "mileage_historical_eta": 80,
+          "course_type": "major requirement",
           "keywords": [
             "architecture",
             "computer architecture",
@@ -733,6 +754,7 @@
           "evaluation_type": "Absolute",
           "prerequisites": [],
           "mileage_historical_eta": 14,
+          "course_type": "major requirement",
           "keywords": [
             "hardware",
             "processor",
@@ -762,6 +784,7 @@
           "evaluation_type": "Absolute",
           "prerequisites": [],
           "mileage_historical_eta": 74,
+          "course_type": "major elective",
           "keywords": [
             "automata",
             "turing machines",
@@ -793,6 +816,7 @@
             "Probability"
           ],
           "mileage_historical_eta": 84,
+          "course_type": "major elective",
           "keywords": [
             "vision",
             "image processing",
@@ -824,6 +848,7 @@
             "Python"
           ],
           "mileage_historical_eta": 45,
+          "course_type": "major elective",
           "keywords": [
             "math",
             "regression",
@@ -855,6 +880,7 @@
             "Programming"
           ],
           "mileage_historical_eta": 60,
+          "course_type": "major elective",
           "keywords": [
             "pytorch",
             "classification",
@@ -886,6 +912,7 @@
             "Calculus"
           ],
           "mileage_historical_eta": 52,
+          "course_type": "major elective",
           "keywords": [
             "graphics",
             "webgl",
@@ -917,6 +944,7 @@
             "Discrete Mathematics"
           ],
           "mileage_historical_eta": 41,
+          "course_type": "major elective",
           "keywords": [
             "ai",
             "search algorithms",
@@ -953,6 +981,7 @@
           "evaluation_type": "Relative",
           "prerequisites": [],
           "mileage_historical_eta": 42,
+          "course_type": "major elective",
           "keywords": [
             "nlp",
             "natural language processing",
@@ -995,6 +1024,7 @@
             "Deep Learning"
           ],
           "mileage_historical_eta": 14,
+          "course_type": "major elective",
           "keywords": [
             "ai systems",
             "on-device training",
@@ -1036,6 +1066,7 @@
           "evaluation_type": "absolute",
           "prerequisites": [],
           "mileage_historical_eta": 40,
+          "course_type": "major requirement",
           "keywords": [
             "capstone design",
             "team project",
@@ -1066,6 +1097,7 @@
             "Data Structures"
           ],
           "mileage_historical_eta": 30,
+          "course_type": "major requirement",
           "keywords": [
             "capstone",
             "design",
@@ -1105,6 +1137,7 @@
             "Calculus"
           ],
           "mileage_historical_eta": 37,
+          "course_type": "major elective",
           "keywords": [
             "differential privacy",
             "generative diffusion models",
@@ -1139,6 +1172,7 @@
             "Computer Architecture"
           ],
           "mileage_historical_eta": 87,
+          "course_type": "major elective",
           "keywords": [
             "computer security",
             "threat modeling",
@@ -1175,6 +1209,7 @@
             "Algorithm"
           ],
           "mileage_historical_eta": 97,
+          "course_type": "major elective",
           "keywords": [
             "multi-core",
             "GPU",
@@ -1207,6 +1242,7 @@
           "evaluation_type": "absolute",
           "prerequisites": [],
           "mileage_historical_eta": 41,
+          "course_type": "major elective",
           "keywords": [
             "human-AI interaction",
             "HCI",
@@ -1241,6 +1277,7 @@
             "Deep learning"
           ],
           "mileage_historical_eta": 93,
+          "course_type": "major elective",
           "keywords": [
             "large language models",
             "LLM",
@@ -1277,6 +1314,7 @@
             "HTML/CSS (recommended)"
           ],
           "mileage_historical_eta": 81,
+          "course_type": "major elective",
           "keywords": [
             "data visualization",
             "interactive visualization",
@@ -1311,6 +1349,7 @@
             "Basic coding skills (coding methods not taught in class)"
           ],
           "mileage_historical_eta": 31,
+          "course_type": "major elective",
           "keywords": [
             "business",
             "AI",
@@ -1347,6 +1386,7 @@
             "PyTorch"
           ],
           "mileage_historical_eta": 110,
+          "course_type": "major elective",
           "keywords": [
             "reinforcement learning",
             "deep RL",
@@ -1381,6 +1421,7 @@
           "evaluation_type": "absolute",
           "prerequisites": [],
           "mileage_historical_eta": 25,
+          "course_type": "major elective",
           "keywords": [
             "webOS",
             "LG Smart TV",
