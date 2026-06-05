@@ -125,7 +125,5 @@ def filter_tree_courses(tree_db, prefs):
                     continue
                 if not (meta.get("credits", 0) <= prefs["max_credits"]):
                     continue
-                if not focus_matches(prefs["focus_areas"], course_obj):
-                    continue
                 matched_results[code] = course_obj
     return matched_results
