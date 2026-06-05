@@ -296,232 +296,101 @@ def strip_schedule_action_text(reply):
 if not st.session_state.intake_done:
     
     st.markdown("""
-        <div style='text-align: center; margin-bottom: 25px;'>
-            <h1 style='margin-bottom: 0px; font-size: 3rem;'> Hi! I'm NightHawk AI 🦅</h1>
-            <h5 style='color: #cbd5e1; margin-top: 4px; font-weight: 500;'>Yonsei Course Assistant - Customize your targets to extract your optimal course alignment.</h3>
-        </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
         <style>
-        /* Your existing multiselect styling */
+        /* Override Streamlit's default top/bottom padding */
+        .block-container {
+            padding-top: 5rem !important;
+            padding-bottom: 1rem !important;
+            max-width: 80vw; /* Keep it tight so the text and form stay close together */
+        }
+
+        /* Hide default Streamlit footer to save space */
+        footer {
+            visibility: hidden;
+        }
+        
+        /* 🚨 NEW: Style the Form to look like a floating, glowing glass card 🚨 */
+        [data-testid="stForm"] {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Tweak multiselect if you decide to bring it back later */
         .stMultiSelect [data-baseweb="tag"] {
             background-color: #2b5c8f !important;
             color: white !important;
         }
-        
-        /* 🚨 NEW: Override Streamlit's default top/bottom padding 🚨 */
-        .block-container {
-            padding-top: 2rem !important;
-            padding-bottom: 1rem !important;
-            max-width: 90vw;
-        }
-
-        /* 🚨 NEW: Hide default Streamlit footer to save space 🚨 */
-        footer {
-            visibility: hidden;
-        }
         </style>
     """, unsafe_allow_html=True)
 
-    with st.form("intake_form"):
-        col_inputs = st.container()
+    # ── SPLIT LAYOUT: Centered Title Left, Single-Column Form Right ──
+    col_title, col_filters = st.columns([1.1, 1], gap="large")
 
-        # ── LEFT SIDE: All Parameters Compressed ──
-        with col_inputs:
-            st.subheader("📋 Search Parameters")
-            
-            # Nested columns to save vertical space
-            inner_left, inner_right = st.columns(2)
-            
-            with inner_left:
-                language = st.radio("Language Medium", ["Any", "English", "Korean"], horizontal=True)
-                lecture_type = st.radio("Lecture Type", ["Both", "Offline", "Blended"], horizontal=True)
-                
-            with inner_right:
-                st.markdown("**Course Categories**")
-                cat_req = st.checkbox("Major Requirement", value=True)
-                cat_elec = st.checkbox("Major Elective", value=True)
-                cat_basic = st.checkbox("Major Basic", value=True)
-
-            # Target Major Year and Mileage side-by-side
-            year_mil_col1, year_mil_col2 = st.columns(2)
-            with year_mil_col1:
-                major_year = st.selectbox("Target Major Year", ["Any", "2nd", "3rd", "4th"], index=2)
-            with year_mil_col2:
-                max_credits = st.number_input("Course Credit Taking", min_value=0, max_value=21, value=19, step=1)
-
-            focus_areas = st.multiselect(
-                "Areas of Interest (Focus Keywords)",
-                [
-                    "Theory & Mathematics (Discrete Math, Linear Algebra, Probability)", 
-                    "Software Engineering (Object-Oriented Programming, Algorithms)", 
-                    "Systems & Performance (Operating Systems, Computer Networks, Computer Architecture)", 
-                    "AI & Data (Machine Learning, Computer Vision)", 
-                    "Human & Security (Human-Computer Interaction, Computer Security)"
-                ],
-            )
-
-        # The timetable now lives on the chatbot page and is updated only by chatbot actions.
-        if False:
-            st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Preferred Class Time Slots</h3>", unsafe_allow_html=True)
-            st.markdown("<p style='text-align: center; color: #666; font-size: 14px;'>Click and drag across time slots to map out your ideal schedule window.</p>", unsafe_allow_html=True)
-
-            timetable_html = """
-            <div id="timetable-container" style="
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-                user-select: none; 
-                max-width: 900px; 
-                margin: 0 auto;
-                background: rgba(255, 255, 255, 0.85); /* Slightly more opaque for readability against the starry sky */
-                backdrop-filter: blur(10px);
-                border-radius: 12px;
-                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                padding: 12px; /* Reduced from 20px */
-                overflow-x: auto;
-            ">
-                <table style="width: 100%; border-collapse: separate; border-spacing: 3px; text-align: center; font-size: 11px;"> <!-- Reduced font size & spacing -->
-                    <thead>
-                        <tr>
-                            <th style="padding: 6px; width: 60px; color: #495057; font-weight: 600;">Time</th>
-                            <th style="padding: 6px; color: #1c3879; font-weight: 700; background: rgba(28, 56, 121, 0.05); border-radius: 4px;">Mon <span id="count-Mon" style="font-size:9px; display:block; color:#868e96; font-weight:400;">0h</span></th>
-                            <th style="padding: 6px; color: #1c3879; font-weight: 700; background: rgba(28, 56, 121, 0.05); border-radius: 4px;">Tue <span id="count-Tue" style="font-size:9px; display:block; color:#868e96; font-weight:400;">0h</span></th>
-                            <th style="padding: 6px; color: #1c3879; font-weight: 700; background: rgba(28, 56, 121, 0.05); border-radius: 4px;">Wed <span id="count-Wed" style="font-size:9px; display:block; color:#868e96; font-weight:400;">0h</span></th>
-                            <th style="padding: 6px; color: #1c3879; font-weight: 700; background: rgba(28, 56, 121, 0.05); border-radius: 4px;">Thu <span id="count-Thu" style="font-size:9px; display:block; color:#868e96; font-weight:400;">0h</span></th>
-                            <th style="padding: 6px; color: #1c3879; font-weight: 700; background: rgba(28, 56, 121, 0.05); border-radius: 4px;">Fri <span id="count-Fri" style="font-size:9px; display:block; color:#868e96; font-weight:400;">0h</span></th>
-                        </tr>
-                    </thead>
-                    <tbody id="timetable-body">
-                    </tbody>
-                </table>
-                <input type="hidden" id="timetable-output" name="timetable_output" value="{}">
+    with col_title:
+        # Using Flexbox to vertically and horizontally center the massive text
+        st.markdown("""
+            <div style='display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 100%; min-height: 500px;'>
+                <h1 style='margin-bottom: 0px; font-size: 5.5rem; font-weight: 800; line-height: 1.1;'>Hi!<br>I'm NightHawk AI 🦅</h1>
+                <h5 style='color: #94a3b8; margin-top: 25px; font-weight: 400; font-size: 1.3rem; line-height: 1.6; max-width: 85%;'>
+                    Yonsei Course Assistant &mdash; Customize your targets to extract your optimal course alignment.
+                </h5>
             </div>
+        """, unsafe_allow_html=True)
 
-            <script>
-            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-            const hours = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
-            const tbody = document.getElementById('timetable-body');
-            let isMouseDown = false;
-            let isSelecting = true;
-            let selectedSlots = {};
-
-            days.forEach(day => selectedSlots[day] = []);
-
-            hours.forEach((hour) => {
-                const tr = document.createElement('tr');
-                const tdTime = document.createElement('td');
-                tdTime.innerText = hour;
-                tdTime.style.padding = '4px'; /* Reduced padding */
-                tdTime.style.fontWeight = '600';
-                tdTime.style.color = '#495057';
-                tdTime.style.background = '#f8f9fa';
-                tdTime.style.borderRadius = '4px';
-                tr.appendChild(tdTime);
-
-                days.forEach(day => {
-                    const td = document.createElement('td');
-                    td.style.height = '24px'; /* Reduced height from 32px to save ~80px total vertical space */
-                    td.style.cursor = 'pointer';
-                    td.style.backgroundColor = '#f1f3f5'; 
-                    td.style.borderRadius = '4px';
-                    td.style.transition = 'all 0.15s ease';
-                    td.dataset.day = day;
-                    td.dataset.hour = hour;
-
-                    td.addEventListener('mouseenter', () => {
-                        if(!td.classList.contains('active')) {
-                            td.style.backgroundColor = '#e3fafc';
-                        }
-                    });
-                    td.addEventListener('mouseleave', () => {
-                        if(!td.classList.contains('active')) {
-                            td.style.backgroundColor = '#f1f3f5';
-                        }
-                    });
-
-                    td.addEventListener('mousedown', (e) => {
-                        isMouseDown = true;
-                        isSelecting = !td.classList.contains('active');
-                        executeToggle(td, isSelecting);
-                        e.preventDefault();
-                    });
-                    
-                    td.addEventListener('mouseover', () => {
-                        if (isMouseDown) {
-                            executeToggle(td, isSelecting);
-                        }
-                    });
-
-                    tr.appendChild(td);
-                });
-                tbody.appendChild(tr);
-            });
-
-            window.addEventListener('mouseup', () => {
-                if (isMouseDown) {
-                    isMouseDown = false;
-                    updateOutput();
-                }
-            });
-
-            function executeToggle(cell, forceSelect) {
-                const day = cell.dataset.day;
-                const hour = cell.dataset.hour;
-                
-                if (forceSelect) {
-                    cell.classList.add('active');
-                    cell.style.backgroundColor = '#1c3879';
-                    cell.style.boxShadow = 'inset 0 0 8px rgba(0,0,0,0.2)';
-                    if (!selectedSlots[day].includes(hour)) {
-                        selectedSlots[day].push(hour);
-                    }
-                } else {
-                    cell.classList.remove('active');
-                    cell.style.backgroundColor = '#f1f3f5';
-                    cell.style.boxShadow = 'none';
-                    selectedSlots[day] = selectedSlots[day].filter(h => h !== hour);
-                }
-                document.getElementById(`count-${day}`).innerText = `${selectedSlots[day].length}h`;
-            }
-
-            function updateOutput() {
-                const output = document.getElementById('timetable-output');
-                output.value = JSON.stringify(selectedSlots);
-                output.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            </script>
-            """
-            st.components.v1.html(timetable_html, height=410, scrolling=False)
-
-        # ── BOTTOM: Submit Button ──
-        # Putting it back in the main form context so it spans the entire width beneath the columns
-        submitted = st.form_submit_button("Generate Strategic Schedule Matching Preferences →", use_container_width=True)
-
-        if submitted:
-            prefs = {
-                "language": language,
-                "lecture_type": lecture_type,
-                "major_year": major_year,
-                "major_years": [] if major_year == "Any" else [major_year],
-                "cat_req": cat_req,
-                "cat_elec": cat_elec,
-                "cat_basic": cat_basic,
-                "max_credits": max_credits,
-                "focus_areas": focus_areas,
-            }
+    with col_filters:
+        # Push the form down slightly to align with the middle of the text
+        st.markdown("<div style='padding-top: 20px;'></div>", unsafe_allow_html=True)
+        
+        with st.form("intake_form"):
+            st.markdown("<h3 style='text-align: center; margin-bottom: 25px;'>📋 Search Parameters</h3>", unsafe_allow_html=True)
             
-            # Execute RAG structural pruning lookups
-            filtered = filter_tree_courses(CS_TREE, prefs)
+            # Converted to a clean, single-column stack as requested
+            language = st.radio("Language Medium", ["Any", "English", "Korean"], horizontal=True)
+            lecture_type = st.radio("Lecture Type", ["Both", "Offline", "Blended"], horizontal=True)
+            
+            st.markdown("<div style='margin-top: 15px; margin-bottom: 5px;'><b>Course Categories</b></div>", unsafe_allow_html=True)
+            # Putting checkboxes in a neat horizontal row to save vertical space while staying in one main column
+            cat_col1, cat_col2, cat_col3 = st.columns(3)
+            with cat_col1: cat_req = st.checkbox("Major Requirement", value=True)
+            with cat_col2: cat_elec = st.checkbox("Major Elective", value=True)
+            with cat_col3: cat_basic = st.checkbox("Major Basic", value=True)
 
-            # Do not silently fall back to the full database; that makes the assistant hallucinate.
-            if not filtered:
-                st.warning("No courses matched those filters. Please loosen one or more filters to get grounded recommendations.")
+            st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+            major_year = st.selectbox("Target Major Year", ["Any", "2nd", "3rd", "4th"], index=2)
+            max_credits = st.number_input("Course Credit Taking", min_value=0, max_value=21, value=19, step=1)
 
-            st.session_state.filtered_courses = filtered
-            st.session_state.prefs = prefs
-            st.session_state.intake_done = True
-            st.rerun()
+            st.markdown("<br>", unsafe_allow_html=True) # Spacer before the button
+            
+            # ── BOTTOM: Submit Button ──
+            submitted = st.form_submit_button("Generate Strategic Schedule Matching Preferences →", use_container_width=True)
+
+            if submitted:
+                prefs = {
+                    "language": language,
+                    "lecture_type": lecture_type,
+                    "major_year": major_year,
+                    "major_years": [] if major_year == "Any" else [major_year],
+                    "cat_req": cat_req,
+                    "cat_elec": cat_elec,
+                    "cat_basic": cat_basic,
+                    "max_credits": max_credits,
+                    "focus_areas": [],  # Passed as empty so backend logic doesn't break
+                }
+                
+                # Execute RAG structural pruning lookups
+                filtered = filter_tree_courses(CS_TREE, prefs)
+
+                # Do not silently fall back to the full database; that makes the assistant hallucinate.
+                if not filtered:
+                    st.warning("No courses matched those filters. Please loosen one or more filters to get grounded recommendations.")
+                else:
+                    st.session_state.filtered_courses = filtered
+                    st.session_state.prefs = prefs
+                    st.session_state.intake_done = True
+                    st.rerun()
 
 # ── 5. CHAT SCREEN ───────────────────────────────────────────────────────────
 else:
