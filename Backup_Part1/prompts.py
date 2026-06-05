@@ -1,0 +1,76 @@
+"""Prompt construction for the grounded course assistant."""
+
+from course_utils import clean_focus_area, clip_text, format_field
+
+
+def build_candidate_catalog(filtered_courses):
+    if not filtered_courses:
+        return "No courses matched the active filters."
+    rows = []
+    for code, data in filtered_courses.items():
+        meta = data.get("metadata", {})
+        rows.append(
+            f"{code}: {format_field(meta.get('name'))} | {format_field(meta.get('professor'))} | "
+            f"{format_field(meta.get('credits'))} credits | {format_field(meta.get('time'))}"
+        )
+    return "\n".join(rows)
+
+
+def format_course_context(selected_courses):
+    if not selected_courses:
+        return "No retrieved course evidence is available for this turn."
+
+    chunks = []
+    for code, data in selected_courses.items():
+        meta = data.get("metadata", {})
+        text_chunks = data.get("text_chunks", {})
+        chunks.append(f"""
+[COURSE {code}]
+Name: {format_field(meta.get('name'))}
+Professor: {format_field(meta.get('professor'))}
+Language: {format_field(meta.get('language_medium'))}
+Lecture type: {format_field(meta.get('lecture_type'))}
+Credits: {format_field(meta.get('credits'))}
+Time/location: {format_field(meta.get('time'))} / {format_field(meta.get('location'))}
+Evaluation: {format_field(meta.get('evaluation_type'))}
+Workload/difficulty: {format_field(meta.get('workload'))} / {format_field(meta.get('difficulty'))}
+Prerequisites: {format_field(meta.get('prerequisites'))}
+Historical mileage ETA: {format_field(meta.get('mileage_historical_eta'))}
+Keywords: {format_field(meta.get('keywords'))}
+Grading and syllabus evidence: {clip_text(text_chunks.get('grading_and_syllabus'))}
+Student review evidence: {clip_text(text_chunks.get('student_reviews'))}
+Alternative professor review evidence: {clip_text(text_chunks.get('alternative_professor_reviews'))}
+[/COURSE]
+""")
+    return "\n".join(chunks)
+
+
+def build_system_prompt(prefs, selected_courses, filtered_courses):
+    return f"""
+You are NightHawk AI, a Yonsei CS course recommendation assistant for Part 1 of this project.
+Your job is to recommend and filter subjects from the supplied database. Do not perform final schedule optimization or exact bidding allocation; say that belongs to Part 2 if asked.
+
+Grounding rules:
+- This is a closed-book task. Use only the COURSE EVIDENCE block for course-specific facts.
+- The CANDIDATE CATALOG is only an index of courses that passed the user's filters. Do not infer extra facts from a catalog row.
+- Never invent professors, prerequisites, schedules, reviews, grading policies, locations, mileage cutoffs, or enrollment certainty.
+- Treat historical mileage ETA as a rough competitiveness signal, not a guaranteed winning bid.
+- If evidence is missing, say "Not listed in the retrieved data" instead of guessing.
+- If the user asks about a course outside the active filters, say it is not in the current filtered candidate set and suggest resetting filters.
+- When recommending courses, name each course as "CODE - Name" and explain Fit, Evidence, and Caveat.
+- Keep answers concise and course-grounded. Prefer 3 to 6 recommendations unless the user asks for a full list.
+
+Student profile from filters:
+- Language: {prefs.get('language')}
+- Lecture type: {prefs.get('lecture_type')}
+- Major year: {prefs.get('major_year')}
+- Credit window: {prefs.get('min_credits')} to {prefs.get('max_credits')}
+- Focus areas: {', '.join(clean_focus_area(a) for a in prefs.get('focus_areas', [])) or 'All'}
+- Available mileage points: {prefs.get('mileage')}
+
+CANDIDATE CATALOG:
+{build_candidate_catalog(filtered_courses)}
+
+COURSE EVIDENCE RETRIEVED FOR THIS TURN:
+{format_course_context(selected_courses)}
+"""
