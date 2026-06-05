@@ -48,6 +48,21 @@ def clean_focus_area(area):
     return normalize_text(str(area).split(" (")[0])
 
 
+def display_course_name(value):
+    """Return an English-only course name for user-facing text."""
+    raw = str(value or "").strip()
+    if not raw:
+        return "Not listed"
+
+    parenthesized = re.findall(r"\(([^()]*[A-Za-z][^()]*)\)", raw)
+    if parenthesized:
+        raw = parenthesized[-1]
+
+    cleaned = re.sub(r"[^A-Za-z0-9\s&+/#:,-]", " ", raw)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" -,:")
+    return cleaned or "Not listed"
+
+
 def period_to_time(period):
     try:
         period_num = int(period)

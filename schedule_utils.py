@@ -3,7 +3,7 @@
 import json
 import re
 
-from course_utils import extract_time_slots
+from course_utils import display_course_name, extract_time_slots
 
 
 DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri"]
@@ -138,7 +138,7 @@ def build_schedule_course(code, course_obj, color_index=0):
     meta = course_obj.get("metadata", {})
     return {
         "course_id": code,
-        "course_name": meta.get("name", code),
+        "course_name": display_course_name(meta.get("name", code)),
         "professor": meta.get("professor", "Not listed"),
         "credits": int(meta.get("credits") or 0),
         "time": meta.get("time", ""),
@@ -178,6 +178,14 @@ def find_course_code(course_ref, filtered_courses):
         if normalized_ref == code.lower() or normalized_ref in str(meta.get("name", "")).lower():
             return code
     return None
+
+
+def course_label(course_code, course_obj=None, schedule_course=None):
+    if schedule_course and schedule_course.get("course_name"):
+        return f"{schedule_course.get('course_name')} ({course_code})"
+    if course_obj:
+        return f"{display_course_name(course_obj.get('metadata', {}).get('name', course_code))} ({course_code})"
+    return str(course_code)
 
 
 def extract_schedule_actions(reply):
@@ -231,19 +239,28 @@ def apply_schedule_actions(actions, schedule, filtered_courses):
             candidate = build_schedule_course(course_code, filtered_courses[course_code], len(updated_schedule))
             conflicts = find_schedule_conflicts(updated_schedule, candidate)
             if conflicts:
-                results.append(f"Blocked add for {course_code}: overlaps with {', '.join(conflicts)}.")
+                conflict_labels = [
+                    course_label(conflict_code, schedule_course=updated_schedule.get(conflict_code))
+                    for conflict_code in conflicts
+                ]
+                results.append(
+                    f"Could not add {course_label(course_code, schedule_course=candidate)} because it overlaps with "
+                    + ", ".join(conflict_labels)
+                    + "."
+                )
                 continue
             updated_schedule[course_code] = candidate
-            results.append(f"Added {course_code}.")
+            results.append(f"Added {course_label(course_code, schedule_course=candidate)}.")
         elif action_type == "remove_course":
             if not course_code:
                 results.append(f"Could not remove {course_ref or 'the requested course'} because it was not recognized.")
                 continue
             if course_code in updated_schedule:
+                removed_course = updated_schedule[course_code]
                 updated_schedule.pop(course_code)
-                results.append(f"Removed {course_code}.")
+                results.append(f"Removed {course_label(course_code, schedule_course=removed_course)}.")
             else:
-                results.append(f"{course_code} is not currently in the timetable.")
+                results.append(f"{course_label(course_code, course_obj=filtered_courses.get(course_code))} is not currently in the timetable.")
         elif action_type == "optimize_courses":
             results.append("Optimization action received; add/remove course actions are needed to update the timetable.")
 
@@ -256,7 +273,7 @@ def course_summary_for_prompt(schedule):
     rows = []
     for index, (code, course) in enumerate(schedule.items(), start=1):
         rows.append(
-            f"{index}. {code} - {course.get('course_name')} | "
+            f"{index}. {course.get('course_name')} ({code}) | "
             f"{course.get('credits', 0)} credits | {course.get('time') or 'Not listed'}"
         )
     return "\n".join(rows)

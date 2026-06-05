@@ -1,9 +1,11 @@
 from html import escape
+import re
 
 import streamlit as st
 from groq import Groq
 
 from course_repository import load_tree_database
+from course_utils import display_course_name
 from filters import filter_tree_courses
 from guardrails import recent_conversation, validate_grounding
 from prompts import build_system_prompt
@@ -120,7 +122,7 @@ def render_weekly_timetable(schedule):
             span = int(meeting.get("end_period", 1)) - int(meeting.get("start_period", 1)) + 1
             height = max(28, span * row_height - 4)
             left = days.index(day) * 20
-            name = escape(str(course.get("course_name", "Course")))
+            name = escape(display_course_name(course.get("course_name", "Course")))
             code = escape(str(course.get("course_id", "")))
             time_text = escape(f"{meeting.get('start_time')} - {meeting.get('end_time')}")
             color = escape(str(course.get("color", "#2563eb")))
@@ -291,6 +293,43 @@ def strip_schedule_action_text(reply):
     if not cleaned:
         return "I updated the timetable based on your request."
     return cleaned
+
+
+def format_assistant_reply(reply):
+    """Prepare assistant text for display without exposing internal actions."""
+    text = strip_schedule_action_text(reply)
+    text = text.replace("\r\n", "\n")
+    text = re.sub(r"[^\x00-\x7F]+\s*\(([^()]*[A-Za-z][^()]*)\)", r"\1", text)
+    text = re.sub(r"[\uac00-\ud7a3]+", "", text)
+
+    section_labels = (
+        "Fit",
+        "Evidence",
+        "Caveat",
+        "Schedule",
+        "Workload",
+        "Mileage",
+        "Credits",
+        "Prerequisites",
+        "Why it fits",
+    )
+    for label in section_labels:
+        text = re.sub(
+            rf"(?<!^)(?<!\n)\s+({re.escape(label)}:)",
+            rf"\n- \1",
+            text,
+            flags=re.IGNORECASE,
+        )
+
+    text = re.sub(r"(?<!\n)\s+(\d+\.\s+)", r"\n\n\1", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
+def course_label_from_filtered(code):
+    course_obj = st.session_state.filtered_courses.get(code, {})
+    meta = course_obj.get("metadata", {})
+    return f"{display_course_name(meta.get('name', code))} ({code})"
 
 # ── 4. INTAKE SCREEN ─────────────────────────────────────────────────────────
 if not st.session_state.intake_done:
@@ -501,7 +540,7 @@ else:
                 with st.form("priority_ranking_form"):
                     ranking_values = {}
                     for code, course in selected_schedule.items():
-                        label = f"{code} - {course.get('course_name')}"
+                        label = f"{display_course_name(course.get('course_name'))} ({code})"
                         ranking_values[code] = st.selectbox(
                             label,
                             list(range(1, course_count + 1)),
@@ -522,7 +561,7 @@ else:
             if selected_schedule:
                 with st.expander("Selected Courses", expanded=True):
                     for code, course in selected_schedule.items():
-                        st.write(f"**{code}** - {course.get('course_name')}")
+                        st.write(f"**{display_course_name(course.get('course_name'))}** ({code})")
                         st.caption(f"{course.get('credits', 0)} credits | {course.get('time') or 'Time not listed'}")
             else:
                 st.info("The timetable is empty. Ask the assistant to add a course.")
@@ -546,7 +585,7 @@ else:
                     llm_messages,
                 )
                 st.session_state.messages.append({"role": "user", "content": "Confirmed timetable."})
-                st.session_state.messages.append({"role": "assistant", "content": strip_schedule_action_text(ranking_reply)})
+                st.session_state.messages.append({"role": "assistant", "content": format_assistant_reply(ranking_reply)})
                 st.session_state.timetable_confirmed = True
                 st.rerun()
 
@@ -568,7 +607,7 @@ else:
             with st.chat_message(msg["role"]):
                 content = msg["content"]
                 if msg["role"] == "assistant":
-                    content = strip_schedule_action_text(content)
+                    content = format_assistant_reply(content)
                 st.write(content)
 
         if not st.session_state.messages:
@@ -611,9 +650,13 @@ else:
                     st.session_state.priority_rankings = {}
 
             if st.session_state.retrieved_course_codes:
-                st.caption("Evidence used: " + ", ".join(st.session_state.retrieved_course_codes))
+                evidence_labels = [
+                    course_label_from_filtered(code)
+                    for code in st.session_state.retrieved_course_codes
+                ]
+                st.caption("Evidence used: " + ", ".join(evidence_labels))
 
-            display_reply = strip_schedule_action_text(reply)
+            display_reply = format_assistant_reply(reply)
             if action_results:
                 display_reply += "\n\nSchedule update:\n" + "\n".join(f"- {result}" for result in action_results)
             st.write(display_reply)

@@ -1,6 +1,6 @@
 """Prompt construction for the grounded course assistant."""
 
-from course_utils import clean_focus_area, clip_text, expand_course_time, format_field, extract_time_slots
+from course_utils import clean_focus_area, clip_text, display_course_name, expand_course_time, format_field, extract_time_slots
 
 def display_major_years(prefs):
     selected_years = prefs.get("major_years")
@@ -34,7 +34,7 @@ def build_candidate_catalog(filtered_courses):
         conflict_str = f" | CONFLICTS WITH: {', '.join(conflicts)}" if conflicts else " | CONFLICTS WITH: None"
 
         rows.append(
-            f"{code}: {format_field(meta.get('name'))} | {format_field(meta.get('professor'))} | "
+            f"{display_course_name(meta.get('name'))} ({code}) | {format_field(meta.get('professor'))} | "
             f"{format_field(meta.get('credits'))} credits | raw time: {format_field(meta.get('time'))} | "
             f"expanded time: {expand_course_time(meta.get('time'))}{conflict_str}"
         )
@@ -53,7 +53,7 @@ def format_course_context(selected_courses):
         expanded_time = expand_course_time(meta.get("time"))
         chunks.append(f"""
 [COURSE {code}]
-Name: {format_field(meta.get('name'))}
+Display name: {display_course_name(meta.get('name'))}
 Professor: {format_field(meta.get('professor'))}
 Language: {format_field(meta.get('language_medium'))}
 Lecture type: {format_field(meta.get('lecture_type'))}
@@ -80,7 +80,7 @@ def format_current_schedule(selected_schedule):
     rows = []
     for code, course in selected_schedule.items():
         rows.append(
-            f"{code}: {format_field(course.get('course_name'))} | "
+            f"{display_course_name(course.get('course_name'))} ({code}) | "
             f"{format_field(course.get('credits'))} credits | raw time: {format_field(course.get('time'))}"
         )
     return "\n".join(rows)
@@ -100,14 +100,16 @@ Grounding rules:
 - OVERLAP RULE: The CANDIDATE CATALOG explicitly lists time conflicts. You MUST NOT recommend a combination of courses that are listed as conflicting with each other.
 - SCHEDULE CONTROL: The chatbot is the only way the user modifies the timetable. When the user asks to add, remove, drop, change, or optimize timetable courses, include machine-readable JSON actions in your reply for the frontend to consume.
 - Do not tell the user to "use" JSON actions, do not introduce the JSON, and do not explain the action format. Write a normal concise user-facing sentence, then include the raw action JSON after it.
-- For an add request, use exactly this action shape: {{"action": "add_course", "course": {{"course_id": "CODE", "course_name": "Name", "days": ["Mon"], "start_time": "9:00 AM", "end_time": "10:00 AM"}}}}
-- For a remove request, use exactly this action shape: {{"action": "remove_course", "course": {{"course_id": "CODE", "course_name": "Name"}}}}
+- For an add request, use exactly this action shape: {{"action": "add_course", "course": {{"course_id": "CODE", "course_name": "English Name", "days": ["Mon"], "start_time": "9:00 AM", "end_time": "10:00 AM"}}}}
+- For a remove request, use exactly this action shape: {{"action": "remove_course", "course": {{"course_id": "CODE", "course_name": "English Name"}}}}
 - For optimize requests, return an "actions" array containing the add_course and remove_course actions needed to transform the current schedule. Do not return draggable/manual edit instructions.
 - Only create schedule actions for courses in the active filtered candidate set. Use exact course codes from the evidence or candidate catalog.
 - Never ask the user to manually drag, draw, or create timetable blocks.
 - If evidence is missing, say "Not listed in the retrieved data" instead of guessing.
 - If the user asks about a course outside the active filters, say it is not in the current filtered candidate set and suggest adjusting filters.
-- When recommending courses, name each course as "CODE - Name" and explain Fit, Evidence, and Caveat.
+- Use English-only course names in user-facing text. If a database name contains Korean plus an English name in parentheses, use only the English name.
+- When recommending courses, name each course as "English Course Name (CODE)" and explain Fit, Evidence, and Caveat.
+- Format answers with short paragraphs or bullets. Put Fit, Evidence, and Caveat on separate lines instead of one crowded paragraph.
 - Keep answers concise and course-grounded. Prefer 3 to 6 recommendations unless the user asks for a full list.
 
 Student profile from filters:

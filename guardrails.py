@@ -2,6 +2,8 @@
 
 import re
 
+from course_utils import display_course_name
+
 
 def recent_conversation(messages, keep=6, char_limit=900):
     recent = messages[-keep:]
@@ -29,9 +31,13 @@ def validate_grounding(reply, selected_courses, filtered_courses):
             + ". Please ignore those course references unless you add them to the data."
         )
     if weak_codes:
+        weak_labels = [
+            f"{display_course_name(filtered_courses[code].get('metadata', {}).get('name', code))} ({code})"
+            for code in weak_codes
+        ]
         notes.append(
             "Grounding note: "
-            + ", ".join(weak_codes)
+            + ", ".join(weak_labels)
             + " appeared in the filtered catalog but was not part of this turn's detailed evidence. Treat those mentions as candidate-level only."
         )
     if notes:
