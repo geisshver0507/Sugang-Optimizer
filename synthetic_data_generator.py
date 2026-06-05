@@ -42,11 +42,9 @@ FEATURE_COLS = [
     "has_review",           # whether any review exists
     # Student-level features (provided at prediction time)
     "student_year",         # student's year (1-4)
-    "student_mileage",      # total available points
     "num_courses_wanted",   # how many courses in their list
     "rank_in_list",         # priority rank of this course (1=most wanted)
     "priority_ratio",       # (n - rank + 1) / n
-    "budget_ratio",         # student_mileage / 500
 ]
 
 TARGET_COL = "winning_threshold"
@@ -74,11 +72,11 @@ def generate_synthetic_bids(
 
             # Simulate a student context
             student_year       = float(rng.integers(1, 5))
-            student_mileage    = float(rng.integers(50, 501))
+            student_mileage    = 76.0   # fixed per Yonsei rules
             num_courses_wanted = float(rng.integers(3, 8))
             rank_in_list       = float(rng.integers(1, int(num_courses_wanted) + 1))
             priority_ratio     = (num_courses_wanted - rank_in_list + 1) / num_courses_wanted
-            budget_ratio       = student_mileage / 500.0
+            budget_ratio       = 76.0 / 76.0   # always 1.0 (fixed budget)
 
             # ── Estimate competition pressure for this course ──────────────
             # This generates a plausible competition score.
@@ -112,13 +110,13 @@ def generate_synthetic_bids(
             threshold = float(np.clip(
                 comp * 10.0 + rng.normal(0, 6),
                 1.0,
-                min(student_mileage * 0.6, 180.0)
+                76.0   # max is the full mileage budget
             ))
 
             row = feat.to_dict()
             row["course_code"]        = code
             row["student_year"]       = student_year
-            row["student_mileage"]    = student_mileage
+            row["student_mileage"]    = 76.0
             row["num_courses_wanted"] = num_courses_wanted
             row["rank_in_list"]       = rank_in_list
             row["priority_ratio"]     = priority_ratio
