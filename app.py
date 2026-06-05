@@ -132,14 +132,7 @@ if not st.session_state.intake_done:
             with year_mil_col1:
                 major_year = st.selectbox("Target Major Year", ["Any", "2nd", "3rd", "4th"], index=2)
             with year_mil_col2:
-                mileage = st.number_input("Available Mileage Points", min_value=0, max_value=72, value=72, step=1)
-            
-            st.markdown("**Planned Credit Range**")
-            cred_col1, cred_col2 = st.columns(2)
-            with cred_col1:
-                min_credits = st.number_input("Minimum Course Credits", min_value=1, max_value=21, value=3)
-            with cred_col2:
-                max_credits = st.number_input("Maximum Course Credits", min_value=1, max_value=21, value=19)
+                max_credits = st.number_input("Course Credit Taking", min_value=0, max_value=21, value=19, step=1)
 
             focus_areas = st.multiselect(
                 "Areas of Interest (Focus Keywords)",
@@ -297,10 +290,8 @@ if not st.session_state.intake_done:
                 "cat_req": cat_req,
                 "cat_elec": cat_elec,
                 "cat_basic": cat_basic,
-                "min_credits": min_credits,
                 "max_credits": max_credits,
                 "focus_areas": focus_areas,
-                "mileage": mileage,
             }
             
             # Execute RAG structural pruning lookups
