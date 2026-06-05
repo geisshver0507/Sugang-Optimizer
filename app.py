@@ -495,10 +495,23 @@ else:
                 st.session_state.pop("chat_language", None)
                 st.rerun()
 
+            if st.session_state.timetable_confirmed and selected_schedule:
+                st.markdown("### Priority Ranking")
+                course_count = len(selected_schedule)
+                with st.form("priority_ranking_form"):
+                    ranking_values = {}
+                    for code, course in selected_schedule.items():
+                        label = f"{code} - {course.get('course_name')}"
+                        ranking_values[code] = st.selectbox(
+                            label,
+                            list(range(1, course_count + 1)),
+                            key=f"priority_{code}",
+                        )
+
         with time_col:
             st.markdown("### 📅 Weekly Timetable")
             render_weekly_timetable(selected_schedule)
-            
+
             if selected_schedule:
                 with st.expander("Selected Courses", expanded=True):
                     for code, course in selected_schedule.items():
@@ -530,25 +543,13 @@ else:
                 st.session_state.timetable_confirmed = True
                 st.rerun()
 
-            if st.session_state.timetable_confirmed and selected_schedule:
-                st.markdown("### Priority Ranking")
-                course_count = len(selected_schedule)
-                with st.form("priority_ranking_form"):
-                    ranking_values = {}
-                    for code, course in selected_schedule.items():
-                        label = f"{code} - {course.get('course_name')}"
-                        ranking_values[code] = st.selectbox(
-                            label,
-                            list(range(1, course_count + 1)),
-                            key=f"priority_{code}",
-                        )
-                    submitted_rankings = st.form_submit_button("Save Priority Ranking", use_container_width=True)
-                    if submitted_rankings:
-                        if len(set(ranking_values.values())) != course_count:
-                            st.warning("Each course needs a unique priority number.")
-                        else:
-                            st.session_state.priority_rankings = ranking_values
-                            st.success("Priority ranking saved.")
+                submitted_rankings = st.form_submit_button("Save Priority Ranking", use_container_width=True)
+                if submitted_rankings:
+                    if len(set(ranking_values.values())) != course_count:
+                        st.warning("Each course needs a unique priority number.")
+                    else:
+                        st.session_state.priority_rankings = ranking_values
+                        st.success("Priority ranking saved.")
 
     # ==========================================
     # 🌟 MAIN AREA: CHAT INTERFACE
