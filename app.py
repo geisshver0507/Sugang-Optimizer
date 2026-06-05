@@ -333,8 +333,8 @@ if not st.session_state.intake_done:
         # Using Flexbox to vertically and horizontally center the massive text
         st.markdown("""
             <div style='display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 100%; min-height: 500px;'>
-                <h1 style='margin-bottom: 0px; font-size: 5.5rem; font-weight: 800; line-height: 1.1;'>Hi!<br>I'm NightHawk AI 🦅</h1>
-                <h5 style='color: #94a3b8; margin-top: 25px; font-weight: 400; font-size: 1.3rem; line-height: 1.6; max-width: 85%;'>
+                <h1 style='margin-bottom: 0px; font-size: 5.5rem; font-weight: 800; line-height: 1.1;'>Hi!    I'm NightHawk AI🦅</h1>
+                <h5 style='color: #94a3b8; margin-top: 15px; font-weight: 400; font-size: 1.3rem; line-height: 1.6; max-width: 85%;'>
                     Yonsei Course Assistant &mdash; Customize your targets to extract your optimal course alignment.
                 </h5>
             </div>
@@ -347,9 +347,10 @@ if not st.session_state.intake_done:
         with st.form("intake_form"):
             st.markdown("<h3 style='text-align: center; margin-bottom: 25px;'>📋 Search Parameters</h3>", unsafe_allow_html=True)
             
-            # Converted to a clean, single-column stack as requested
-            language = st.radio("Language Medium", ["Any", "English", "Korean"], horizontal=True)
-            lecture_type = st.radio("Lecture Type", ["Both", "Offline", "Blended"], horizontal=True)
+            left, right = st.columns(2)
+
+            with left: language = st.radio("Language Medium", ["Any", "English", "Korean"], horizontal=True)
+            with right: lecture_type = st.radio("Lecture Type", ["Both", "Offline", "Blended"], horizontal=True)
             
             st.markdown("<div style='margin-top: 15px; margin-bottom: 5px;'><b>Course Categories</b></div>", unsafe_allow_html=True)
             # Putting checkboxes in a neat horizontal row to save vertical space while staying in one main column
@@ -394,150 +395,106 @@ if not st.session_state.intake_done:
 
 # ── 5. CHAT SCREEN ───────────────────────────────────────────────────────────
 else:
+    # ==========================================
+    # 🌟 CSS: WIDEN THE NATIVE SIDEBAR
+    # ==========================================
+    st.markdown("""
+        <style>
+        /* Force the native sidebar to take up ~45% of the screen width */
+        [data-testid="stSidebar"] {
+            min-width: 45vw !important;
+            max-width: 50vw !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # ==========================================
+    # 🌟 LEFT SIDEBAR: DUAL-COLUMN LAYOUT
+    # ==========================================
     with st.sidebar:
-        p = st.session_state.prefs
-        year_options = ["1st", "2nd", "3rd", "4th"]
-        language_options = ["Any", "English", "Korean"]
+        # Split the wide sidebar into two internal columns
+        # Ratio [1, 1.4] gives the timetable slightly more breathing room
+        filter_col, time_col = st.columns([1, 1.4], gap="medium")
 
-        current_years = p.get("major_years")
-        if current_years is None:
-            current_years = [] if p.get("major_year") == "Any" else [p.get("major_year", "3rd")]
-        current_years = [year for year in current_years if year in year_options]
-        default_years = current_years if current_years else year_options
+        with filter_col:
+            p = st.session_state.prefs
+            year_options = ["1st", "2nd", "3rd", "4th"]
+            language_options = ["Any", "English", "Korean"]
 
-        current_language = p.get("language", "Any")
-        if current_language not in language_options:
-            current_language = "Any"
+            current_years = p.get("major_years")
+            if current_years is None:
+                current_years = [] if p.get("major_year") == "Any" else [p.get("major_year", "3rd")]
+            current_years = [year for year in current_years if year in year_options]
+            default_years = current_years if current_years else year_options
 
-        st.markdown("### Dynamic Filters")
-        selected_years = st.multiselect(
-            "Major Years",
-            year_options,
-            default=default_years,
-            key="chat_major_years",
-        )
-        selected_language = st.radio(
-            "Language Medium",
-            language_options,
-            index=language_options.index(current_language),
-            key="chat_language",
-        )
+            current_language = p.get("language", "Any")
+            if current_language not in language_options:
+                current_language = "Any"
 
-        stored_years = current_years if current_years else year_options
-        filters_changed = (
-            selected_language != p.get("language", "Any")
-            or selected_years != stored_years
-        )
+            st.markdown("### Dynamic Filters")
+            selected_years = st.multiselect(
+                "Major Years",
+                year_options,
+                default=default_years,
+                key="chat_major_years",
+            )
+            selected_language = st.radio(
+                "Language Medium",
+                language_options,
+                index=language_options.index(current_language),
+                key="chat_language",
+            )
 
-        if filters_changed:
-            updated_p = dict(p)
-            updated_p["language"] = selected_language
-            updated_p["major_years"] = selected_years
-            if not selected_years or set(selected_years) == set(year_options):
-                updated_p["major_year"] = "Any"
-            elif len(selected_years) == 1:
-                updated_p["major_year"] = selected_years[0]
-            else:
-                updated_p["major_year"] = ", ".join(selected_years)
+            stored_years = current_years if current_years else year_options
+            filters_changed = (
+                selected_language != p.get("language", "Any")
+                or selected_years != stored_years
+            )
 
-            updated_filtered = filter_tree_courses(CS_TREE, updated_p)
-            st.session_state.prefs = updated_p
-            st.session_state.filtered_courses = updated_filtered
-            st.session_state.retrieved_course_codes = []
-            p = updated_p
+            if filters_changed:
+                updated_p = dict(p)
+                updated_p["language"] = selected_language
+                updated_p["major_years"] = selected_years
+                if not selected_years or set(selected_years) == set(year_options):
+                    updated_p["major_year"] = "Any"
+                elif len(selected_years) == 1:
+                    updated_p["major_year"] = selected_years[0]
+                else:
+                    updated_p["major_year"] = ", ".join(selected_years)
 
-            if not updated_filtered:
-                st.warning("No courses match the current sidebar filters.")
+                updated_filtered = filter_tree_courses(CS_TREE, updated_p)
+                st.session_state.prefs = updated_p
+                st.session_state.filtered_courses = updated_filtered
+                st.session_state.retrieved_course_codes = []
+                p = updated_p
 
-        st.divider()
-        st.markdown("### Active Constraints")
-        display_years = p.get("major_years") or year_options
-        st.write(f"Language: **{p['language']}**")
-        st.write(f"Format: **{p['lecture_type']}**")
-        st.write(f"Target Years: **{', '.join(display_years)}**")
-        st.write(f"Credits: **{p['max_credits']} pts**")
-        st.write(f"Interests Specified: **{', '.join([a.split(' (')[0] for a in p['focus_areas']]) if p['focus_areas'] else 'All'}**")
-        st.metric("Filtered Candidates", len(st.session_state.filtered_courses))
-        
-        if st.button("Reset Filters & Availability"):
-            st.session_state.intake_done = False
-            st.session_state.messages = []
-            st.session_state.retrieved_course_codes = []
-            st.session_state.selected_schedule = {}
-            st.session_state.schedule_action_log = []
-            st.session_state.timetable_confirmed = False
-            st.session_state.priority_rankings = {}
-            st.session_state.pop("chat_major_years", None)
-            st.session_state.pop("chat_language", None)
-            st.rerun()
+                if not updated_filtered:
+                    st.warning("No courses match the current sidebar filters.")
 
-    st.title("NightHawk AI - Yonsei Course Assistant🎓")
+            st.divider()
+            st.markdown("### Active Constraints")
+            display_years = p.get("major_years") or year_options
+            st.write(f"Language: **{p['language']}**")
+            st.write(f"Format: **{p['lecture_type']}**")
+            st.write(f"Target Years: **{', '.join(display_years)}**")
+            st.write(f"Credits: **{p['max_credits']} pts**")
+            st.write(f"Interests Specified: **{', '.join([a.split(' (')[0] for a in p.get('focus_areas', [])]) if p.get('focus_areas') else 'All'}**")
+            st.metric("Filtered Candidates", len(st.session_state.filtered_courses))
+            
+            if st.button("Reset Filters & Availability", use_container_width=True):
+                st.session_state.intake_done = False
+                st.session_state.messages = []
+                st.session_state.retrieved_course_codes = []
+                st.session_state.selected_schedule = {}
+                st.session_state.schedule_action_log = []
+                st.session_state.timetable_confirmed = False
+                st.session_state.priority_rankings = {}
+                st.session_state.pop("chat_major_years", None)
+                st.session_state.pop("chat_language", None)
+                st.rerun()
 
-    chat_col, timetable_col = st.columns([1.25, 0.95], gap="large")
-
-    with chat_col:
-        st.subheader("Chatbot")
-        with st.container(height=650, border=True):
-            for msg in st.session_state.messages:
-                with st.chat_message(msg["role"]):
-                    content = msg["content"]
-                    if msg["role"] == "assistant":
-                        content = strip_schedule_action_text(content)
-                    st.write(content)
-
-            if not st.session_state.messages:
-                with st.chat_message("assistant"):
-                    st.write(
-                        f"Hello! I have matched **{len(st.session_state.filtered_courses)} system courses** filtering exactly along your desired categories and keywords. "
-                        "Tell me which courses you want to add, remove, or optimize, and I will update the timetable automatically."
-                    )
-
-        if prompt := st.chat_input("Ask to add, remove, optimize, or compare courses..."):
-            st.session_state.messages.append({"role": "user", "content": prompt})
-
-            with st.chat_message("user"):
-                st.write(prompt)
-
-            with st.chat_message("assistant"):
-                with st.spinner("Analyzing targeted data chunks..."):
-                    selected_courses = select_relevant_courses(st.session_state.filtered_courses, prompt)
-                    st.session_state.retrieved_course_codes = list(selected_courses.keys())
-                    system_prompt = build_system_prompt(
-                        p,
-                        selected_courses,
-                        st.session_state.filtered_courses,
-                        st.session_state.selected_schedule,
-                    )
-                    reply = call_llm(system_prompt, st.session_state.messages)
-                    reply = validate_grounding(reply, selected_courses, st.session_state.filtered_courses)
-
-                    actions = extract_schedule_actions(reply)
-                    action_results = []
-                    if actions:
-                        updated_schedule, action_results = apply_schedule_actions(
-                            actions,
-                            st.session_state.selected_schedule,
-                            st.session_state.filtered_courses,
-                        )
-                        st.session_state.selected_schedule = updated_schedule
-                        st.session_state.schedule_action_log.extend(action_results)
-                        st.session_state.timetable_confirmed = False
-                        st.session_state.priority_rankings = {}
-
-                if st.session_state.retrieved_course_codes:
-                    st.caption("Evidence used: " + ", ".join(st.session_state.retrieved_course_codes))
-
-                display_reply = strip_schedule_action_text(reply)
-                if action_results:
-                    display_reply += "\n\nSchedule update:\n" + "\n".join(f"- {result}" for result in action_results)
-                st.write(display_reply)
-
-            st.session_state.messages.append({"role": "assistant", "content": display_reply})
-            st.rerun()
-
-    with timetable_col:
-        with st.container(height=760, border=True):
-            st.subheader("Weekly Timetable")
+        with time_col:
+            st.markdown("### 📅 Weekly Timetable")
             selected_schedule = st.session_state.selected_schedule
             total_credits = schedule_total_credits(selected_schedule)
             st.metric("Total Credits", total_credits)
@@ -549,7 +506,7 @@ else:
                         st.write(f"**{code}** - {course.get('course_name')}")
                         st.caption(f"{course.get('credits', 0)} credits | {course.get('time') or 'Time not listed'}")
             else:
-                st.info("The timetable is empty. Ask the chatbot to add a course.")
+                st.info("The timetable is empty. Ask the assistant to add a course.")
 
             if st.session_state.schedule_action_log:
                 with st.expander("Schedule Action Log"):
@@ -593,3 +550,66 @@ else:
                         else:
                             st.session_state.priority_rankings = ranking_values
                             st.success("Priority ranking saved.")
+
+    # ==========================================
+    # 🌟 MAIN AREA: CHAT INTERFACE
+    # ==========================================
+    st.title("NightHawk AI - Yonsei Course Assistant 🎓")
+    
+    with st.container(height=700, border=False):
+        for msg in st.session_state.messages:
+            with st.chat_message(msg["role"]):
+                content = msg["content"]
+                if msg["role"] == "assistant":
+                    content = strip_schedule_action_text(content)
+                st.write(content)
+
+        if not st.session_state.messages:
+            with st.chat_message("assistant"):
+                st.write(
+                    f"Hello! I have matched **{len(st.session_state.filtered_courses)} system courses** filtering exactly along your desired categories and keywords. "
+                    "Tell me which courses you want to add, remove, or optimize, and I will update the timetable automatically."
+                )
+
+    if prompt := st.chat_input("Ask to add, remove, optimize, or compare courses..."):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+
+        with st.chat_message("user"):
+            st.write(prompt)
+
+        with st.chat_message("assistant"):
+            with st.spinner("Analyzing targeted data chunks..."):
+                selected_courses = select_relevant_courses(st.session_state.filtered_courses, prompt)
+                st.session_state.retrieved_course_codes = list(selected_courses.keys())
+                system_prompt = build_system_prompt(
+                    p,
+                    selected_courses,
+                    st.session_state.filtered_courses,
+                    st.session_state.selected_schedule,
+                )
+                reply = call_llm(system_prompt, st.session_state.messages)
+                reply = validate_grounding(reply, selected_courses, st.session_state.filtered_courses)
+
+                actions = extract_schedule_actions(reply)
+                action_results = []
+                if actions:
+                    updated_schedule, action_results = apply_schedule_actions(
+                        actions,
+                        st.session_state.selected_schedule,
+                        st.session_state.filtered_courses,
+                    )
+                    st.session_state.selected_schedule = updated_schedule
+                    st.session_state.schedule_action_log.extend(action_results)
+                    st.session_state.timetable_confirmed = False
+                    st.session_state.priority_rankings = {}
+
+            if st.session_state.retrieved_course_codes:
+                st.caption("Evidence used: " + ", ".join(st.session_state.retrieved_course_codes))
+
+            display_reply = strip_schedule_action_text(reply)
+            if action_results:
+                display_reply += "\n\nSchedule update:\n" + "\n".join(f"- {result}" for result in action_results)
+            st.write(display_reply)
+
+        st.session_state.messages.append({"role": "assistant", "content": display_reply})
+        st.rerun()
