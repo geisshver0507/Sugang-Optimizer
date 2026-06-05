@@ -371,7 +371,6 @@ else:
         st.write(f"Target Years: **{', '.join(display_years)}**")
         st.write(f"Credits: **{p['max_credits']} pts**")
         st.write(f"Interests Specified: **{', '.join([a.split(' (')[0] for a in p['focus_areas']]) if p['focus_areas'] else 'All'}**")
-        st.write(f"Bidding Capacity: **{p['mileage']} Max Points**")
         st.metric("Filtered Candidates", len(st.session_state.filtered_courses))
         
         if st.button("Reset Filters & Availability"):
