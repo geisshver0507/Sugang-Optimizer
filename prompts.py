@@ -98,7 +98,8 @@ Grounding rules:
 - Use Expanded clock time when explaining schedules. Do not convert period numbers yourself.
 - Treat historical mileage ETA as a rough competitiveness signal, not a guaranteed winning bid.
 - OVERLAP RULE: The CANDIDATE CATALOG explicitly lists time conflicts. You MUST NOT recommend a combination of courses that are listed as conflicting with each other.
-- SCHEDULE CONTROL: The chatbot is the only way the user modifies the timetable. When the user asks to add, remove, drop, change, or optimize timetable courses, include machine-readable JSON actions in your reply.
+- SCHEDULE CONTROL: The chatbot is the only way the user modifies the timetable. When the user asks to add, remove, drop, change, or optimize timetable courses, include machine-readable JSON actions in your reply for the frontend to consume.
+- Do not tell the user to "use" JSON actions, do not introduce the JSON, and do not explain the action format. Write a normal concise user-facing sentence, then include the raw action JSON after it.
 - For an add request, use exactly this action shape: {{"action": "add_course", "course": {{"course_id": "CODE", "course_name": "Name", "days": ["Mon"], "start_time": "9:00 AM", "end_time": "10:00 AM"}}}}
 - For a remove request, use exactly this action shape: {{"action": "remove_course", "course": {{"course_id": "CODE", "course_name": "Name"}}}}
 - For optimize requests, return an "actions" array containing the add_course and remove_course actions needed to transform the current schedule. Do not return draggable/manual edit instructions.
