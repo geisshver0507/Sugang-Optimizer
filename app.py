@@ -1,7 +1,11 @@
 import streamlit as st
 from groq import Groq
-import json
-import os
+
+from course_repository import load_tree_database
+from filters import filter_tree_courses
+from guardrails import recent_conversation, validate_grounding
+from prompts import build_system_prompt
+from retrieval import select_relevant_courses
 
 # import base64
 
@@ -38,96 +42,17 @@ st.set_page_config(page_title="Yonsei Course Assistant", layout="wide")
 # ── 1. Groq client ──────────────────────────────────────────────────────────
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-# ── 2. Optimized Tree Retrieval Engine ───────────────────────────────────────
-def load_tree_database():
-    """Safely loads our newly optimized layered tree structure file."""
-    filename = "segmented_cs_courses.json"
-    if os.path.exists(filename):
-        with open(filename, "r", encoding="utf-8") as f:
-            return json.load(f)
-    else:
-        st.error(f"Missing data tracking asset: '{filename}'. Please run your migration script first.")
-        return {}
-
-def filter_tree_courses(tree_db, prefs):
-    """
-    Traverses the tree branches structurally first, then executes metadata filters
-    to extract matching items while remaining lightweight.
-    """
-    # Step 1: Identify Year Node Branch to prune unnecessary scans
-    year_map = {"2nd": "major_year_2", "3rd": "major_year_3", "4th": "major_year_4"}
-    target_year_key = year_map.get(prefs["major_year"])
-    
-    years_to_scan = [target_year_key] if target_year_key else list(tree_db.keys())
-    
-    # Step 2: Identify Category Node Branches based on checkbox states
-    categories_to_scan = []
-    if prefs["cat_req"]: categories_to_scan.append("major_requirement")
-    if prefs["cat_basic"]: categories_to_scan.append("major_basic")
-    if prefs["cat_elec"]: categories_to_scan.append("major_elective")
-    
-    # Fallback default if zero boxes checked
-    if not categories_to_scan:
-        categories_to_scan = ["major_requirement", "major_basic", "major_elective", "general_elective"]
-
-    matched_results = {}
-
-    # Step 3: Fast Structural Lookup & Secondary Verification
-    for y_key in years_to_scan:
-        if y_key not in tree_db:
-            continue
-        for cat_key in categories_to_scan:
-            if cat_key not in tree_db[y_key]:
-                continue
-            
-            # Scan elements inside this precise folder bucket path
-            for code, course_obj in tree_db[y_key][cat_key].items():
-                meta = course_obj["metadata"]
-                
-                # Dynamic Filter: Language Medium
-                if prefs["language"] != "Any" and meta.get("language_medium") != prefs["language"]:
-                    continue
-                    
-                # Dynamic Filter: Lecture Format Type Mapping
-                if prefs["lecture_type"] != "Both":
-                    # Maps UI 'Offline' to data 'In-person' if needed
-                    match_type = "In-person" if prefs["lecture_type"] == "Offline" else prefs["lecture_type"]
-                    if meta.get("lecture_type") != match_type:
-                        continue
-                        
-                # Dynamic Filter: Course Credits Range
-                if not (prefs["min_credits"] <= meta.get("credits", 0) <= prefs["max_credits"]):
-                    continue
-                    
-                # Dynamic Filter: Focus Keyword Match Lookups
-                if prefs["focus_areas"]:
-                    # Lowercase user inputs by cleaning up the parenthetical explanations
-                    cleaned_user_areas = [area.split(" (")[0].lower() for area in prefs["focus_areas"]]
-                    course_keywords = [k.lower() for k in meta.get("keywords", [])]
-                    
-                    match_found = any(
-                        user_area in course_keywords or any(user_area in kw for kw in course_keywords)
-                        for user_area in cleaned_user_areas
-                    )
-                    if not match_found:
-                        continue
-                
-                # Course passed all evaluations -> Add to selection cache
-                # We save the full block so the chat screen can access the text chunks later
-                matched_results[code] = course_obj
-
-    return matched_results
-
+# ---- 2. LLM bridge ----------------------------------------------------
 def call_llm(system, messages):
     groq_messages = [{"role": "system", "content": system}]
-    for m in messages:
+    for m in recent_conversation(messages):
         groq_messages.append({"role": m["role"], "content": m["content"]})
 
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=groq_messages,
-        max_tokens=1024,
-        temperature=0.3,
+        max_tokens=800,
+        temperature=0.1,
     )
     return response.choices[0].message.content
 
@@ -137,12 +62,17 @@ for key, default in [
     ("messages", []),
     ("filtered_courses", {}),
     ("prefs", {}),
+    ("retrieved_course_codes", []),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
 
 # Load static tree database representation asset
-CS_TREE = load_tree_database()
+try:
+    CS_TREE = load_tree_database()
+except FileNotFoundError as exc:
+    st.error(str(exc))
+    CS_TREE = {}
 
 # ── 4. INTAKE SCREEN ─────────────────────────────────────────────────────────
 if not st.session_state.intake_done:
@@ -375,14 +305,9 @@ if not st.session_state.intake_done:
             # Execute RAG structural pruning lookups
             filtered = filter_tree_courses(CS_TREE, prefs)
 
-            # Fallback if filters match nothing
+            # Do not silently fall back to the full database; that makes the assistant hallucinate.
             if not filtered:
-                st.warning("No precise matches found. Displaying all tree elements to prevent blank states.")
-                # Flattens database for fallback viewing
-                filtered = {}
-                for year in CS_TREE:
-                    for cat in CS_TREE[year]:
-                        filtered.update(CS_TREE[year][cat])
+                st.warning("No courses matched those filters. Please loosen one or more filters to get grounded recommendations.")
 
             st.session_state.filtered_courses = filtered
             st.session_state.prefs = prefs
@@ -406,6 +331,7 @@ else:
         if st.button("← Reset Filters & Availability"):
             st.session_state.intake_done = False
             st.session_state.messages = []
+            st.session_state.retrieved_course_codes = []
             st.rerun()
 
     st.title("🎓 Yonsei Course Assistant")
@@ -422,44 +348,7 @@ else:
             "mileage_historical_eta": m["mileage_historical_eta"]
         }
 
-    # Construct the RAG Payload Context injection for the LLM
-    # Contains the metadata along with the rich, heavy text review chunks
-    rag_context_list = []
-    for code, data in st.session_state.filtered_courses.items():
-        m = data["metadata"]
-        t = data["text_chunks"]
-        chunk = f"""
-        COURSE: {code} - {m['name']}
-        Professor: {m['professor']} | Evaluation: {m['evaluation_type']} | Workload: {m['workload']}
-        Historical Competitive Bids (ETA): {m['mileage_historical_eta']} points
-        Syllabus Context: {t['grading_and_syllabus']}
-        Student Feedback Reviews: {t['student_reviews']}
-        ---
-        """
-        rag_context_list.append(chunk)
-    
-    llm_rag_payload = "\n".join(rag_context_list)
-
-    system_prompt = f"""
-You are an expert Yonsei University course registration advisor assisting a computer science student with allocating mileage pool points strategically based on historic enrollment pressure profiles.
-
-Trust and evidence rules:
-- Use only the retrieved course data below. Do not invent prerequisites, professors, schedules, reviews, or mileage cutoffs.
-- If the retrieved data is missing or weak, say that clearly and give a cautious recommendation.
-- Treat Historical Competitive Bids (ETA) as an evidence signal, not a guaranteed admission threshold.
-- Separate facts from recommendations. Explain the reason for every recommended bid or course choice.
-- If the user asks for exact enrollment certainty, refuse certainty and provide a risk estimate instead.
-
-Student Profile & Targets:
-- Major Year Preference Tier: {p['major_year']}
-- Target Credit Windows: {p['min_credits']} to {p['max_credits']} Total Units
-- Available Mileage Capital: {p['mileage']} Points
-
-Evaluate historical competition indexes shown within 'Historical Competitive Bids (ETA)' keys to build specific advice. Flag both overbidding trends and underbidding edge conditions dynamically.
-
-Courses matching the customized parameters (RAG Context Injection Chunks):
-{llm_rag_payload}
-"""
+    # Course evidence is retrieved per user turn below, so the model sees only relevant data.
 
     # Render history
     for msg in st.session_state.messages:
@@ -481,7 +370,13 @@ Courses matching the customized parameters (RAG Context Injection Chunks):
 
         with st.chat_message("assistant"):
             with st.spinner("Analyzing targeted data chunks..."):
+                selected_courses = select_relevant_courses(st.session_state.filtered_courses, prompt)
+                st.session_state.retrieved_course_codes = list(selected_courses.keys())
+                system_prompt = build_system_prompt(p, selected_courses, st.session_state.filtered_courses)
                 reply = call_llm(system_prompt, st.session_state.messages)
+                reply = validate_grounding(reply, selected_courses, st.session_state.filtered_courses)
+            if st.session_state.retrieved_course_codes:
+                st.caption("Evidence used: " + ", ".join(st.session_state.retrieved_course_codes))
             st.write(reply)
 
         st.session_state.messages.append({"role": "assistant", "content": reply})
