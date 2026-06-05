@@ -1,7 +1,6 @@
 """Prompt construction for the grounded course assistant."""
 
-from course_utils import clean_focus_area, clip_text, expand_course_time, format_field
-
+from course_utils import clean_focus_area, clip_text, expand_course_time, format_field, extract_time_slots
 
 def display_major_years(prefs):
     selected_years = prefs.get("major_years")
@@ -13,13 +12,31 @@ def display_major_years(prefs):
 def build_candidate_catalog(filtered_courses):
     if not filtered_courses:
         return "No courses matched the active filters."
+        
+    # Step 1: Pre-calculate the time slot sets for every filtered course
+    course_slots = {}
+    for code, data in filtered_courses.items():
+        course_slots[code] = extract_time_slots(data.get("metadata", {}).get("time"))
+
+    # Step 2: Build the rows with explicit conflict warnings
     rows = []
     for code, data in filtered_courses.items():
         meta = data.get("metadata", {})
+        slots_a = course_slots[code]
+
+        # Find overlapping courses
+        conflicts = []
+        for other_code, slots_b in course_slots.items():
+            # If the sets intersect, there is a time conflict
+            if code != other_code and (slots_a & slots_b):
+                conflicts.append(other_code)
+
+        conflict_str = f" | CONFLICTS WITH: {', '.join(conflicts)}" if conflicts else " | CONFLICTS WITH: None"
+
         rows.append(
             f"{code}: {format_field(meta.get('name'))} | {format_field(meta.get('professor'))} | "
             f"{format_field(meta.get('credits'))} credits | raw time: {format_field(meta.get('time'))} | "
-            f"expanded time: {expand_course_time(meta.get('time'))}"
+            f"expanded time: {expand_course_time(meta.get('time'))}{conflict_str}"
         )
     return "\n".join(rows)
 
@@ -68,6 +85,7 @@ Grounding rules:
 - Never invent professors, prerequisites, schedules, reviews, grading policies, locations, mileage cutoffs, or enrollment certainty.
 - Use Expanded clock time when explaining schedules. Do not convert period numbers yourself.
 - Treat historical mileage ETA as a rough competitiveness signal, not a guaranteed winning bid.
+- OVERLAP RULE: The CANDIDATE CATALOG explicitly lists time conflicts. You MUST NOT recommend a combination of courses that are listed as conflicting with each other.
 - If evidence is missing, say "Not listed in the retrieved data" instead of guessing.
 - If the user asks about a course outside the active filters, say it is not in the current filtered candidate set and suggest adjusting filters.
 - When recommending courses, name each course as "CODE - Name" and explain Fit, Evidence, and Caveat.
@@ -87,3 +105,4 @@ CANDIDATE CATALOG:
 COURSE EVIDENCE RETRIEVED FOR THIS TURN:
 {format_course_context(selected_courses)}
 """
+

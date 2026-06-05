@@ -21,6 +21,20 @@ PERIOD_TIME_RANGES = {
 
 DAY_PATTERN = re.compile(r"\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b\s*([^A-Za-z]*)")
 
+def extract_time_slots(time_value):
+    """Extracts a set of specific day-period slots for overlap comparison."""
+    raw_time = str(time_value or "").strip()
+    if not raw_time:
+        return set()
+
+    slots = set()
+    # This existing regex handles both your old "Thu 2,3" and new "Thu 2, Thu 3" formats perfectly
+    for day, period_text in DAY_PATTERN.findall(raw_time):
+        periods = [int(value) for value in re.findall(r"\d+", period_text)]
+        for period in periods:
+            slots.add(f"{day} {period}")
+            
+    return slots
 
 def normalize_text(value):
     if value is None:
