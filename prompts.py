@@ -43,6 +43,7 @@ Lecture type: {format_field(meta.get('lecture_type'))}
 Credits: {format_field(meta.get('credits'))}
 Raw database time/location: {raw_time} / {format_field(meta.get('location'))}
 Expanded clock time: {expanded_time}
+Course type: {format_field(meta.get('course_type'))}
 Evaluation: {format_field(meta.get('evaluation_type'))}
 Workload/difficulty: {format_field(meta.get('workload'))} / {format_field(meta.get('difficulty'))}
 Prerequisites: {format_field(meta.get('prerequisites'))}
