@@ -507,6 +507,13 @@ else:
                             list(range(1, course_count + 1)),
                             key=f"priority_{code}",
                         )
+                    submitted_rankings = st.form_submit_button("Save Priority Ranking", use_container_width=True)
+                    if submitted_rankings:
+                        if len(set(ranking_values.values())) != course_count:
+                            st.warning("Each course needs a unique priority number.")
+                        else:
+                            st.session_state.priority_rankings = ranking_values
+                            st.success("Priority ranking saved.")
 
         with time_col:
             st.markdown("### 📅 Weekly Timetable")
