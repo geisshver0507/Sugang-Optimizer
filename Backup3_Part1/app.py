@@ -18,7 +18,7 @@ from schedule_utils import (
 # import base64
 
 # ── 0. Page config (must be first Streamlit call) ───────────────────────────
-st.set_page_config(page_title="NightHawk AI - Yonsei Course Assistant", layout="wide")
+st.set_page_config(page_title="Yonsei Course Assistant", layout="wide")
 
 # def set_background(image_file):
 #     """Encodes a local image and injects it as the Streamlit app background."""
@@ -247,50 +247,6 @@ def render_weekly_timetable(schedule):
     </div>
     """
     st.components.v1.html(timetable_html, height=grid_height + 48, scrolling=False)
-
-
-def strip_schedule_action_text(reply):
-    """Hide machine-readable schedule actions from the visible chat transcript."""
-    if not reply:
-        return ""
-
-    visible_lines = []
-    skipping_actions = False
-    action_triggers = (
-        "json action",
-        "json actions",
-        "following action",
-        "following actions",
-        "schedule_actions",
-        '"action"',
-        "'action'",
-    )
-    resume_prefixes = (
-        "grounding note:",
-        "grounding check:",
-        "schedule update:",
-    )
-
-    for line in str(reply).splitlines():
-        stripped = line.strip()
-        lowered = stripped.lower()
-
-        if skipping_actions:
-            if any(lowered.startswith(prefix) for prefix in resume_prefixes):
-                skipping_actions = False
-                visible_lines.append(line)
-            continue
-
-        if any(trigger in lowered for trigger in action_triggers) or stripped in ("[", "]", "{", "}"):
-            skipping_actions = True
-            continue
-
-        visible_lines.append(line)
-
-    cleaned = "\n".join(visible_lines).strip()
-    if not cleaned:
-        return "I updated the timetable based on your request."
-    return cleaned
 
 # ── 4. INTAKE SCREEN ─────────────────────────────────────────────────────────
 if not st.session_state.intake_done:
@@ -602,26 +558,21 @@ else:
             st.session_state.pop("chat_language", None)
             st.rerun()
 
-    st.title("NightHawk AI - Yonsei Course Assistant🎓")
+    st.title("🎓 Yonsei Course Assistant")
 
     chat_col, timetable_col = st.columns([1.25, 0.95], gap="large")
 
     with chat_col:
-        st.subheader("Chatbot")
-        with st.container(height=650, border=True):
-            for msg in st.session_state.messages:
-                with st.chat_message(msg["role"]):
-                    content = msg["content"]
-                    if msg["role"] == "assistant":
-                        content = strip_schedule_action_text(content)
-                    st.write(content)
+        for msg in st.session_state.messages:
+            with st.chat_message(msg["role"]):
+                st.write(msg["content"])
 
-            if not st.session_state.messages:
-                with st.chat_message("assistant"):
-                    st.write(
-                        f"Hello! I have matched **{len(st.session_state.filtered_courses)} system courses** filtering exactly along your desired categories and keywords. "
-                        "Tell me which courses you want to add, remove, or optimize, and I will update the timetable automatically."
-                    )
+        if not st.session_state.messages:
+            with st.chat_message("assistant"):
+                st.write(
+                    f"Hello! I have matched **{len(st.session_state.filtered_courses)} system courses** filtering exactly along your desired categories and keywords. "
+                    "Tell me which courses you want to add, remove, or optimize, and I will update the timetable automatically."
+                )
 
         if prompt := st.chat_input("Ask to add, remove, optimize, or compare courses..."):
             st.session_state.messages.append({"role": "user", "content": prompt})
@@ -658,7 +609,7 @@ else:
                 if st.session_state.retrieved_course_codes:
                     st.caption("Evidence used: " + ", ".join(st.session_state.retrieved_course_codes))
 
-                display_reply = strip_schedule_action_text(reply)
+                display_reply = reply
                 if action_results:
                     display_reply += "\n\nSchedule update:\n" + "\n".join(f"- {result}" for result in action_results)
                 st.write(display_reply)
@@ -667,60 +618,59 @@ else:
             st.rerun()
 
     with timetable_col:
-        with st.container(height=760, border=True):
-            st.subheader("Weekly Timetable")
-            selected_schedule = st.session_state.selected_schedule
-            total_credits = schedule_total_credits(selected_schedule)
-            st.metric("Total Credits", total_credits)
-            render_weekly_timetable(selected_schedule)
+        st.subheader("Weekly Timetable")
+        selected_schedule = st.session_state.selected_schedule
+        total_credits = schedule_total_credits(selected_schedule)
+        st.metric("Total Credits", total_credits)
+        render_weekly_timetable(selected_schedule)
 
-            if selected_schedule:
-                with st.expander("Selected Courses", expanded=True):
-                    for code, course in selected_schedule.items():
-                        st.write(f"**{code}** - {course.get('course_name')}")
-                        st.caption(f"{course.get('credits', 0)} credits | {course.get('time') or 'Time not listed'}")
-            else:
-                st.info("The timetable is empty. Ask the chatbot to add a course.")
+        if selected_schedule:
+            with st.expander("Selected Courses", expanded=True):
+                for code, course in selected_schedule.items():
+                    st.write(f"**{code}** - {course.get('course_name')}")
+                    st.caption(f"{course.get('credits', 0)} credits | {course.get('time') or 'Time not listed'}")
+        else:
+            st.info("The timetable is empty. Ask the chatbot to add a course.")
 
-            if st.session_state.schedule_action_log:
-                with st.expander("Schedule Action Log"):
-                    for item in st.session_state.schedule_action_log[-8:]:
-                        st.write(item)
+        if st.session_state.schedule_action_log:
+            with st.expander("Schedule Action Log"):
+                for item in st.session_state.schedule_action_log[-8:]:
+                    st.write(item)
 
-            if st.button("Confirm Timetable", disabled=not selected_schedule, use_container_width=True):
-                final_list = course_summary_for_prompt(selected_schedule)
-                confirmation_prompt = (
-                    "The user has confirmed this timetable. Ask the user to rank the selected courses "
-                    "from 1 to N, where 1 is highest priority and N is lowest priority. "
-                    "Here is the final selected course list:\n"
-                    f"{final_list}"
-                )
-                llm_messages = st.session_state.messages + [{"role": "user", "content": confirmation_prompt}]
-                ranking_reply = call_llm(
-                    "You are NightHawk AI. The timetable is confirmed. Ask for priority rankings only; do not add or remove courses.",
-                    llm_messages,
-                )
-                st.session_state.messages.append({"role": "user", "content": "Confirmed timetable."})
-                st.session_state.messages.append({"role": "assistant", "content": strip_schedule_action_text(ranking_reply)})
-                st.session_state.timetable_confirmed = True
-                st.rerun()
+        if st.button("Confirm Timetable", disabled=not selected_schedule, use_container_width=True):
+            final_list = course_summary_for_prompt(selected_schedule)
+            confirmation_prompt = (
+                "The user has confirmed this timetable. Ask the user to rank the selected courses "
+                "from 1 to N, where 1 is highest priority and N is lowest priority. "
+                "Here is the final selected course list:\n"
+                f"{final_list}"
+            )
+            llm_messages = st.session_state.messages + [{"role": "user", "content": confirmation_prompt}]
+            ranking_reply = call_llm(
+                "You are NightHawk AI. The timetable is confirmed. Ask for priority rankings only; do not add or remove courses.",
+                llm_messages,
+            )
+            st.session_state.messages.append({"role": "user", "content": "Confirmed timetable."})
+            st.session_state.messages.append({"role": "assistant", "content": ranking_reply})
+            st.session_state.timetable_confirmed = True
+            st.rerun()
 
-            if st.session_state.timetable_confirmed and selected_schedule:
-                st.markdown("### Priority Ranking")
-                course_count = len(selected_schedule)
-                with st.form("priority_ranking_form"):
-                    ranking_values = {}
-                    for code, course in selected_schedule.items():
-                        label = f"{code} - {course.get('course_name')}"
-                        ranking_values[code] = st.selectbox(
-                            label,
-                            list(range(1, course_count + 1)),
-                            key=f"priority_{code}",
-                        )
-                    submitted_rankings = st.form_submit_button("Save Priority Ranking", use_container_width=True)
-                    if submitted_rankings:
-                        if len(set(ranking_values.values())) != course_count:
-                            st.warning("Each course needs a unique priority number.")
-                        else:
-                            st.session_state.priority_rankings = ranking_values
-                            st.success("Priority ranking saved.")
+        if st.session_state.timetable_confirmed and selected_schedule:
+            st.markdown("### Priority Ranking")
+            course_count = len(selected_schedule)
+            with st.form("priority_ranking_form"):
+                ranking_values = {}
+                for code, course in selected_schedule.items():
+                    label = f"{code} - {course.get('course_name')}"
+                    ranking_values[code] = st.selectbox(
+                        label,
+                        list(range(1, course_count + 1)),
+                        key=f"priority_{code}",
+                    )
+                submitted_rankings = st.form_submit_button("Save Priority Ranking", use_container_width=True)
+                if submitted_rankings:
+                    if len(set(ranking_values.values())) != course_count:
+                        st.warning("Each course needs a unique priority number.")
+                    else:
+                        st.session_state.priority_rankings = ranking_values
+                        st.success("Priority ranking saved.")

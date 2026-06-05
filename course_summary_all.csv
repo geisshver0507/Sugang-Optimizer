@@ -1,3 +1,5 @@
 ﻿course_code_portal,course_name_portal,professor,lecture_time,classroom,capacity,major_quota,total_applicants,avg_mileage,course_code,course_name,year,semester
-MAT2013-03-00,확률통계,최창열,"월4,5,목10",공D408,55.0,55.0,28.0,8.89,MAT2013-03-00,확률통계학 (Probability and Statistics),2023,2
-MAT2011-03-00,선형대수와그응용,김현정,"월1,2,3",공학원170E,80.0,80.0,47.0,4.47,MAT2011-03-00,선형대수와그응용 (Linear Algebra and Its Applications),2023,2
+MAT2013-03-00,확률통계,최창열,"월7,8,수8",공학원170E,80.0,80.0,104.0,11.51,MAT2013-03-00,확률통계학 (Probability and Statistics),2026,1
+MAT2013-04-00,확률통계,김현정,"금1,2,3",공D408,80.0,80.0,52.0,3.81,MAT2013-04-00,확률통계학 (Probability and Statistics),2026,1
+MAT2011-03-00,선형대수와그응용,최창열,"월9,10,수10",공학원170E,80.0,80.0,151.0,16.84,MAT2011-03-00,선형대수와그응용 (Linear Algebra and Its Applications),2026,1
+CAS4151-01-00,SW·AI비즈니스응용설계,김현수,"수5/금5,6",공A343/공D507,30.0,24.0,36.0,11.36,CAS4151-01-00,SW-AI비즈니스응용설계 (SW-AI Business Application Design),2026,1
