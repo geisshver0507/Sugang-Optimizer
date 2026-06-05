@@ -478,8 +478,10 @@ else:
             st.write(f"Format: **{p['lecture_type']}**")
             st.write(f"Target Years: **{', '.join(display_years)}**")
             st.write(f"Credits: **{p['max_credits']} pts**")
-            st.write(f"Interests Specified: **{', '.join([a.split(' (')[0] for a in p.get('focus_areas', [])]) if p.get('focus_areas') else 'All'}**")
             st.metric("Filtered Candidates", len(st.session_state.filtered_courses))
+            selected_schedule = st.session_state.selected_schedule
+            total_credits = schedule_total_credits(selected_schedule)
+            st.metric("Total Credits", total_credits)
             
             if st.button("Reset Filters & Availability", use_container_width=True):
                 st.session_state.intake_done = False
@@ -495,11 +497,8 @@ else:
 
         with time_col:
             st.markdown("### 📅 Weekly Timetable")
-            selected_schedule = st.session_state.selected_schedule
-            total_credits = schedule_total_credits(selected_schedule)
-            st.metric("Total Credits", total_credits)
             render_weekly_timetable(selected_schedule)
-
+            
             if selected_schedule:
                 with st.expander("Selected Courses", expanded=True):
                     for code, course in selected_schedule.items():
