@@ -324,9 +324,9 @@
           "alternative_professor_reviews": ""
         }
       },
-      "MAT2013-03-00": {
+      "MAT2013-03": {
         "metadata": {
-          "name": "확률통계학 (Probability and Statistics)",
+          "name": "확률통계학 (PROBABILITY AND STATISTICS)",
           "professor": "최장열 (Jangyeol Choi)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
@@ -357,9 +357,9 @@
           "alternative_professor_reviews": ""
         }
       },
-      "MAT2013-04-00": {
+      "MAT2013-04": {
         "metadata": {
-          "name": "확률통계학 (Probability and Statistics)",
+          "name": "확률통계학 (PROBABILITY AND STATISTICS)",
           "professor": "김현정 (Hyunjung Kim)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
@@ -390,9 +390,9 @@
           "alternative_professor_reviews": ""
         }
       },
-      "MAT2011-03-00": {
+      "MAT2011-03": {
         "metadata": {
-          "name": "선형대수와그응용 (Linear Algebra and Its Applications)",
+          "name": "선형대수와그응용 (LINEAR ALGEBRA AND ITS APPLICATIONS)",
           "professor": "최장열 (Jangyeol Choi)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
@@ -494,9 +494,9 @@
           "alternative_professor_reviews": ""
         }
       },
-      "MAT2013-03-00": {
+      "MAT2013-03": {
         "metadata": {
-          "name": "확률통계학 (Probability and Statistics)",
+          "name": "확률통계학 (PROBABILITY AND STATISTICS)",
           "professor": "최장열 (Jangyeol Choi)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
@@ -527,9 +527,9 @@
           "alternative_professor_reviews": ""
         }
       },
-      "MAT2013-04-00": {
+      "MAT2013-04": {
         "metadata": {
-          "name": "확률통계학 (Probability and Statistics)",
+          "name": "확률통계학 (PROBABILITY AND STATISTICS)",
           "professor": "김현정 (Hyunjung Kim)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
@@ -560,9 +560,9 @@
           "alternative_professor_reviews": ""
         }
       },
-      "MAT2011-03-00": {
+      "MAT2011-03": {
         "metadata": {
-          "name": "선형대수와그응용 (Linear Algebra and Its Applications)",
+          "name": "선형대수와그응용 (LINEAR ALGEBRA AND ITS APPLICATIONS)",
           "professor": "최장열 (Jangyeol Choi)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
@@ -742,7 +742,7 @@
       },
       "CAS3102-02": {
         "metadata": {
-          "name": "Architecture of Computers",
+          "name": "컴퓨터아키텍쳐 (ARCHITECTURE OF COMPUTERS)",
           "professor": "Park Kwanghyun",
           "language_medium": "English",
           "lecture_type": "Offline",
@@ -772,7 +772,7 @@
     "major_elective": {
       "CAS3109-01": {
         "metadata": {
-          "name": "Automata and Formal Languages",
+          "name": "AUTOMATA AND FORMAL LANGUAGES",
           "professor": "Han Yo-Sub",
           "language_medium": "English",
           "lecture_type": "Offline",
@@ -800,7 +800,7 @@
       },
       "CAS3116-01": {
         "metadata": {
-          "name": "Computer Vision",
+          "name": "COMPUTER VISION",
           "professor": "Kim Seon Joo",
           "language_medium": "English",
           "lecture_type": "Offline",
@@ -832,7 +832,7 @@
       },
       "CAS3120-01": {
         "metadata": {
-          "name": "Machine Learning",
+          "name": "MACHINE LEARNING",
           "professor": "Lee Dongha",
           "language_medium": "English",
           "lecture_type": "Offline",
@@ -864,7 +864,7 @@
       },
       "CAS3120-02": {
         "metadata": {
-          "name": "Machine Learning",
+          "name": "MACHINE LEARNING",
           "professor": "Jeon Hae-Gon",
           "language_medium": "English",
           "lecture_type": "Offline",
@@ -896,7 +896,7 @@
       },
       "CAS3205-01": {
         "metadata": {
-          "name": "Computer Graphics",
+          "name": "COMPUTER GRAPHICS",
           "professor": "Lee In Kwon",
           "language_medium": "Korean",
           "lecture_type": "On-Off Blended (Video Recorded)",
@@ -929,7 +929,7 @@
       },
       "CAS3208-01": {
         "metadata": {
-          "name": "Artificial Intelligence",
+          "name": "ARTIFICIAL INTELLIGENCE",
           "professor": "CHO Sung-Bae",
           "language_medium": "Korean",
           "lecture_type": "On-Off Blended (Pre-recorded & Offline)",
@@ -969,7 +969,7 @@
       },
       "CAS3301-01": {
         "metadata": {
-          "name": "Natural Language Processing",
+          "name": "NATURAL LANGUAGE PROCESSING",
           "professor": "Yeo Jinyoung",
           "language_medium": "Korean",
           "lecture_type": "Offline",
@@ -1009,7 +1009,7 @@
       },
       "CAS3400-01": {
         "metadata": {
-          "name": "AI Systems",
+          "name": "AI SYSTEMS",
           "professor": "Han Dong-Jun",
           "language_medium": "English",
           "lecture_type": "Offline",
@@ -1052,9 +1052,9 @@
   },
   "major_year_4": {
     "major_requirement": {
-      "CAS4102-01-00": {
+      "CAS4102-01": {
         "metadata": {
-          "name": "인공지능종합설계 (AI Capstone Design)",
+          "name": "인공지능종합설계 (AI CAPSTONE DESIGN)",
           "professor": "이봉신 (Bongshin Lee)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
@@ -1083,7 +1083,7 @@
       },
       "CAS4101-01": {
         "metadata": {
-          "name": "Computer Capstone Design",
+          "name": "COMPUTER CAPSTONE DESIGN",
           "professor": "Han Seungjae",
           "language_medium": "Korean",
           "lecture_type": "Offline",
@@ -1119,9 +1119,9 @@
       }
     },
     "major_elective": {
-      "CAS4108-01-00": {
+      "CAS4108-01": {
         "metadata": {
-          "name": "데이터프라이버시학 (Data Privacy)",
+          "name": "데이터프라이버시학 (DATA PRIVACY)",
           "professor": "노일버트 (Albert No)",
           "language_medium": "English",
           "lecture_type": "In-person",
@@ -1155,9 +1155,9 @@
           "alternative_professor_reviews": ""
         }
       },
-      "CAS4109-01-00": {
+      "CAS4109-01": {
         "metadata": {
-          "name": "컴퓨터보안학 (Computer Security)",
+          "name": "컴퓨터보안학 (COMPUTER SECURITY)",
           "professor": "송도경 (Dokyung Song)",
           "language_medium": "English",
           "lecture_type": "On-Off Blended (Flipped Classroom)",
@@ -1191,9 +1191,9 @@
           "alternative_professor_reviews": "lots of assignments with high technical difficulty but class content is interesting, professor mostly just reads through powerpoint slides, professor pronunciation is spot on, gives good grades"
         }
       },
-      "CAS4119-01-00": {
+      "CAS4119-01": {
         "metadata": {
-          "name": "멀티코어및GPU프로그래밍 (Multi-core and GPU Programming)",
+          "name": "멀티코어및GPU프로그래밍 (MULTICORE AND GPU PROGRAMMING)",
           "professor": "박영준 (Yongjun Park)",
           "language_medium": "English",
           "lecture_type": "In-person",
@@ -1228,9 +1228,9 @@
           "alternative_professor_reviews": ""
         }
       },
-      "CAS4127-01-00": {
+      "CAS4127-01": {
         "metadata": {
-          "name": "인간-인공지능상호작용학 (Human-AI Interaction)",
+          "name": "인간-인공지능상호작용학 (HUMAN-AI INTERACTION)",
           "professor": "김대현 (Daehyun Kim)",
           "language_medium": "English",
           "lecture_type": "In-person",
@@ -1260,9 +1260,9 @@
           "alternative_professor_reviews": "very generous with grades, passionate teaching, open and adaptive to course feedback from students, professor is good at answering questions"
         }
       },
-      "CAS4133-01-00": {
+      "CAS4133-01": {
         "metadata": {
-          "name": "거대언어모델학 (Large Language Models)",
+          "name": "거대언어모델학 (LARGE LANGUAGE MODELS)",
           "professor": "김재형 (Jaehyung Kim)",
           "language_medium": "English",
           "lecture_type": "In-person",
@@ -1297,9 +1297,9 @@
           "alternative_professor_reviews": ""
         }
       },
-      "CAS4150-01-00": {
+      "CAS4150-01": {
         "metadata": {
-          "name": "데이터시각화입문 (Introduction to Data Visualization)",
+          "name": "데이터시각화입문 (INTRODUCTION TO DATA VISUALISATION)",
           "professor": "강민석 (Minsuk Kang)",
           "language_medium": "English",
           "lecture_type": "In-person",
@@ -1333,9 +1333,9 @@
           "alternative_professor_reviews": ""
         }
       },
-      "CAS4151-01-00": {
+      "CAS4151-01": {
         "metadata": {
-          "name": "SW-AI비즈니스응용설계 (SW-AI Business Application Design)",
+          "name": "SW-AI비즈니스응용설계 (SW-AI BUSINESS APPLICATION DESIGN)",
           "professor": "김현수 (Hyunsoo Kim)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
@@ -1368,9 +1368,9 @@
           "alternative_professor_reviews": ""
         }
       },
-      "CAS4160-01-00": {
+      "CAS4160-01": {
         "metadata": {
-          "name": "강화학습 (Reinforcement Learning)",
+          "name": "강화학습 (REINFORCEMENT LEARNING)",
           "professor": "이영운 (Youngwoon Lee)",
           "language_medium": "English",
           "lecture_type": "In-person",
@@ -1407,7 +1407,7 @@
           "alternative_professor_reviews": ""
         }
       },
-      "CAS4131-01-00": {
+      "CAS4131-01": {
         "metadata": {
           "name": "커넥티드플랫폼이론과실제 (THEORY AND PRACTICE OF CONNECTED PLATFORM)",
           "professor": "이경우 (Kyoungwoo Lee)",
