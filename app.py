@@ -369,7 +369,7 @@ else:
         st.write(f"Language: **{p['language']}**")
         st.write(f"Format: **{p['lecture_type']}**")
         st.write(f"Target Years: **{', '.join(display_years)}**")
-        st.write(f"Allowed Credits: **{p['min_credits']} - {p['max_credits']} pts**")
+        st.write(f"Credits: **{p['max_credits']} pts**")
         st.write(f"Interests Specified: **{', '.join([a.split(' (')[0] for a in p['focus_areas']]) if p['focus_areas'] else 'All'}**")
         st.write(f"Bidding Capacity: **{p['mileage']} Max Points**")
         st.metric("Filtered Candidates", len(st.session_state.filtered_courses))

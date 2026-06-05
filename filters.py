@@ -123,7 +123,7 @@ def filter_tree_courses(tree_db, prefs):
                     continue
                 if not lecture_type_matches(prefs["lecture_type"], meta.get("lecture_type")):
                     continue
-                if not (prefs["min_credits"] <= meta.get("credits", 0) <= prefs["max_credits"]):
+                if not (meta.get("credits", 0) <= prefs["max_credits"]):
                     continue
                 if not focus_matches(prefs["focus_areas"], course_obj):
                     continue
