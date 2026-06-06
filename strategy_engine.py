@@ -129,9 +129,14 @@ def format_strategy_for_chat(results: list) -> str:
 
     lines = [
         "## 🎯 Recommended Mileage Strategy\n",
-        f"**Total: {total}/{TOTAL_MILEAGE} pts used**  "
+        f"**Total suggested: {total}/{TOTAL_MILEAGE} pts**  "
         f"*(max {MAX_BID_PER_COURSE}pts per course)*\n",
     ]
+    if total > TOTAL_MILEAGE:
+        lines.append(
+            f"Warning: these per-course secure bids exceed the {TOTAL_MILEAGE} point semester budget. "
+            "Drop or reprioritize lower-ranked courses before final submission.\n"
+        )
 
     for r in results:
         e = EMOJI.get(r.risk_level, "⚪")
@@ -144,7 +149,12 @@ def format_strategy_for_chat(results: list) -> str:
             lines.append(f"   > {r.note}")
 
         # Top 2 SHAP drivers
-        top = sorted(r.shap_breakdown.items(),
+        numeric_breakdown = {
+            key: value
+            for key, value in r.shap_breakdown.items()
+            if isinstance(value, (int, float))
+        }
+        top = sorted(numeric_breakdown.items(),
                      key=lambda x: abs(x[1]), reverse=True)[:2]
         if top:
             drivers = "  |  ".join(

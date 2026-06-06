@@ -158,17 +158,6 @@ def _weighted_median(values: Iterable[float], weights: Iterable[float]) -> float
     order = np.argsort(v)
     v = v[order]
     w = w[order]
-    if target_mode == "average_mileage":
-        for column in (
-            "average_mileage",
-            "avg_all_bids",
-            "avg_winning_bid",
-            "major_quota_threshold",
-            "winning_threshold",
-        ):
-            if column in df.columns:
-                return df[column]
-        raise ValueError("No usable average mileage target column found")
     cutoff = w.sum() / 2.0
     return float(v[np.searchsorted(np.cumsum(w), cutoff, side="left")])
 
@@ -182,6 +171,17 @@ def _clean_target(series: pd.Series) -> pd.Series:
 
 
 def _choose_base_target(df: pd.DataFrame, target_mode: str) -> pd.Series:
+    if target_mode == "average_mileage":
+        for column in (
+            "average_mileage",
+            "avg_all_bids",
+            "avg_winning_bid",
+            "major_quota_threshold",
+            "winning_threshold",
+        ):
+            if column in df.columns:
+                return df[column]
+        raise ValueError("No usable average mileage target column found")
     if target_mode == "winning_threshold":
         if "winning_threshold" not in df.columns:
             raise ValueError("winning_threshold column is missing")
@@ -199,18 +199,26 @@ def _choose_base_target(df: pd.DataFrame, target_mode: str) -> pd.Series:
     raise ValueError(f"Unknown target mode: {target_mode}")
 
 
+def _numeric_column(df: pd.DataFrame, column: str, default: float) -> pd.Series:
+    if column in df.columns:
+        values = pd.to_numeric(df[column], errors="coerce")
+    else:
+        values = pd.Series(default, index=df.index, dtype=float)
+    return values.fillna(default)
+
+
 def _expand_student_year_targets(df: pd.DataFrame, target_mode: str) -> pd.DataFrame:
     """Create one row per student year when threshold_yr1..4 are available."""
     if target_mode != "by_year":
         out = df.copy()
-        out["student_year"] = pd.to_numeric(out.get("student_year", 3.0), errors="coerce").fillna(3.0)
+        out["student_year"] = _numeric_column(out, "student_year", 3.0)
         out["target_raw"] = _choose_base_target(out, target_mode)
         return out
 
     year_cols = [f"threshold_yr{i}" for i in range(1, 5)]
     if not all(c in df.columns for c in year_cols):
         out = df.copy()
-        out["student_year"] = pd.to_numeric(out.get("student_year", 3.0), errors="coerce").fillna(3.0)
+        out["student_year"] = _numeric_column(out, "student_year", 3.0)
         out["target_raw"] = _choose_base_target(out, "major_quota_threshold")
         return out
 
@@ -247,8 +255,8 @@ def _prepare_frame(
     df["course_code"] = df["course_code"].astype(str)
     df["base_code"] = df.get("base_code", df["course_code"].map(_base_code)).fillna("").astype(str)
     df["professor_norm"] = df.get("professor_norm", df.get("professor", "")).map(_norm_prof)
-    df["semester"] = pd.to_numeric(df.get("semester", 1), errors="coerce").fillna(1).astype(int)
-    df["year"] = pd.to_numeric(df.get("year", 0), errors="coerce").fillna(0).astype(int)
+    df["semester"] = _numeric_column(df, "semester", 1.0).astype(int)
+    df["year"] = _numeric_column(df, "year", 0.0).astype(int)
     df["semester_index"] = [_semester_index(y, s) for y, s in zip(df["year"], df["semester"])]
     max_idx = int(max_semester_index or df["semester_index"].max())
     df["recency_age"] = (max_idx - df["semester_index"]).clip(lower=0)
@@ -279,19 +287,19 @@ def _prepare_frame(
 
     if "num_applied" in expanded.columns:
         applied = pd.to_numeric(expanded["num_applied"], errors="coerce").fillna(0.0)
-        expanded["demand_proxy"] = applied.where(applied > 0, pd.to_numeric(expanded.get("eta_added", 0.0), errors="coerce").fillna(0.0))
-        safe_capacity = pd.to_numeric(expanded.get("max_capacity", 0.0), errors="coerce").fillna(0.0).where(lambda s: s > 0, 1.0)
+        expanded["demand_proxy"] = applied.where(applied > 0, _numeric_column(expanded, "eta_added", 0.0))
+        safe_capacity = _numeric_column(expanded, "max_capacity", 0.0).where(lambda s: s > 0, 1.0)
         expanded["demand_capacity_ratio"] = (expanded["demand_proxy"] / safe_capacity).clip(lower=0.0, upper=8.0)
 
     for col in BASE_FEATURE_COLS:
         if col not in expanded.columns:
             expanded[col] = 0.0
-    expanded["num_courses_wanted"] = pd.to_numeric(expanded.get("num_courses_wanted", 5.0), errors="coerce").fillna(5.0)
-    expanded["rank_in_list"] = pd.to_numeric(expanded.get("rank_in_list", 1.0), errors="coerce").fillna(1.0)
-    expanded["priority_ratio"] = pd.to_numeric(expanded.get("priority_ratio", 1.0), errors="coerce").fillna(1.0)
+    expanded["num_courses_wanted"] = _numeric_column(expanded, "num_courses_wanted", 5.0)
+    expanded["rank_in_list"] = _numeric_column(expanded, "rank_in_list", 1.0)
+    expanded["priority_ratio"] = _numeric_column(expanded, "priority_ratio", 1.0)
 
     for col in ML_FEATURE_COLS:
-        expanded[col] = pd.to_numeric(expanded.get(col, 0.0), errors="coerce").fillna(0.0)
+        expanded[col] = _numeric_column(expanded, col, 0.0)
 
     return expanded, max_idx
 
@@ -497,7 +505,7 @@ def train(
         anchor_path = _as_path(anchor_csv)
         if anchor_path.exists():
             anchor = pd.read_csv(anchor_path, encoding="utf-8-sig")
-            base_weight = pd.to_numeric(anchor.get("sample_weight", 1.0), errors="coerce").fillna(1.0)
+            base_weight = _numeric_column(anchor, "sample_weight", 1.0)
             anchor["sample_weight"] = base_weight * float(anchor_weight)
             raw = pd.concat([raw, anchor], ignore_index=True)
             anchor_rows = len(anchor)
@@ -667,7 +675,15 @@ def load_model(model_path: str | Path = MODEL_PATH) -> Tuple[Dict[str, Any], Non
         print("No robust model found; training now...")
         return train(save=True, model_path=model_path)
     with open(model_path, "rb") as f:
-        return pickle.load(f), None
+        bundle = pickle.load(f)
+    if (
+        not isinstance(bundle, dict)
+        or bundle.get("version") != "robust-average-v2"
+        or list(bundle.get("ml_feature_cols", [])) != ML_FEATURE_COLS
+    ):
+        print("Saved robust model is stale; retraining with capacity/average-mileage features...")
+        return train(save=True, model_path=model_path)
+    return bundle, None
 
 
 def top_reasons(breakdown: Dict[str, float], n: int = 3) -> List[Tuple[str, float]]:
@@ -832,4 +848,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

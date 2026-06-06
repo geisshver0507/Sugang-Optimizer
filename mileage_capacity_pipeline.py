@@ -205,3 +205,11 @@ def apply_cold_start_weight(
 
 def build_average_mileage_training_frame(df: pd.DataFrame) -> tuple[pd.DataFrame, float]:
     """Return enriched training frame and capacity/applicant correlation."""
+    out = create_average_mileage_target(df)
+    corr = capacity_application_correlation(out)
+    if "course_code" in out.columns:
+        counts = out.groupby("course_code")["course_code"].transform("count")
+        out["historical_records"] = counts.astype(float)
+    else:
+        out["historical_records"] = 0.0
+    return out, corr
