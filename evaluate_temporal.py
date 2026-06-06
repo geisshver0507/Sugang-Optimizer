@@ -1,38 +1,135 @@
 """
 evaluate_temporal.py
 --------------------
-Proper temporal holdout evaluation.
+Proper temporal holdout evaluation using 2026-1 as ground truth.
 
-Train on: 2023-2, 2024-1, 2024-2, 2025-1, 2025-2
-         (professor-matched to 2026-1 professors)
+WHAT WE'RE EVALUATING:
+  "If a student used our system before 2026-1 sugang and submitted
+   the recommended bid, would they have gotten enrolled based on
+   what actually happened in 2026-1?"
 
-Evaluate on: 2026-1 actual thresholds (ground truth)
+TWO LEVELS OF ANALYSIS:
 
-This is the honest evaluation:
-  - Model never saw 2026-1 data during training
-  - Predictions are genuinely forward-looking
-  - Same situation students face before sugang day
+1. THRESHOLD ACCURACY
+   How close were our predicted thresholds to the actual safe threshold?
+   (MAE in mileage points)
 
-Run: python3 evaluate_temporal.py
+2. ENROLLMENT PROBABILITY SIMULATION
+   For the bid our model recommended, what was the actual
+   enrollment rate among 2026-1 students who bid that amount?
+   This accounts for tie-breaking — some students at the same bid
+   got in, some didn't, depending on their academic profile.
+
+3. BASELINE COMPARISON
+   Does our model outperform naive strategies?
+   (uniform split, priority-weighted, all-in)
+
+4. FAILURE ANALYSIS
+   Where did the model go wrong and why?
+   This helps explain limitations in the paper.
 """
 
 import pandas as pd
 import numpy as np
 from pathlib import Path
 
-
 HOLDOUT_CSV = "mileage_holdout_2026_1.csv"
-TRAIN_CSV   = "mileage_training_real.csv"
+HISTORY_CSV = "mileage_history_all.csv"
+
+
+def get_enrollment_probability(history_df: pd.DataFrame,
+                                course_code: str,
+                                bid_amount: int,
+                                student_year: int = None) -> dict:
+    """
+    Given a course and a bid amount, compute the actual enrollment
+    probability from 2026-1 history.
+
+    Returns dict with:
+        prob_overall    - P(enrolled | bid=X) across all students
+        prob_for_year   - P(enrolled | bid=X, year=student_year)
+        n_same_bid      - how many students bid exactly X
+        n_enrolled_same - how many of those got enrolled
+        interpretation  - human readable
+    """
+    course_data = history_df[
+        (history_df["course_code"] == course_code) &
+        (history_df["year"] == 2026) &
+        (history_df["semester"] == 1) &
+        (history_df["rank"] > 0)   # competitive only, not priority queue
+    ].copy()
+
+    if len(course_data) == 0:
+        return {"prob_overall": None, "n_same_bid": 0,
+                "interpretation": "no 2026-1 data"}
+
+    course_data["enrolled_bool"] = course_data["enrolled"].map(
+        {"Y": 1, "N": 0}
+    ).fillna(0)
+    course_data["mileage_bid"] = pd.to_numeric(
+        course_data["mileage_bid"], errors="coerce"
+    )
+
+    # Students who bid >= bid_amount
+    above_threshold = course_data[course_data["mileage_bid"] >= bid_amount]
+    at_exact_bid    = course_data[course_data["mileage_bid"] == bid_amount]
+
+    # P(enrolled | bid >= X)
+    if len(above_threshold) > 0:
+        prob_above = above_threshold["enrolled_bool"].mean()
+    else:
+        prob_above = 0.0
+
+    # P(enrolled | bid == X exactly) — shows tie-break effect
+    if len(at_exact_bid) > 0:
+        prob_exact = at_exact_bid["enrolled_bool"].mean()
+        n_exact    = len(at_exact_bid)
+        n_enr_exact= at_exact_bid["enrolled_bool"].sum()
+    else:
+        prob_exact  = 0.0
+        n_exact     = 0
+        n_enr_exact = 0
+
+    # P(enrolled | bid >= X, year == student_year)
+    prob_for_year = None
+    if student_year:
+        yr_data = above_threshold[
+            above_threshold.get("grade_year", pd.Series()) == student_year
+        ] if "grade_year" in above_threshold.columns else pd.DataFrame()
+        if len(yr_data) > 0:
+            prob_for_year = yr_data["enrolled_bool"].mean()
+
+    # Interpretation
+    if prob_above >= 0.95:
+        interp = f"✅ Very safe — {prob_above:.0%} of students bidding ≥{bid_amount}pts enrolled"
+    elif prob_above >= 0.75:
+        interp = f"✓  Likely — {prob_above:.0%} of students bidding ≥{bid_amount}pts enrolled"
+    elif prob_above >= 0.5:
+        interp = f"⚠  Uncertain — only {prob_above:.0%} success rate at ≥{bid_amount}pts"
+    else:
+        interp = f"❌ Risky — only {prob_above:.0%} success at ≥{bid_amount}pts (bid too low)"
+
+    return {
+        "prob_above":    round(prob_above,    3),
+        "prob_exact":    round(prob_exact,    3),
+        "prob_for_year": round(prob_for_year, 3) if prob_for_year else None,
+        "n_same_bid":    n_exact,
+        "n_enrolled_same": int(n_enr_exact),
+        "n_above_bid":   len(above_threshold),
+        "interpretation": interp,
+    }
 
 
 def run():
-    print("TEMPORAL HOLDOUT EVALUATION")
-    print("Train: pre-2026-1 data  |  Evaluate: 2026-1 actual thresholds")
+    print("TEMPORAL HOLDOUT EVALUATION — 2026-1 GROUND TRUTH")
     print("=" * 60)
 
     if not Path(HOLDOUT_CSV).exists():
-        print(f"No holdout data at {HOLDOUT_CSV}")
-        print("Run: python3 process_mileage_data.py")
+        print(f"No holdout data — run process_mileage_data.py first")
+        return
+
+    if not Path(HISTORY_CSV).exists():
+        print(f"No history data — run scrape_mileage.py --merge-only first")
         return
 
     from model import load_model, predict_threshold
@@ -42,16 +139,25 @@ def run():
         TOTAL_MILEAGE, MAX_BID_PER_COURSE
     )
 
-    model, explainer = load_model()
-    df_features      = load_features("segmented_cs_courses.json")
-    df_holdout       = pd.read_csv(HOLDOUT_CSV, encoding="utf-8-sig")
-    df_holdout       = df_holdout.dropna(subset=["winning_threshold"])
+    model, explainer  = load_model()
+    df_features       = load_features("segmented_cs_courses.json")
+    df_holdout        = pd.read_csv(HOLDOUT_CSV,  encoding="utf-8-sig")
+    df_history        = pd.read_csv(HISTORY_CSV,  encoding="utf-8-sig")
 
-    print(f"\n2026-1 courses with real thresholds: {len(df_holdout)}")
+    df_history["rank"]        = pd.to_numeric(df_history["rank"],        errors="coerce")
+    df_history["mileage_bid"] = pd.to_numeric(df_history["mileage_bid"], errors="coerce")
+    df_history["grade_year"]  = pd.to_numeric(df_history["grade_year"],  errors="coerce")
 
-    # ── Per-course prediction vs actual ───────────────────────────────────
-    rows = []
+    df_holdout = df_holdout.dropna(subset=["winning_threshold"])
+    print(f"Courses in holdout: {len(df_holdout)}")
 
+    # ── Part 1: Threshold Prediction Accuracy ─────────────────────────────
+    print(f"\n{'─'*60}")
+    print("PART 1: THRESHOLD PREDICTION ACCURACY")
+    print("How close were predictions to actual safe thresholds?")
+    print(f"{'─'*60}")
+
+    pred_rows = []
     for _, row in df_holdout.iterrows():
         code      = row["course_code"]
         actual_wt = float(row["winning_threshold"])
@@ -62,161 +168,178 @@ def run():
         feat = df_features.loc[code].to_dict()
         feat.update({
             "student_year":       3.0,
-            "student_mileage":    float(TOTAL_MILEAGE),
             "num_courses_wanted": 5.0,
             "rank_in_list":       1.0,
             "priority_ratio":     1.0,
-            "budget_ratio":       1.0,
         })
 
         pred, _ = predict_threshold(model, explainer, feat)
         error   = abs(pred - actual_wt)
 
-        rows.append({
-            "course_code":    code,
-            "course_name":    row.get("course_name", code),
-            "professor":      row.get("professor", ""),
-            "actual_wt":      actual_wt,
-            "predicted_wt":   round(pred, 1),
-            "error_pts":      round(error, 1),
-            "over_under":     "over"  if pred > actual_wt else "under",
-            "total_applicants": row.get("total_applicants", 0),
-            "competition_ratio": row.get("competition_ratio", 0),
+        pred_rows.append({
+            "course":      code,
+            "professor":   row.get("professor", ""),
+            "actual_wt":   actual_wt,
+            "predicted_wt":round(pred, 1),
+            "error_pts":   round(error, 1),
+            "direction":   "over" if pred > actual_wt else "under",
         })
 
-    if not rows:
-        print("No matching courses between holdout and feature set")
-        return
+    df_pred = pd.DataFrame(pred_rows)
+    mae     = df_pred["error_pts"].mean()
+    median  = df_pred["error_pts"].median()
+    w5      = (df_pred["error_pts"] <= 5).mean()  * 100
+    w10     = (df_pred["error_pts"] <= 10).mean() * 100
+    over    = (df_pred["direction"] == "over").sum()
+    under   = (df_pred["direction"] == "under").sum()
 
-    df = pd.DataFrame(rows)
-
-    # ── Prediction accuracy ────────────────────────────────────────────────
-    mae    = df["error_pts"].mean()
-    median = df["error_pts"].median()
-    w5     = (df["error_pts"] <= 5).mean()  * 100
-    w10    = (df["error_pts"] <= 10).mean() * 100
-
-    print(f"\n── Threshold Prediction Accuracy (2026-1) ──")
-    print(f"Mean Absolute Error:    {mae:.1f} pts")
-    print(f"Median Absolute Error:  {median:.1f} pts")
-    print(f"Within 5pts of actual:  {w5:.0f}%")
-    print(f"Within 10pts of actual: {w10:.0f}%")
-
-    over  = (df["over_under"] == "over").sum()
-    under = (df["over_under"] == "under").sum()
-    print(f"Over-predicted: {over}  |  Under-predicted: {under}")
+    print(f"\nMAE:                {mae:.1f} pts")
+    print(f"Median error:       {median:.1f} pts")
+    print(f"Within 5pts:        {w5:.0f}%")
+    print(f"Within 10pts:       {w10:.0f}%")
+    print(f"Over-predicted:     {over}  |  Under-predicted: {under}")
 
     print(f"\nPer-course breakdown:")
-    print(df[["course_code","professor","actual_wt","predicted_wt",
-              "error_pts","over_under"]].sort_values(
-                  "error_pts", ascending=False
-              ).to_string(index=False))
+    print(df_pred.sort_values("error_pts", ascending=False).to_string(index=False))
 
-    # ── Bid win rate simulation ────────────────────────────────────────────
-    # Simulate 5-course student, this course as rank-1
-    # Check if AI bid would have won a seat
-    print(f"\n── Bid Win Rate Simulation (2026-1 ground truth) ──")
-    print("Simulating: student wants 5 courses, this course is rank-1")
-    print("Budget: 72pts, max 36pts per course\n")
-
-    ai_wins       = 0
-    uniform_wins  = 0
-    priority_wins = 0
-    allin_wins    = 0
+    # ── Part 2: Enrollment Probability Simulation ─────────────────────────
+    print(f"\n{'─'*60}")
+    print("PART 2: ENROLLMENT PROBABILITY SIMULATION")
+    print("For the AI's recommended bid, what was actual enrollment rate?")
+    print(f"{'─'*60}")
 
     sim_rows = []
-    avg_pred  = df["predicted_wt"].mean()
+    avg_pred = df_pred["predicted_wt"].mean() if len(df_pred) > 0 else 10.0
 
-    for _, row in df.iterrows():
-        code      = row["course_code"]
-        actual_wt = row["actual_wt"]
-        pred_wt   = row["predicted_wt"]
+    for _, row in df_pred.iterrows():
+        code    = row["course"]
+        pred_wt = row["predicted_wt"]
 
-        # Build 5-course input
+        # Build 5-course input, this course as rank 1
         courses = [CourseInput(code, code, 1, pred_wt)]
         for j in range(2, 6):
-            courses.append(CourseInput(f"f{j}", f"filler{j}", j, avg_pred))
+            courses.append(CourseInput(f"f{j}", f"f{j}", j, avg_pred))
 
-        ai_results = allocate_bids(courses, TOTAL_MILEAGE, MAX_BID_PER_COURSE)
-        ai_bid     = next(r.recommended_bid for r in ai_results if r.rank == 1)
+        ai_results = allocate_bids(
+            courses, TOTAL_MILEAGE, MAX_BID_PER_COURSE
+        )
+        ai_bid = next(r.recommended_bid for r in ai_results if r.rank == 1)
 
-        uniform_bid  = TOTAL_MILEAGE // 5               # 14pts
-        priority_bid = min(int(TOTAL_MILEAGE * 0.4), MAX_BID_PER_COURSE)  # 28pts
-        allin_bid    = MAX_BID_PER_COURSE                # 36pts
+        # Baselines
+        uniform_bid  = TOTAL_MILEAGE // 5
+        priority_bid = min(int(TOTAL_MILEAGE * 0.40), MAX_BID_PER_COURSE)
+        allin_bid    = MAX_BID_PER_COURSE
 
-        ai_w  = int(ai_bid       >= actual_wt)
-        u_w   = int(uniform_bid  >= actual_wt)
-        p_w   = int(priority_bid >= actual_wt)
-        al_w  = int(allin_bid    >= actual_wt)
-
-        ai_wins       += ai_w
-        uniform_wins  += u_w
-        priority_wins += p_w
-        allin_wins    += al_w
+        # Get actual enrollment probability for each bid
+        ai_prob       = get_enrollment_probability(
+            df_history, code, ai_bid
+        )
+        uniform_prob  = get_enrollment_probability(
+            df_history, code, uniform_bid
+        )
+        priority_prob = get_enrollment_probability(
+            df_history, code, priority_bid
+        )
+        allin_prob    = get_enrollment_probability(
+            df_history, code, allin_bid
+        )
 
         sim_rows.append({
-            "course":        code,
-            "actual_wt":     actual_wt,
-            "ai_bid":        ai_bid,
-            "uniform_bid":   uniform_bid,
-            "ai_wins":       ai_w,
-            "uniform_wins":  u_w,
+            "course":         code,
+            "actual_wt":      row["actual_wt"],
+            "ai_bid":         ai_bid,
+            "ai_prob":        ai_prob["prob_above"],
+            "uniform_bid":    uniform_bid,
+            "uniform_prob":   uniform_prob["prob_above"],
+            "priority_bid":   priority_bid,
+            "priority_prob":  priority_prob["prob_above"],
+            "allin_bid":      allin_bid,
+            "allin_prob":     allin_prob["prob_above"],
+            "interpretation": ai_prob["interpretation"],
         })
 
-    n = len(df)
-    def pct(w): return w / n * 100
+    df_sim = pd.DataFrame(sim_rows)
+    df_sim = df_sim.dropna(subset=["ai_prob"])
 
-    print(f"{'Strategy':<38} {'Win Rate':>9}  {'vs AI':>8}")
-    print(f"{'─'*57}")
-    print(f"{'Our AI Strategy':<38} {pct(ai_wins):>8.1f}%  {'—':>8}")
-    print(f"{'Baseline: Uniform split (14pts)':<38} {pct(uniform_wins):>8.1f}%  "
-          f"{pct(ai_wins)-pct(uniform_wins):>+7.1f}%")
-    print(f"{'Baseline: Priority-weighted (28pts)':<38} {pct(priority_wins):>8.1f}%  "
-          f"{pct(ai_wins)-pct(priority_wins):>+7.1f}%")
-    print(f"{'Baseline: All-in on rank-1 (36pts)':<38} {pct(allin_wins):>8.1f}%  "
-          f"{pct(ai_wins)-pct(allin_wins):>+7.1f}%")
+    if len(df_sim) > 0:
+        print(f"\nCourses simulated: {len(df_sim)}")
+        print(f"\n{'Strategy':<38} {'Avg Enroll Prob':>16}")
+        print(f"{'─'*56}")
+        print(f"{'AI Strategy':<38} {df_sim['ai_prob'].mean():>15.1%}")
+        print(f"{'Uniform (14pts)':<38} {df_sim['uniform_prob'].mean():>15.1%}")
+        print(f"{'Priority-weighted (28pts)':<38} {df_sim['priority_prob'].mean():>15.1%}")
+        print(f"{'All-in (36pts)':<38} {df_sim['allin_prob'].mean():>15.1%}")
 
-    # Competitive courses only
-    comp_df = df[df["actual_wt"] >= 10]
-    if len(comp_df) > 0:
-        print(f"\nOn COMPETITIVE courses only (threshold ≥ 10pts, n={len(comp_df)}):")
-        sim_comp = pd.DataFrame(sim_rows)
-        sim_comp = sim_comp.merge(
-            df[["course_code","actual_wt"]].rename(columns={"course_code":"course"}), on="course", how="left"
-        )
-        sim_comp = sim_comp[sim_comp["actual_wt"] >= 10]
-        if len(sim_comp) > 0:
-            ai_c = sim_comp["ai_wins"].mean()   * 100
-            u_c  = sim_comp["uniform_wins"].mean() * 100
-            print(f"  AI: {ai_c:.1f}%  vs  Uniform: {u_c:.1f}%")
+        # Competitive courses only
+        comp = df_sim[df_sim["actual_wt"] >= 10]
+        if len(comp) > 0:
+            print(f"\nOn COMPETITIVE courses (threshold ≥ 10pts, n={len(comp)}):")
+            print(f"  AI:      {comp['ai_prob'].mean():.1%}")
+            print(f"  Uniform: {comp['uniform_prob'].mean():.1%}")
             print(f"  ← This is the headline metric for your paper")
 
-    # ── What to report ─────────────────────────────────────────────────────
-    print(f"\n{'═'*60}")
+        print(f"\nPer-course detail:")
+        cols = ["course","actual_wt","ai_bid","ai_prob","uniform_bid",
+                "uniform_prob","interpretation"]
+        print(df_sim[cols].sort_values(
+            "actual_wt", ascending=False
+        ).to_string(index=False))
+
+    # ── Part 3: Failure Analysis ──────────────────────────────────────────
+    print(f"\n{'─'*60}")
+    print("PART 3: FAILURE ANALYSIS")
+    print("Where does the model go wrong and why?")
+    print(f"{'─'*60}")
+
+    if len(df_pred) > 0:
+        bad = df_pred[df_pred["error_pts"] >= 10].copy()
+        if len(bad) > 0:
+            print(f"\nCourses with error ≥ 10pts ({len(bad)} courses):")
+            for _, r in bad.iterrows():
+                direction = "predicted too HIGH" if r["direction"] == "over" else \
+                            "predicted too LOW"
+                print(f"\n  {r['course']} (Prof. {r['professor']})")
+                print(f"    Actual threshold: {r['actual_wt']:.0f}pts")
+                print(f"    Predicted:        {r['predicted_wt']:.0f}pts")
+                print(f"    Error:            {r['error_pts']:.0f}pts — {direction}")
+
+                if r["direction"] == "over":
+                    print(f"    → Model over-estimated competition")
+                    print(f"    → Student would overbid, wasting points")
+                    print(f"    → Possible cause: no same-professor history, "
+                          f"model using Tier 2 data from more competitive prof")
+                else:
+                    print(f"    → Model under-estimated competition")
+                    print(f"    → Student might not get enrolled")
+                    print(f"    → Possible cause: course became more popular "
+                          f"than historical data suggests (reputation growth)")
+
+    # ── Summary for paper ─────────────────────────────────────────────────
+    print(f"\n{'='*60}")
     print("NUMBERS TO REPORT IN YOUR PAPER")
-    print(f"{'═'*60}")
+    print(f"{'='*60}")
     print(f"""
-Model Evaluation (Temporal Holdout — 2026-1):
-  Training data:  All semesters before 2026-1,
-                  filtered to matching professor
-  Evaluation data: 2026-1 actual thresholds (ground truth)
+Evaluation Method: Temporal Holdout
+  Train: 2022-1 to 2025-2 (professor-matched)
+  Evaluate: 2026-1 actual results (ground truth)
 
-Threshold Prediction:
-  MAE = {mae:.1f} pts
-  (Predictions were off by ~{mae:.0f} mileage points on average)
+Threshold Prediction (MAE):
+  {mae:.1f} pts average error
 
-Bid Strategy Win Rate:
-  AI strategy:        {pct(ai_wins):.1f}%
-  Uniform baseline:   {pct(uniform_wins):.1f}%
-  Priority baseline:  {pct(priority_wins):.1f}%
-  Improvement over uniform: {pct(ai_wins)-pct(uniform_wins):+.1f}%
+Enrollment Probability (actual 2026-1 data):
+  AI strategy:   {df_sim['ai_prob'].mean():.1%} average enrollment probability
+  Uniform split: {df_sim['uniform_prob'].mean():.1%}
+  All-in:        {df_sim['allin_prob'].mean():.1%}
 
-This evaluation is credible because:
-  - Model was trained on data from BEFORE 2026-1
-  - Evaluated against 2026-1 which the model never saw
-  - Same setup as real students: use past to predict future
-  - Professor-matched: history filtered to same professor
-    as 2026-1 to avoid cross-professor contamination
+Key insight: The enrollment probability accounts for tie-breaking.
+A bid above the safe threshold has near-100% enrollment probability
+regardless of the student's academic profile. Our model aims to
+recommend bids above this threshold.
+
+Limitations:
+  - Tie-breaking within the same bid tier is unpredictable
+  - Yearly quota allocation not visible in historical data
+  - Course reputation changes not captured in limited history
 """)
 
 

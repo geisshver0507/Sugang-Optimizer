@@ -753,7 +753,7 @@
           "location": "EngHD408",
           "evaluation_type": "Absolute",
           "prerequisites": [],
-          "mileage_historical_eta": 14,
+          "mileage_historical_eta": 96,
           "course_type": "major requirement",
           "keywords": [
             "hardware",
@@ -847,7 +847,7 @@
             "Linear Algebra",
             "Python"
           ],
-          "mileage_historical_eta": 45,
+          "mileage_historical_eta": 85,
           "course_type": "major elective",
           "keywords": [
             "math",
@@ -879,7 +879,7 @@
             "Differential Equation",
             "Programming"
           ],
-          "mileage_historical_eta": 60,
+          "mileage_historical_eta": 63,
           "course_type": "major elective",
           "keywords": [
             "pytorch",
@@ -943,7 +943,7 @@
             "Data Structures",
             "Discrete Mathematics"
           ],
-          "mileage_historical_eta": 41,
+          "mileage_historical_eta": 27,
           "course_type": "major elective",
           "keywords": [
             "ai",
@@ -980,7 +980,7 @@
           "location": "ERC170E",
           "evaluation_type": "Relative",
           "prerequisites": [],
-          "mileage_historical_eta": 42,
+          "mileage_historical_eta": 31,
           "course_type": "major elective",
           "keywords": [
             "nlp",
@@ -1023,7 +1023,7 @@
             "Machine Learning",
             "Deep Learning"
           ],
-          "mileage_historical_eta": 14,
+          "mileage_historical_eta": 104,
           "course_type": "major elective",
           "keywords": [
             "ai systems",
@@ -1096,7 +1096,7 @@
           "prerequisites": [
             "Data Structures"
           ],
-          "mileage_historical_eta": 30,
+          "mileage_historical_eta": 54,
           "course_type": "major requirement",
           "keywords": [
             "capstone",

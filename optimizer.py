@@ -72,48 +72,69 @@ def allocate_bids(
     # No point predicting above 36 — it's impossible to bid more
     thresholds = np.minimum(thresholds, float(max_per_course))
 
-    # ── Weights ───────────────────────────────────────────────────────────
-    threshold_range = thresholds.max() - thresholds.min()
-
-    if threshold_range > 2.0:
-        # Meaningful spread — use competition weight
-        comp_weight = thresholds / thresholds.sum()
-    else:
-        # All thresholds nearly equal — weight purely by priority
-        # Prevents the "everyone gets the same" problem
-        comp_weight = np.ones(n) / n
-
-    # Priority weight: steeper dropoff so rank 1 gets meaningfully more
-    prio_weight = 1.0 / (ranks ** 1.2)
-    prio_weight = prio_weight / prio_weight.sum()
-
-    # Combined: 60% competition-driven, 40% priority-driven
-    combined = 0.6 * comp_weight + 0.4 * prio_weight
-
-    # ── Minimum bids needed (capped at max_per_course) ────────────────────
+    # ── Minimum and maximum useful bids ──────────────────────────────────
     min_needed = thresholds * (1.0 + safety_margin)
     min_needed = np.minimum(min_needed, float(max_per_course))
     min_needed = np.maximum(min_needed, float(min_bid))
 
+    # Maximum useful bid per course:
+    # No benefit bidding much more than the threshold + generous buffer
+    # Bidding 14pts on a 1pt threshold course wastes points
+    # Cap at threshold × 3.0 or 5pts minimum buffer, whichever is larger
+    max_useful = np.maximum(thresholds * 3.0, thresholds + 5.0)
+    max_useful = np.minimum(max_useful, float(max_per_course))
+
     # ── Distribute budget ─────────────────────────────────────────────────
+    # CORE PRINCIPLE:
+    # 1. Every course gets its minimum (threshold × safety buffer)
+    # 2. Surplus goes to HIGH-COMPETITION courses only
+    #    using threshold² weighting so low-competition courses get nothing extra
+    # 3. Priority rank only breaks ties — never inflates low-competition bids
+    #    e.g. threshold=1pt course stays near 1pt even if ranked #1
+
     total_min = min_needed.sum()
 
     if total_min <= total_mileage:
-        # Cover all minimums, then distribute surplus by combined weight
-        # Surplus also capped per course at max_per_course
-        surplus   = total_mileage - total_min
-        allocated = min_needed + combined * surplus
-        # Apply per-course cap
-        allocated = np.minimum(allocated, float(max_per_course))
-        # If capping created leftover, give to next-highest priority
+        surplus = total_mileage - total_min
+
+        # Priority weight — tiny nudge only
+        prio_weight = 1.0 / (ranks ** 1.2)
+        prio_weight = prio_weight / prio_weight.sum()
+
+        # Surplus weight = threshold² × tiny priority nudge
+        # threshold=1:  weight ≈ 0.003  → gets almost nothing extra
+        # threshold=30: weight ≈ 2.7    → gets most of surplus
+        surplus_weight = (thresholds ** 2) * (1.0 + 0.1 * prio_weight)
+        if surplus_weight.sum() > 0:
+            surplus_weight = surplus_weight / surplus_weight.sum()
+        else:
+            surplus_weight = prio_weight
+
+        allocated = min_needed + surplus_weight * surplus
+        # Cap at max_useful first — don't overbid low-competition courses
+        allocated = np.minimum(allocated, max_useful)
+
+        # Redistribute leftover from capping — still using threshold² weighting
+        # NOT just giving to next-highest priority course
         leftover = total_mileage - allocated.sum()
-        if leftover > 1:
-            for idx in np.argsort(ranks):   # priority order
-                room = max_per_course - allocated[idx]
-                if room > 0 and leftover > 0:
-                    add = min(room, leftover)
-                    allocated[idx] += add
-                    leftover -= add
+        iterations = 0
+        while leftover > 1 and iterations < 10:
+            iterations += 1
+            # Recalculate who still has room and needs points
+            room = np.maximum(0.0, float(max_per_course) - allocated)
+            can_receive = room > 0
+            if not can_receive.any():
+                break
+            # Weight by threshold² again — competitive courses get leftover first
+            recv_weight = (thresholds ** 2) * can_receive
+            if recv_weight.sum() > 0:
+                recv_weight = recv_weight / recv_weight.sum()
+                extra = recv_weight * leftover
+                extra = np.minimum(extra, room)
+                allocated += extra
+                leftover = total_mileage - allocated.sum()
+            else:
+                break
 
     else:
         # Budget too tight — protect high-priority courses first
@@ -183,10 +204,13 @@ def allocate_bids(
             note = f"⚠ At university maximum ({max_per_course}pts) — highest possible bid."
         elif course.is_major_req and ratio < 0.85:
             note = "⚠ Major requirement — consider bidding higher."
+        elif pred <= 2.0 and bid > 5:
+            note = (f"ℹ Low competition course — {bid}pts allocated to use your budget. "
+                    f"Even 1-2pts would likely secure this seat.")
         elif ratio > 2.5:
             note = "✓ Well above threshold — could redistribute some points."
         elif confidence < 35:
-            note = "⚠ Budget too thin for this many courses — consider dropping lower-priority ones."
+            note = "⚠ Budget too thin — consider dropping lower-priority courses."
 
         results.append(BidResult(
             code                = course.code,

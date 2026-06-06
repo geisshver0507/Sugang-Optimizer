@@ -25,10 +25,32 @@ OUTPUT_CSV = "training_final.csv"
 
 def get_2026_professors(json_path: str) -> dict:
     """
-    Get the professor for each course in the 2026-1 semester
-    from the segmented_cs_courses.json database.
+    Get the professor for each 2026-1 course.
+    Uses the scraped holdout CSV as the source of truth since it has
+    actual professor names from the mileage helper site.
+    Falls back to JSON if holdout not available.
     Returns {course_code: professor_norm}
     """
+    import pandas as pd
+    from pathlib import Path
+
+    holdout_path = Path("mileage_holdout_2026_1.csv")
+    if holdout_path.exists():
+        try:
+            df = pd.read_csv(holdout_path, encoding="utf-8-sig")
+            if "professor_norm" in df.columns and "course_code" in df.columns:
+                result = {}
+                for _, row in df.iterrows():
+                    code = row["course_code"]
+                    prof = str(row.get("professor_norm", "")).strip()
+                    if code and prof and prof != "nan":
+                        result[code] = prof
+                if result:
+                    return result
+        except Exception:
+            pass
+
+    # Fallback: try JSON
     flat = flatten_json(json_path)
     result = {}
     for code, c in flat.items():
@@ -47,7 +69,6 @@ def build(
 
     df_features    = load_features(json_path)
     all_codes      = set(df_features.index)
-    prof_2026      = get_2026_professors(json_path)
     parts          = []
     codes_w_real   = set()
 
@@ -69,33 +90,15 @@ def build(
         df_real[TARGET_COL] = pd.to_numeric(df_real[TARGET_COL], errors="coerce")
         df_real = df_real.dropna(subset=[TARGET_COL])
 
-        # ── Professor matching filter ─────────────────────────────────────
-        # Only filter when BOTH the historical row AND 2026-1 have professor info.
-        # If either is missing, keep the row — sparse data means we can't afford
-        # to throw away valid history just because professor wasn't scraped.
-        if "professor_norm" in df_real.columns:
-            original_len = len(df_real)
-
-            def professor_matches(row):
-                code          = row.get("course_code", "")
-                prof_hist     = str(row.get("professor_norm", "")).strip()
-                prof_2026_val = prof_2026.get(code, "")
-
-                # Either side missing info → keep (can't make a reliable judgment)
-                if not prof_2026_val or not prof_hist or prof_hist == "nan":
-                    return True
-                # Both present → only keep if they match
-                return prof_hist == prof_2026_val
-
-            df_real["prof_match"] = df_real.apply(professor_matches, axis=1)
-            df_filtered = df_real[df_real["prof_match"]].drop("prof_match", axis=1)
-
-            filtered_out = original_len - len(df_filtered)
-            if verbose:
-                kept = len(df_filtered)
-                print(f"Professor filter: kept {kept} rows, "
-                      f"removed {filtered_out} confirmed professor mismatches")
-            df_real = df_filtered
+        # Professor filtering is handled by sample_weight in process_mileage_data.py
+        # Tier 1 (same professor) = weight 5.0
+        # Tier 2 (different professor) = weight 2.0
+        # No need to hard-filter here — weights handle the influence
+        if verbose:
+            t1 = (df_real.get("data_tier", pd.Series()) == 1).sum()
+            t2 = (df_real.get("data_tier", pd.Series()) == 2).sum()
+            print(f"Professor filter: kept all {len(df_real)} rows "
+                  f"(Tier 1: {t1} rows weight=5x, Tier 2: {t2} rows weight=2x)")
 
         # Add student context defaults
         for col, val in [

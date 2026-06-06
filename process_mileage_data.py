@@ -222,12 +222,21 @@ def process():
     df["base_code"] = df["course_code"].apply(get_base_code)
 
     # ── Recency weights ───────────────────────────────────────────────────
+    # Drop rows that are missing critical year or semester values to prevent NaN crashes
+    df = df.dropna(subset=["year", "semester"])
+    
+    # Force columns to integers early to guarantee safe dictionary lookups
+    df["year"] = df["year"].astype(int)
+    df["semester"] = df["semester"].astype(int)
+
     all_sems = sorted(
-        df[["year","semester"]].drop_duplicates().values.tolist()
+        df[["year", "semester"]].drop_duplicates().values.tolist()
     )
     n_sems = len(all_sems)
+    
+    # Safe dictionary construction since elements are guaranteed to be integers
     recency_map = {
-        (int(y), int(s)): 0.5 + 0.5 * (i / max(n_sems - 1, 1))
+        (y, s): 0.5 + 0.5 * (i / max(n_sems - 1, 1))
         for i, (y, s) in enumerate(all_sems)
     }
     print(f"Semesters found: {[f'{y}-{s}' for y,s in all_sems]}")
