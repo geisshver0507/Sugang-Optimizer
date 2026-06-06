@@ -53,22 +53,9 @@ def format_course_context(selected_courses):
         expanded_time = expand_course_time(meta.get("time"))
         chunks.append(f"""
 [COURSE {code}]
-Display name: {display_course_name(meta.get('name'))}
-Professor: {format_field(meta.get('professor'))}
-Language: {format_field(meta.get('language_medium'))}
-Lecture type: {format_field(meta.get('lecture_type'))}
-Credits: {format_field(meta.get('credits'))}
-Raw database time/location: {raw_time} / {format_field(meta.get('location'))}
-Expanded clock time: {expanded_time}
-Course type: {format_field(meta.get('course_type'))}
-Evaluation: {format_field(meta.get('evaluation_type'))}
-Workload/difficulty: {format_field(meta.get('workload'))} / {format_field(meta.get('difficulty'))}
-Prerequisites: {format_field(meta.get('prerequisites'))}
-Historical mileage ETA: {format_field(meta.get('mileage_historical_eta'))}
-Keywords: {format_field(meta.get('keywords'))}
-Grading and syllabus evidence: {clip_text(text_chunks.get('grading_and_syllabus'))}
-Student review evidence: {clip_text(text_chunks.get('student_reviews'))}
-Alternative professor review evidence: {clip_text(text_chunks.get('alternative_professor_reviews'))}
+Name: {display_course_name(meta.get('name'))}
+Fit info: {clip_text(text_chunks.get('student_reviews'))}
+Difficulty: {format_field(meta.get('workload'))}
 [/COURSE]
 """)
     return "\n".join(chunks)
@@ -108,14 +95,18 @@ Grounding rules:
 - If evidence is missing, say "Not listed in the retrieved data" instead of guessing.
 - If the user asks about a course outside the active filters, say it is not in the current filtered candidate set and suggest adjusting filters.
 - Use English-only course names in user-facing text. If a database name contains Korean plus an English name in parentheses, use only the English name.
-- When recommending courses, use a clean numbered list. Name each course as "1. English Course Name (CODE)", then put Fit, Evidence, and Caveat on the next lines.
-- Do not use Markdown bullet markers, standalone bullet lines, decorative asterisks, or italic/bold wrappers around course names.
-- Use this exact readable shape for each course:
-  1. English Course Name (CODE)
-     Fit: one concise sentence.
-     Evidence: one concise sentence.
-     Caveat: one concise sentence.
-- Keep answers concise and course-grounded. Prefer 3 to 6 recommendations unless the user asks for a full list.
+
+Formatting Rules (STRICT):
+- When recommending a course, use ONLY this format:
+    1. English Course Name (CODE)
+        * Fit: [One concise sentence about why it matches user interests].
+        * Evidence: [One concise sentence based on syllabus or reviews].
+        * Caveat: [One concise sentence about difficulty or workload].
+- DO NOT list fields like "Schedule", "Workload", "Mileage", "Credits", "Prerequisites" as separate labels.
+- DO NOT repeat the header labels.
+- If the user asks for a list, ONLY output the numbered list and the required action JSON. 
+- Stop immediately after the last course recommendation.
+
 
 Student profile from filters:
 - Language: {prefs.get('language')}
@@ -133,7 +124,15 @@ CURRENT SELECTED TIMETABLE:
 
 COURSE EVIDENCE RETRIEVED FOR THIS TURN:
 {format_course_context(selected_courses)}
+
+CRITICAL OUTPUT RULES:
+1. You MUST begin your response IMMEDIATELY with the sentence: "Here are the [X] subjects:" or "I can recommend...".
+2. NEVER output standalone words, category headers, or preambles (like "Fit", "Evidence", "Schedule", "Workload", etc.) at the top of your message.
+3. Output ONLY the numbered list and the required action JSON.
+
 """
+
+
 
 
 def build_priority_ranking_system_prompt(prefs, selected_schedule, filtered_courses):
@@ -166,22 +165,24 @@ Ranking rules:
 - If evidence is missing, say that the evidence is limited instead of guessing.
 - Keep each reason concise and grounded in the supplied evidence or conversation context.
 
-Return valid JSON only. Do not include Markdown or explanatory text outside JSON.
-Use this exact shape:
-{{"ranking":[{{"course_id":"COURSE_CODE","rank":1,"reasons":["Reason tied to conversation context or filters.","Reason tied to reviews, ratings, workload, syllabus, or course evidence."]}}]}}
+OUTPUT FORMAT INSTRUCTIONS:
+Your output must consist of two parts. First, present a clean, beautifully formatted user-facing Markdown summary. Second, append the raw machine-readable JSON object at the very end. Do not wrap the JSON in markdown code blocks.
+
+Use this exact layout for your response:
+
+### 📋 Recommended Priority Ranking
+Here is a suggested priority ranking for your confirmed courses based on your academic goals and course requirements:
+
+1. **English Course Name (COURSE_CODE)**
+   - **Fit:** A concise sentence explaining why this is priority #1.
+   - **Prerequisites/Workload:** A concise sentence regarding workload or prerequisites.
+   - **Mileage Strategy:** A concise sentence regarding its mileage competitiveness signal.
+
+[Repeat for all N courses in order...]
+
+{{"ranking":[{{"course_id":"COURSE_CODE","rank":1,"reasons":["Reason 1","Reason 2"]}}]}}
 
 Student profile from onboarding filters:
 - Language: {prefs.get('language')}
-- Lecture type: {prefs.get('lecture_type')}
-- Major years: {display_major_years(prefs)}
-- Credit window: {prefs.get('min_credits')} to {prefs.get('max_credits')}
-- Focus areas: {', '.join(clean_focus_area(a) for a in prefs.get('focus_areas', [])) or 'All'}
-- Available mileage points: {prefs.get('mileage')}
-
-CONFIRMED TIMETABLE TO RANK:
-{format_current_schedule(selected_schedule)}
-
-COURSE EVIDENCE FOR CONFIRMED COURSES:
-{format_course_context(selected_evidence)}
+...
 """
-
