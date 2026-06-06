@@ -18,6 +18,36 @@ from model_robust import load_model, predict_threshold, FEATURE_LABELS
 from optimizer import BidResult, TOTAL_MILEAGE, MAX_BID_PER_COURSE
 
 JSON_PATH = "segmented_cs_courses.json"
+BASE_SAFETY_BUFFER = 3.0
+HIGH_DEMAND_RATIO = 1.18
+
+
+def _calibrated_bid_adjustment(predicted_avg: float, shap: dict, rank: int, n_courses: int) -> tuple[float, list[str]]:
+    """Post-model bid calibration using only deterministic course signals."""
+    priority_ratio = (n_courses - rank + 1) / max(n_courses, 1)
+    demand_ratio = float(shap.get("demand_capacity_ratio", 0.0) or 0.0)
+    cold_condition = str(shap.get("cold_start_condition", "") or "")
+
+    adjustment = 0.0
+    reasons = []
+
+    if demand_ratio >= HIGH_DEMAND_RATIO and priority_ratio >= 0.5 and cold_condition != "A":
+        if predicted_avg < 12.0:
+            adjustment += 6.0
+            reasons.append("high ETA/capacity pressure with low predicted average")
+        elif predicted_avg < 13.5:
+            adjustment += 4.0
+            reasons.append("high ETA/capacity pressure with likely underprediction")
+
+    if cold_condition == "A":
+        adjustment -= 2.5
+        reasons.append("cold-start penalty for low-trust sparse history")
+
+    if cold_condition in {"A", "B"} and priority_ratio < 0.5:
+        adjustment -= 7.0
+        reasons.append("low-priority sparse-history discount")
+
+    return adjustment, reasons
 
 
 def get_strategy_for_ranked_list(
@@ -78,7 +108,12 @@ def get_strategy_for_ranked_list(
         })
 
         predicted_avg, shap = predict_threshold(model, explainer, feat)
-        recommended_bid = int(round(min(MAX_BID_PER_COURSE, max(1.0, predicted_avg + 2.0))))
+        bid_adjustment, adjustment_reasons = _calibrated_bid_adjustment(
+            predicted_avg, shap, rank, n_courses
+        )
+        raw_bid = predicted_avg + BASE_SAFETY_BUFFER + bid_adjustment
+        recommended_bid = int(round(min(MAX_BID_PER_COURSE, max(1.0, raw_bid))))
+        shap["bid_adjustment"] = bid_adjustment
         ratio = recommended_bid / max(predicted_avg, 1.0)
 
         if ratio >= 1.20:
@@ -96,8 +131,10 @@ def get_strategy_for_ranked_list(
             note = "Major requirement; review whether this bid deserves extra priority."
         elif recommended_bid == MAX_BID_PER_COURSE:
             note = f"At university maximum ({MAX_BID_PER_COURSE} pts)."
+        elif adjustment_reasons:
+            note = "Calibrated from predicted average + 3.0 buffer: " + "; ".join(adjustment_reasons) + "."
         else:
-            note = "Recommended bid = predicted average mileage + 2.0 safety buffer."
+            note = "Recommended bid = predicted average mileage + 3.0 safety buffer."
 
         results.append(BidResult(
             code                = code,
@@ -143,7 +180,7 @@ def format_strategy_for_chat(results: list) -> str:
         lines.append(
             f"**{r.rank}. {r.name}**  →  Bid **{r.recommended_bid} pts**  "
             f"{e} {r.risk_level} ({r.confidence_pct:.0f}% confidence)  "
-            f"*(predicted avg ~{r.predicted_threshold:.1f} pts; +2.0 buffer)*"
+            f"*(predicted avg ~{r.predicted_threshold:.1f} pts; +3.0 buffer)*"
         )
         if r.note:
             lines.append(f"   > {r.note}")

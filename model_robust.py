@@ -84,7 +84,7 @@ FEATURE_LABELS = {
     "cold_start_multiplier": "cold-start heuristic multiplier",
     "cold_start_condition": "cold-start condition code",
     "predicted_average_mileage": "predicted average mileage",
-    "recommended_bid": "recommended bid after +3.5 safety buffer",
+    "recommended_bid": "recommended bid after +3.0 safety buffer",
     "max_capacity": "classroom/applicant capacity",
     "demand_proxy": "future demand proxy from ETA/cart adds",
     "demand_capacity_ratio": "ETA demand divided by capacity",
@@ -626,7 +626,7 @@ def _predict_from_row(bundle: Dict[str, Any], feature_row: Dict[str, Any]) -> Tu
         review_score=row.get("review_score"),
         has_known_professor=bool(professor_norm),
     )
-    recommended_bid = float(np.clip(pred + 2.0, 1.0, MAX_BID_PER_COURSE))
+    recommended_bid = float(np.clip(pred + 3.0, 1.0, MAX_BID_PER_COURSE))
 
     breakdown = {
         "history_prior": hist_details["history_prior"],
