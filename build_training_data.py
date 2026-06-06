@@ -55,7 +55,14 @@ def build(
     if Path(train_csv).exists() and Path(train_csv).stat().st_size > 10:
         df_real = pd.read_csv(train_csv, encoding="utf-8-sig")
 
-        if TARGET_COL not in df_real.columns and "winning_threshold" in df_real.columns:
+        # For CS major users, use major_quota_threshold as the target
+        # This is the threshold specifically among Y(Y) major quota students
+        # Fall back to winning_threshold if major_quota_threshold not available
+        if "major_quota_threshold" in df_real.columns:
+            df_real[TARGET_COL] = df_real["major_quota_threshold"].fillna(
+                df_real.get("winning_threshold", df_real.get(TARGET_COL, 1.0))
+            )
+        elif TARGET_COL not in df_real.columns and "winning_threshold" in df_real.columns:
             df_real = df_real.rename(columns={"winning_threshold": TARGET_COL})
 
         df_real = df_real.dropna(subset=[TARGET_COL])
@@ -116,8 +123,13 @@ def build(
             if col not in df_real.columns:
                 df_real[col] = 0.0
 
-        df_real["data_source"]   = "real"
-        df_real["sample_weight"] = 5.0
+        df_real["data_source"] = "real"
+        # Sample weight = recency weight × 5 (real data bonus)
+        # Recent semesters count more than old ones
+        if "recency_weight" in df_real.columns:
+            df_real["sample_weight"] = df_real["recency_weight"] * 5.0
+        else:
+            df_real["sample_weight"] = 5.0
 
         codes_w_real = set(df_real["course_code"].unique()) \
             if "course_code" in df_real.columns else set()

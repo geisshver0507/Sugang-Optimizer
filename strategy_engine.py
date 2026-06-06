@@ -76,6 +76,8 @@ def get_strategy_for_ranked_list(
             "num_courses_wanted": float(n_courses),
             "rank_in_list":       float(rank),
             "priority_ratio":     (n_courses - rank + 1) / max(n_courses, 1),
+            # is_cs_major always True since system is for CS majors only
+            "is_cs_major":        1.0,
         })
 
         threshold, shap = predict_threshold(model, explainer, feat)
