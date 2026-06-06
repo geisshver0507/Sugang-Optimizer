@@ -1,31 +1,20 @@
-<<<<<<< HEAD
+import base64
 from html import escape
+from importlib.resources import path
 import re
-=======
-from html import escape
 import json
-import re
-
-import streamlit as st
-from groq import Groq
->>>>>>> f34c2e4dbebddf7f085b50e204666a75315ac730
-
 import streamlit as st
 from groq import Groq
 
-from course_competitiveness import (
-    build_competitiveness_prompt,
-    is_historical_mileage_query,
-    records_for_schedule,
-)
 from course_repository import load_tree_database
 from course_utils import display_course_name
 from filters import filter_tree_courses
 from guardrails import recent_conversation, validate_grounding
-from prompts import build_priority_ranking_system_prompt, build_system_prompt
+from prompts import build_system_prompt
 from retrieval import select_relevant_courses
 from schedule_utils import (
     apply_schedule_actions,
+    course_summary_for_prompt,
     extract_schedule_actions,
     schedule_total_credits,
 )
@@ -90,7 +79,7 @@ for key, default in [
     ("schedule_action_log", []),
     ("timetable_confirmed", False),
     ("priority_rankings", {}),
-    ("priority_ranking_version", 0),
+    ("ai_suggested_rankings", {}),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -314,9 +303,9 @@ def format_assistant_reply(reply):
     text = strip_schedule_action_text(reply)
     text = text.replace("\r\n", "\n")
     text = re.sub(r"[^\x00-\x7F]+\s*\(([^()]*[A-Za-z][^()]*)\)", r"\1", text)
+    text = re.sub(r"[\uac00-\ud7a3]+", "", text)
 
     section_labels = (
-<<<<<<< HEAD
         "Fit",
         "Evidence",
         "Caveat",
@@ -344,135 +333,6 @@ def course_label_from_filtered(code):
     course_obj = st.session_state.filtered_courses.get(code, {})
     meta = course_obj.get("metadata", {})
     return f"{display_course_name(meta.get('name', code))} ({code})"
-=======
-        "Fit",
-        "Evidence",
-        "Caveat",
-        "Schedule",
-        "Workload",
-        "Mileage",
-        "Credits",
-        "Prerequisites",
-        "Why it fits",
-    )
-    for label in section_labels:
-        text = re.sub(
-            rf"(?<!^)(?<!\n)\s+({re.escape(label)}:)",
-            rf"\n- \1",
-            text,
-            flags=re.IGNORECASE,
-        )
-
-    text = re.sub(r"(?<!\n)\s+(\d+\.\s+)", r"\n\n\1", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()
-
-
-def course_label_from_filtered(code):
-    course_obj = st.session_state.filtered_courses.get(code, {})
-    meta = course_obj.get("metadata", {})
-    return f"{display_course_name(meta.get('name', code))} ({code})"
-
-
-def iter_json_values(text):
-    """Yield JSON values embedded in model text."""
-    decoder = json.JSONDecoder()
-    source = str(text or "")
-    for match in re.finditer(r"[\[{]", source):
-        try:
-            parsed, _ = decoder.raw_decode(source[match.start():])
-        except json.JSONDecodeError:
-            continue
-        yield parsed
-
-
-def normalize_priority_recommendation(reply, selected_schedule):
-    course_codes = list(selected_schedule.keys())
-    course_set = set(course_codes)
-    ranking_items = []
-
-    for parsed in iter_json_values(reply):
-        if isinstance(parsed, dict):
-            candidate_items = (
-                parsed.get("ranking")
-                or parsed.get("rankings")
-                or parsed.get("priorities")
-                or parsed.get("courses")
-            )
-        elif isinstance(parsed, list):
-            candidate_items = parsed
-        else:
-            candidate_items = None
-
-        if isinstance(candidate_items, list):
-            ranking_items = candidate_items
-            break
-
-    normalized = []
-    seen = set()
-    for fallback_index, item in enumerate(ranking_items, start=1):
-        if not isinstance(item, dict):
-            continue
-        code = str(
-            item.get("course_id")
-            or item.get("course_code")
-            or item.get("code")
-            or ""
-        ).strip()
-        if code not in course_set or code in seen:
-            continue
-
-        try:
-            model_rank = int(item.get("rank") or item.get("priority") or fallback_index)
-        except (TypeError, ValueError):
-            model_rank = fallback_index
-
-        reasons = item.get("reasons") or item.get("reason") or item.get("rationale") or []
-        if isinstance(reasons, str):
-            reasons = [reasons]
-        reasons = [str(reason).strip() for reason in reasons if str(reason).strip()]
-        if not reasons:
-            reasons = ["The model selected this position from the confirmed timetable evidence, but did not return a detailed rationale."]
-
-        normalized.append({
-            "course_id": code,
-            "model_rank": model_rank,
-            "reasons": reasons[:3],
-        })
-        seen.add(code)
-
-    normalized.sort(key=lambda item: (item["model_rank"], course_codes.index(item["course_id"])))
-
-    for code in course_codes:
-        if code not in seen:
-            normalized.append({
-                "course_id": code,
-                "model_rank": len(normalized) + 1,
-                "reasons": ["Included in your confirmed timetable; ranking evidence was limited for this course."],
-            })
-
-    for rank, item in enumerate(normalized, start=1):
-        item["rank"] = rank
-
-    return normalized
-
-
-def format_priority_recommendation_message(priority_items, selected_schedule):
-    lines = [
-        "I generated an editable starting priority ranking for your confirmed timetable. "
-        "This is only a recommendation, and you can change any number in the Priority Ranking panel before final submission."
-    ]
-
-    for item in priority_items:
-        code = item["course_id"]
-        course = selected_schedule.get(code, {})
-        name = display_course_name(course.get("course_name", code))
-        lines.append(f"{item['rank']}. {name}")
-        for reason in item["reasons"]:
-            lines.append(f"- {reason}")
-
-    return "\n".join(lines)
->>>>>>> f34c2e4dbebddf7f085b50e204666a75315ac730
 
 # ── 4. INTAKE SCREEN ─────────────────────────────────────────────────────────
 if not st.session_state.intake_done:
@@ -511,44 +371,73 @@ if not st.session_state.intake_done:
     # ── SPLIT LAYOUT: Centered Title Left, Single-Column Form Right ──
     col_title, col_filters = st.columns([1.1, 1], gap="large")
 
+
+    def gif_to_base64(path):
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+
+    gif_b64 = gif_to_base64("sonic.gif")
+
     with col_title:
-        st.markdown("""
-        <div style='display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                    text-align: center;
-                    height: 100%;
-                    min-height: 500px;'>
+        # Using Flexbox to vertically and horizontally center the massive text
+        st.markdown(f"""
+    <style>
+    @keyframes fadeSlideUp {{
+        from {{ opacity: 0; transform: translateY(28px); }}
+        to   {{ opacity: 1; transform: translateY(0);    }}
+    }}
+    .nh-hero-wrap {{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        height: 100%;
+        min-height: 500px;
+        gap: 0;
+    }}
+    .nh-title {{
+        margin: 0;
+        font-size: 5.5rem;
+        font-weight: 800;
+        line-height: 1.1;
+        opacity: 0;
+        animation: fadeSlideUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
+    }}
+    .nh-subtitle {{
+        color: #94a3b8;
+        margin-top: 15px;
+        font-weight: 400;
+        font-size: 1.3rem;
+        line-height: 1.6;
+        max-width: 85%;
+        opacity: 0;
+        animation: fadeSlideUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards;
+    }}
+    .nh-gif-wrap {{
+        margin-top: 28px;
+        opacity: 0;
+        animation: fadeSlideUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.7s forwards;
+    }}
+    .nh-gif-wrap img {{
+        width: 220px;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    }}
+    </style>
 
-            <h1 style='margin-bottom: 0px;
-                       font-size: 5.5rem;
-                       font-weight: 800;
-                       line-height: 1.1;'>
-                Hi! I'm NightHawk AI 🦅
-            </h1>
-
+    <div class='nh-hero-wrap'>
+        <h1 class='nh-title'>Hi! I'm NightHawk AI🦅</h1>
+        <h5 class='nh-subtitle'>
+            Yonsei Course Assistant &mdash; Customize your targets to extract your optimal
+            course alignment, then get a mileage betting strategy automatically.
+        </h5>
+        <div class='nh-gif-wrap'>
+            <img src='data:image/gif;base64,{gif_b64}'
+                 alt='NightHawk animation' />
         </div>
-    """, unsafe_allow_html=True)
-
-    # GIF
-    st.image("eagle.gif", width=250)
-
-    st.markdown("""
-        <div style='text-align: center;'>
-            <h5 style='color: #94a3b8;
-                       margin-top: 15px;
-                       font-weight: 400;
-                       font-size: 1.3rem;
-                       line-height: 1.6;
-                       max-width: 85%;
-                       margin-left: auto;
-                       margin-right: auto;'>
-                Yonsei Course Assistant &mdash;
-                Customize your targets to extract your optimal course alignment.
-            </h5>
-        </div>
-    """, unsafe_allow_html=True)
+    </div>
+""", unsafe_allow_html=True)
 
     with col_filters:
         # Push the form down slightly to align with the middle of the text
@@ -705,47 +594,29 @@ else:
                 st.session_state.pop("chat_language", None)
                 st.rerun()
 
-<<<<<<< HEAD
             if st.session_state.timetable_confirmed and selected_schedule:
                 st.markdown("### Priority Ranking")
+                st.caption("AI suggested rankings below — adjust if needed.")
                 course_count = len(selected_schedule)
+                ai_suggestions = st.session_state.get("ai_suggested_rankings", {})
+
                 with st.form("priority_ranking_form"):
                     ranking_values = {}
                     for code, course in selected_schedule.items():
                         label = f"{display_course_name(course.get('course_name'))} ({code})"
+                        ai_default = ai_suggestions.get(code, 1)
+                        ai_default = max(1, min(ai_default, course_count))
+
                         ranking_values[code] = st.selectbox(
                             label,
                             list(range(1, course_count + 1)),
+                            index=ai_default - 1, 
                             key=f"priority_{code}",
                         )
                     submitted_rankings = st.form_submit_button("Save Priority Ranking", use_container_width=True)
                     if submitted_rankings:
                         if len(set(ranking_values.values())) != course_count:
                             st.warning("Each course needs a unique priority number.")
-=======
-            if st.session_state.timetable_confirmed and selected_schedule:
-                st.markdown("### Priority Ranking")
-                course_count = len(selected_schedule)
-                priority_options = list(range(1, course_count + 1))
-                priority_version = st.session_state.priority_ranking_version
-                with st.form("priority_ranking_form"):
-                    ranking_values = {}
-                    for default_index, (code, course) in enumerate(selected_schedule.items(), start=1):
-                        label = f"{display_course_name(course.get('course_name'))} ({code})"
-                        default_rank = st.session_state.priority_rankings.get(code, default_index)
-                        if default_rank not in priority_options:
-                            default_rank = default_index
-                        ranking_values[code] = st.selectbox(
-                            label,
-                            priority_options,
-                            index=priority_options.index(default_rank),
-                            key=f"priority_{priority_version}_{code}",
-                        )
-                    submitted_rankings = st.form_submit_button("Save Priority Ranking", use_container_width=True)
-                    if submitted_rankings:
-                        if len(set(ranking_values.values())) != course_count:
-                            st.warning("Each course needs a unique priority number.")
->>>>>>> f34c2e4dbebddf7f085b50e204666a75315ac730
                         else:
                             st.session_state.priority_rankings = ranking_values
                             st.success("Priority ranking saved.")
@@ -766,26 +637,56 @@ else:
                 with st.expander("Schedule Action Log"):
                     for item in st.session_state.schedule_action_log[-8:]:
                         st.write(item)
-<<<<<<< HEAD
 
             if st.button("Confirm Timetable", disabled=not selected_schedule, use_container_width=True):
                 final_list = course_summary_for_prompt(selected_schedule)
                 confirmation_prompt = (
-                    "The user has confirmed this timetable. Ask the user to rank the selected courses "
-                    "from 1 to N, where 1 is highest priority and N is lowest priority. "
+                    "The user has confirmed this timetable. "
+                    "First, suggest a priority ranking for each course from 1 to N based on "
+                    "factors like major requirements, prerequisites, course difficulty, and typical demand. "
+                    "Return your suggested ranking as a JSON object like: "
+                    "{\"COURSE_CODE\": rank, ...} "
+                    "Then explain your reasoning briefly. "
                     "Here is the final selected course list:\n"
                     f"{final_list}"
                 )
                 llm_messages = st.session_state.messages + [{"role": "user", "content": confirmation_prompt}]
                 ranking_reply = call_llm(
-                    "You are NightHawk AI. The timetable is confirmed. Ask for priority rankings only; do not add or remove courses.",
+                    "You are NightHawk AI. The timetable is confirmed. "
+                    "Suggest a priority ranking for the courses as a JSON object first, then explain why. "
+                    "Format: {\"COURSE_CODE\": rank_number, ...} on its own line, then your explanation.",
                     llm_messages,
                 )
+            
+                # Extract the suggested JSON ranking from the reply
+                suggested_rankings = {}
+                try:
+                    json_match = re.search(r'\{[^{}]+\}', ranking_reply, re.DOTALL)
+                    if json_match:
+                        suggested_rankings = json.loads(json_match.group())
+                        # Normalize to int ranks
+                        suggested_rankings = {k: int(v) for k, v in suggested_rankings.items()}
+                except Exception:
+                    # If parsing fails, just default to order in schedule
+                    for i, code in enumerate(selected_schedule.keys(), 1):
+                        suggested_rankings[code] = i
+            
+                # Fill in any missing courses with sequential ranks
+                used_ranks = set(suggested_rankings.values())
+                next_rank = 1
+                for code in selected_schedule.keys():
+                    if code not in suggested_rankings:
+                        while next_rank in used_ranks:
+                            next_rank += 1
+                        suggested_rankings[code] = next_rank
+                        used_ranks.add(next_rank)
+            
                 st.session_state.messages.append({"role": "user", "content": "Confirmed timetable."})
                 st.session_state.messages.append({"role": "assistant", "content": format_assistant_reply(ranking_reply)})
                 st.session_state.timetable_confirmed = True
+                st.session_state.ai_suggested_rankings = suggested_rankings   # <-- store AI suggestion
                 st.rerun()
-
+                
                 submitted_rankings = st.form_submit_button("Save Priority Ranking", use_container_width=True)
                 if submitted_rankings:
                     if len(set(ranking_values.values())) != course_count:
@@ -793,35 +694,6 @@ else:
                     else:
                         st.session_state.priority_rankings = ranking_values
                         st.success("Priority ranking saved.")
-=======
-
-            if st.button("Confirm Timetable", disabled=not selected_schedule, use_container_width=True):
-                confirmation_prompt = (
-                    "The user clicked Confirm Timetable. Generate the initial editable priority ranking now. "
-                    "Use the confirmed timetable, onboarding filters, course evidence, and especially the conversation context."
-                )
-                llm_messages = st.session_state.messages + [{"role": "user", "content": confirmation_prompt}]
-                ranking_system_prompt = build_priority_ranking_system_prompt(
-                    p,
-                    selected_schedule,
-                    st.session_state.filtered_courses,
-                )
-                ranking_reply = call_llm(
-                    ranking_system_prompt,
-                    llm_messages,
-                )
-                priority_items = normalize_priority_recommendation(ranking_reply, selected_schedule)
-                st.session_state.priority_rankings = {
-                    item["course_id"]: item["rank"]
-                    for item in priority_items
-                }
-                st.session_state.priority_ranking_version += 1
-                ranking_message = format_priority_recommendation_message(priority_items, selected_schedule)
-                st.session_state.messages.append({"role": "user", "content": "Confirmed timetable."})
-                st.session_state.messages.append({"role": "assistant", "content": ranking_message})
-                st.session_state.timetable_confirmed = True
-                st.rerun()
->>>>>>> f34c2e4dbebddf7f085b50e204666a75315ac730
 
     # ==========================================
     # 🌟 MAIN AREA: CHAT INTERFACE
@@ -851,40 +723,19 @@ else:
 
         with st.chat_message("assistant"):
             with st.spinner("Analyzing targeted data chunks..."):
-                selected_courses = {}
-                competitiveness_records = []
-                action_results = []
-
-                if (
-                    st.session_state.timetable_confirmed
-                    and st.session_state.selected_schedule
-                    and is_historical_mileage_query(prompt)
-                ):
-                    competitiveness_records = records_for_schedule(st.session_state.selected_schedule)
-                    st.session_state.retrieved_course_codes = []
-                    if competitiveness_records:
-                        reply = call_llm(
-                            build_competitiveness_prompt(competitiveness_records),
-                            st.session_state.messages,
-                        )
-                    else:
-                        reply = (
-                            "I could not find matching historical mileage records for the courses "
-                            "currently in your confirmed timetable."
-                        )
-                else:
-                    selected_courses = select_relevant_courses(st.session_state.filtered_courses, prompt)
-                    st.session_state.retrieved_course_codes = list(selected_courses.keys())
-                    system_prompt = build_system_prompt(
-                        p,
-                        selected_courses,
-                        st.session_state.filtered_courses,
-                        st.session_state.selected_schedule,
-                    )
-                    reply = call_llm(system_prompt, st.session_state.messages)
-                    reply = validate_grounding(reply, selected_courses, st.session_state.filtered_courses)
+                selected_courses = select_relevant_courses(st.session_state.filtered_courses, prompt)
+                st.session_state.retrieved_course_codes = list(selected_courses.keys())
+                system_prompt = build_system_prompt(
+                    p,
+                    selected_courses,
+                    st.session_state.filtered_courses,
+                    st.session_state.selected_schedule,
+                )
+                reply = call_llm(system_prompt, st.session_state.messages)
+                reply = validate_grounding(reply, selected_courses, st.session_state.filtered_courses)
 
                 actions = extract_schedule_actions(reply)
+                action_results = []
                 if actions:
                     updated_schedule, action_results = apply_schedule_actions(
                         actions,
@@ -902,14 +753,6 @@ else:
                     for code in st.session_state.retrieved_course_codes
                 ]
                 st.caption("Evidence used: " + ", ".join(evidence_labels))
-            elif competitiveness_records:
-                evidence_labels = sorted(
-                    {
-                        f"{record['course_name']} ({record['year']}-{record['semester']})"
-                        for record in competitiveness_records
-                    }
-                )
-                st.caption("Competitiveness evidence used: " + ", ".join(evidence_labels))
 
             display_reply = format_assistant_reply(reply)
             if action_results:
