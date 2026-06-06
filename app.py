@@ -1,14 +1,6 @@
-<<<<<<< HEAD
-from html import escape
-import re
-=======
 from html import escape
 import json
 import re
-
-import streamlit as st
-from groq import Groq
->>>>>>> f34c2e4dbebddf7f085b50e204666a75315ac730
 
 import streamlit as st
 from groq import Groq
@@ -34,33 +26,6 @@ from schedule_utils import (
 
 # ── 0. Page config (must be first Streamlit call) ───────────────────────────
 st.set_page_config(page_title="NightHawk AI - Yonsei Course Assistant", layout="wide")
-
-# def set_background(image_file):
-#     """Encodes a local image and injects it as the Streamlit app background."""
-#     with open(image_file, "rb") as file:
-#         encoded_string = base64.b64encode(file.read()).decode()
-    
-#     css = f"""
-#     <style>
-#     .stApp {{
-#         background-image: url("data:image/jpeg;base64,{encoded_string}");
-#         background-size: cover;
-#         background-position: center;
-#         background-attachment: fixed;
-#     }}
-#     /* Optional: Adds a slight dark overlay so your text remains readable */
-#     .stApp > header {{
-#         background-color: transparent;
-#     }}
-#     </style>
-#     """
-#     st.markdown(css, unsafe_allow_html=True)
-
-# Call this right after your Session State init (Section 3)
-# if os.path.exists("Night_Sky.jpg"):
-#     set_background("Night_Sky.jpg")
-# else:
-#     st.warning("Background image 'Night_Sky.jpg' not found in directory.")
 
 # ── 1. Groq client ──────────────────────────────────────────────────────────
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
@@ -316,35 +281,6 @@ def format_assistant_reply(reply):
     text = re.sub(r"[^\x00-\x7F]+\s*\(([^()]*[A-Za-z][^()]*)\)", r"\1", text)
 
     section_labels = (
-<<<<<<< HEAD
-        "Fit",
-        "Evidence",
-        "Caveat",
-        "Schedule",
-        "Workload",
-        "Mileage",
-        "Credits",
-        "Prerequisites",
-        "Why it fits",
-    )
-    for label in section_labels:
-        text = re.sub(
-            rf"(?<!^)(?<!\n)\s+({re.escape(label)}:)",
-            rf"\n- \1",
-            text,
-            flags=re.IGNORECASE,
-        )
-
-    text = re.sub(r"(?<!\n)\s+(\d+\.\s+)", r"\n\n\1", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()
-
-
-def course_label_from_filtered(code):
-    course_obj = st.session_state.filtered_courses.get(code, {})
-    meta = course_obj.get("metadata", {})
-    return f"{display_course_name(meta.get('name', code))} ({code})"
-=======
         "Fit",
         "Evidence",
         "Caveat",
@@ -472,7 +408,6 @@ def format_priority_recommendation_message(priority_items, selected_schedule):
             lines.append(f"- {reason}")
 
     return "\n".join(lines)
->>>>>>> f34c2e4dbebddf7f085b50e204666a75315ac730
 
 # ── 4. INTAKE SCREEN ─────────────────────────────────────────────────────────
 if not st.session_state.intake_done:
@@ -522,12 +457,11 @@ if not st.session_state.intake_done:
                     min-height: 500px;'>
 
             <h1 style='margin-bottom: 0px;
-                       font-size: 5.5rem;
-                       font-weight: 800;
-                       line-height: 1.1;'>
+                        font-size: 5.5rem;
+                        font-weight: 800;
+                        line-height: 1.1;'>
                 Hi! I'm NightHawk AI 🦅
             </h1>
-
         </div>
     """, unsafe_allow_html=True)
 
@@ -705,32 +639,23 @@ else:
                 st.session_state.pop("chat_language", None)
                 st.rerun()
 
-<<<<<<< HEAD
-            if st.session_state.timetable_confirmed and selected_schedule:
-                st.markdown("### Priority Ranking")
-                course_count = len(selected_schedule)
-                with st.form("priority_ranking_form"):
-                    ranking_values = {}
-                    for code, course in selected_schedule.items():
-                        label = f"{display_course_name(course.get('course_name'))} ({code})"
-                        ranking_values[code] = st.selectbox(
-                            label,
-                            list(range(1, course_count + 1)),
-                            key=f"priority_{code}",
-                        )
-                    submitted_rankings = st.form_submit_button("Save Priority Ranking", use_container_width=True)
-                    if submitted_rankings:
-                        if len(set(ranking_values.values())) != course_count:
-                            st.warning("Each course needs a unique priority number.")
-=======
             if st.session_state.timetable_confirmed and selected_schedule:
                 st.markdown("### Priority Ranking")
                 course_count = len(selected_schedule)
                 priority_options = list(range(1, course_count + 1))
                 priority_version = st.session_state.priority_ranking_version
+                schedule_order = list(selected_schedule.keys())
+                ranked_schedule_items = sorted(
+                    selected_schedule.items(),
+                    key=lambda item: (
+                        st.session_state.priority_rankings.get(item[0], course_count + 1),
+                        schedule_order.index(item[0]),
+                    ),
+                )
+                st.caption("AI recommended ranks are prefilled below. You can change any number before saving.")
                 with st.form("priority_ranking_form"):
                     ranking_values = {}
-                    for default_index, (code, course) in enumerate(selected_schedule.items(), start=1):
+                    for default_index, (code, course) in enumerate(ranked_schedule_items, start=1):
                         label = f"{display_course_name(course.get('course_name'))} ({code})"
                         default_rank = st.session_state.priority_rankings.get(code, default_index)
                         if default_rank not in priority_options:
@@ -745,7 +670,6 @@ else:
                     if submitted_rankings:
                         if len(set(ranking_values.values())) != course_count:
                             st.warning("Each course needs a unique priority number.")
->>>>>>> f34c2e4dbebddf7f085b50e204666a75315ac730
                         else:
                             st.session_state.priority_rankings = ranking_values
                             st.success("Priority ranking saved.")
@@ -766,35 +690,6 @@ else:
                 with st.expander("Schedule Action Log"):
                     for item in st.session_state.schedule_action_log[-8:]:
                         st.write(item)
-<<<<<<< HEAD
-
-            if st.button("Confirm Timetable", disabled=not selected_schedule, use_container_width=True):
-                final_list = course_summary_for_prompt(selected_schedule)
-                confirmation_prompt = (
-                    "The user has confirmed this timetable. Ask the user to rank the selected courses "
-                    "from 1 to N, where 1 is highest priority and N is lowest priority. "
-                    "Here is the final selected course list:\n"
-                    f"{final_list}"
-                )
-                llm_messages = st.session_state.messages + [{"role": "user", "content": confirmation_prompt}]
-                ranking_reply = call_llm(
-                    "You are NightHawk AI. The timetable is confirmed. Ask for priority rankings only; do not add or remove courses.",
-                    llm_messages,
-                )
-                st.session_state.messages.append({"role": "user", "content": "Confirmed timetable."})
-                st.session_state.messages.append({"role": "assistant", "content": format_assistant_reply(ranking_reply)})
-                st.session_state.timetable_confirmed = True
-                st.rerun()
-
-                submitted_rankings = st.form_submit_button("Save Priority Ranking", use_container_width=True)
-                if submitted_rankings:
-                    if len(set(ranking_values.values())) != course_count:
-                        st.warning("Each course needs a unique priority number.")
-                    else:
-                        st.session_state.priority_rankings = ranking_values
-                        st.success("Priority ranking saved.")
-=======
-
             if st.button("Confirm Timetable", disabled=not selected_schedule, use_container_width=True):
                 confirmation_prompt = (
                     "The user clicked Confirm Timetable. Generate the initial editable priority ranking now. "
@@ -821,7 +716,6 @@ else:
                 st.session_state.messages.append({"role": "assistant", "content": ranking_message})
                 st.session_state.timetable_confirmed = True
                 st.rerun()
->>>>>>> f34c2e4dbebddf7f085b50e204666a75315ac730
 
     # ==========================================
     # 🌟 MAIN AREA: CHAT INTERFACE
