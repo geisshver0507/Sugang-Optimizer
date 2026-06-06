@@ -294,12 +294,22 @@ def format_assistant_reply(reply):
     for label in section_labels:
         text = re.sub(
             rf"(?<!^)(?<!\n)\s+({re.escape(label)}:)",
-            rf"\n- \1",
+            rf"\n\1",
             text,
             flags=re.IGNORECASE,
         )
 
     text = re.sub(r"(?<!\n)\s+(\d+\.\s+)", r"\n\n\1", text)
+    cleaned_lines = []
+    for line in text.splitlines():
+        cleaned = line.strip()
+        if re.fullmatch(r"[-*•]+\s*", cleaned):
+            continue
+        cleaned = re.sub(r"^[-*•]\s+", "", cleaned)
+        cleaned = re.sub(r"(?<!\*)\*\s*$", "", cleaned).strip()
+        cleaned_lines.append(cleaned)
+
+    text = "\n".join(cleaned_lines)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
@@ -807,7 +817,7 @@ else:
 
             display_reply = format_assistant_reply(reply)
             if action_results:
-                display_reply += "\n\nSchedule update:\n" + "\n".join(f"- {result}" for result in action_results)
+                display_reply += "\n\nSchedule update:\n" + "\n".join(action_results)
             st.write(display_reply)
 
         st.session_state.messages.append({"role": "assistant", "content": display_reply})
