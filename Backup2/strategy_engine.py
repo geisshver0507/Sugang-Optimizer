@@ -14,8 +14,11 @@ student's ranked course list and year. Mileage is not needed.
 from __future__ import annotations
 
 from feature_extractor import load_features, flatten_json
-from model_robust import load_model, predict_threshold, FEATURE_LABELS
-from optimizer import BidResult, TOTAL_MILEAGE, MAX_BID_PER_COURSE
+from model import load_model, predict_threshold, FEATURE_LABELS
+from optimizer import (
+    CourseInput, allocate_bids, BidResult,
+    TOTAL_MILEAGE, MAX_BID_PER_COURSE
+)
 
 JSON_PATH = "segmented_cs_courses.json"
 
@@ -54,7 +57,7 @@ def get_strategy_for_ranked_list(
     student_year = float(student_profile.get("year", 2))
     n_courses    = len(ranked_list)
 
-    results = []
+    course_inputs = []
     skipped       = []
 
     for item in ranked_list:
@@ -77,44 +80,27 @@ def get_strategy_for_ranked_list(
             "is_cs_major":        1.0,
         })
 
-        predicted_avg, shap = predict_threshold(model, explainer, feat)
-        recommended_bid = int(round(min(MAX_BID_PER_COURSE, max(1.0, predicted_avg + 3.5))))
-        ratio = recommended_bid / max(predicted_avg, 1.0)
-
-        if ratio >= 1.20:
-            risk_level = "Safe"
-            confidence_pct = min(95.0, 55.0 + ratio * 20.0)
-        elif ratio >= 0.90:
-            risk_level = "Moderate"
-            confidence_pct = 40.0 + ratio * 20.0
-        else:
-            risk_level = "Risky"
-            confidence_pct = max(10.0, ratio * 50.0)
+        threshold, shap = predict_threshold(model, explainer, feat)
 
         c_info = flat_courses.get(code, {})
-        if c_info.get("category") == "major_requirement" and risk_level != "Safe":
-            note = "Major requirement; review whether this bid deserves extra priority."
-        elif recommended_bid == MAX_BID_PER_COURSE:
-            note = f"At university maximum ({MAX_BID_PER_COURSE} pts)."
-        else:
-            note = "Recommended bid = predicted average mileage + 3.5 safety buffer."
-
-        results.append(BidResult(
+        course_inputs.append(CourseInput(
             code                = code,
             name                = name,
             rank                = rank,
-            recommended_bid     = recommended_bid,
-            predicted_threshold = round(predicted_avg, 1),
-            risk_level          = risk_level,
-            confidence_pct      = round(confidence_pct, 1),
+            predicted_threshold = threshold,
+            is_major_req        = (c_info.get("category") == "major_requirement"),
             shap_breakdown      = shap,
-            note                = note,
         ))
 
     if skipped:
         print(f"[strategy_engine] Skipped unknown courses: {skipped}")
 
-    return sorted(results, key=lambda item: item.rank)
+    return allocate_bids(
+        course_inputs,
+        total_mileage  = TOTAL_MILEAGE,
+        max_per_course = MAX_BID_PER_COURSE,
+        safety_margin  = safety_margin,
+    )
 
 
 def format_strategy_for_chat(results: list) -> str:
@@ -138,7 +124,7 @@ def format_strategy_for_chat(results: list) -> str:
         lines.append(
             f"**{r.rank}. {r.name}**  →  Bid **{r.recommended_bid} pts**  "
             f"{e} {r.risk_level} ({r.confidence_pct:.0f}% confidence)  "
-            f"*(predicted avg ~{r.predicted_threshold:.1f} pts; +3.5 buffer)*"
+            f"*(est. threshold ~{int(r.predicted_threshold)} pts)*"
         )
         if r.note:
             lines.append(f"   > {r.note}")

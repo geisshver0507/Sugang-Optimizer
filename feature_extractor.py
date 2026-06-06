@@ -146,6 +146,11 @@ def extract_features(courses: dict[str, dict]) -> pd.DataFrame:
 
             # ── Demand signal ────────────────────────────────────────────
             "eta_added": float(c.get("mileage_historical_eta", 0) or 0),
+            "max_capacity": float(c.get("max_capacity", 0) or 0),
+            "demand_proxy": float(c.get("mileage_historical_eta", 0) or 0),
+            "demand_capacity_ratio": float(c.get("mileage_historical_eta", 0) or 0)
+            / max(float(c.get("max_capacity", 0) or 0), 1.0),
+            "capacity_demand_gap": float(c.get("mileage_historical_eta", 0) or 0) - float(c.get("max_capacity", 0) or 0),
 
             # ── Course structure ─────────────────────────────────────────
             "credits": float(c.get("credits", 3) or 3),

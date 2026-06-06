@@ -26,7 +26,10 @@
             "inheritance",
             "polymorphism",
             "virtual functions"
-          ]
+          ],
+          "max_capacity": 34,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "30% midterm, 40% final, 25% individual assignment, 5% attendance",
@@ -62,7 +65,10 @@
             "graphs",
             "sorting",
             "hashing"
-          ]
+          ],
+          "max_capacity": 39,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "35% midterm, 40% final, 20% individual assignment, 5% attendance",
@@ -98,7 +104,10 @@
             "graphs",
             "sorting",
             "hashing"
-          ]
+          ],
+          "max_capacity": 77,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "30% midterm, 30% final, 30% individual assignment, 10% attendance",
@@ -133,7 +142,10 @@
             "inheritance",
             "polymorphism",
             "virtual functions"
-          ]
+          ],
+          "max_capacity": 34,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "30% midterm, 40% final, 25% individual assignment, 5% attendance",
@@ -169,7 +181,10 @@
             "graphs",
             "sorting",
             "hashing"
-          ]
+          ],
+          "max_capacity": 39,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "35% midterm, 40% final, 20% individual assignment, 5% attendance",
@@ -205,7 +220,10 @@
             "graphs",
             "sorting",
             "hashing"
-          ]
+          ],
+          "max_capacity": 77,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "30% midterm, 30% final, 30% individual assignment, 10% attendance",
@@ -242,7 +260,10 @@
             "graphs",
             "sorting",
             "hashing"
-          ]
+          ],
+          "max_capacity": 75,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "35% midterm, 40% final, 3% quiz, 17% individual assignment, 5% attendance",
@@ -281,7 +302,10 @@
             "permutation",
             "combination",
             "graphs"
-          ]
+          ],
+          "max_capacity": 69,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "20% midterm, 40% final, 20% individual assignment, 10% attendance, 10% other",
@@ -316,7 +340,10 @@
             "permutation",
             "combination",
             "graphs"
-          ]
+          ],
+          "max_capacity": 75,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "30% midterm, 30% final, 40% individual assignment",
@@ -349,7 +376,10 @@
             "joint density",
             "marginal density",
             "MGF"
-          ]
+          ],
+          "max_capacity": 80,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "40% midterm, 40% final, 10% quiz, 10% attendance",
@@ -382,7 +412,10 @@
             "expected value",
             "variance",
             "regression analysis"
-          ]
+          ],
+          "max_capacity": 52,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "40% midterm, 40% final, 20% individual assignments",
@@ -414,7 +447,10 @@
             "matrices",
             "eigenvalues",
             "eigenvectors"
-          ]
+          ],
+          "max_capacity": 80,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "40% midterm, 40% final, 10% quiz, 10% attendance",
@@ -451,7 +487,10 @@
             "permutation",
             "combination",
             "graphs"
-          ]
+          ],
+          "max_capacity": 69,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "20% midterm, 40% final, 20% individual assignment, 10% attendance, 10% other",
@@ -486,7 +525,10 @@
             "permutation",
             "combination",
             "graphs"
-          ]
+          ],
+          "max_capacity": 75,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "30% midterm, 30% final, 40% individual assignment",
@@ -519,7 +561,10 @@
             "joint density",
             "marginal density",
             "MGF"
-          ]
+          ],
+          "max_capacity": 80,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "40% midterm, 40% final, 10% quiz, 10% attendance",
@@ -552,7 +597,10 @@
             "expected value",
             "variance",
             "regression analysis"
-          ]
+          ],
+          "max_capacity": 52,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "40% midterm, 40% final, 20% individual assignments",
@@ -584,7 +632,10 @@
             "matrices",
             "eigenvalues",
             "eigenvectors"
-          ]
+          ],
+          "max_capacity": 80,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "40% midterm, 40% final, 10% quiz, 10% attendance",
@@ -624,7 +675,10 @@
             "databases",
             "artificial intelligence",
             "theory of computation"
-          ]
+          ],
+          "max_capacity": 69,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "35% midterm, 35% final, 20% quiz, 10% attendance",
@@ -654,7 +708,10 @@
             "css",
             "javascript",
             "programming"
-          ]
+          ],
+          "max_capacity": 39,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "25% midterm, 25% final, 45% individual assignment, 5% attendance",
@@ -694,7 +751,10 @@
             "file systems",
             "linux",
             "c programming"
-          ]
+          ],
+          "max_capacity": 141,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "20% midterm, 25% final, 45% individual assignment, 10% attendance",
@@ -732,7 +792,10 @@
             "superscalar",
             "multi-threading",
             "multi-core"
-          ]
+          ],
+          "max_capacity": 32,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "0% midterm, 20% final, 40% quiz, 40% individual assignment",
@@ -760,7 +823,10 @@
             "processor",
             "cpu",
             "memory"
-          ]
+          ],
+          "max_capacity": 78,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "20% Midterm, 20% Final, 20% Quiz, 30% Individual Assignment, 10% Attendance",
@@ -790,7 +856,10 @@
             "turing machines",
             "computation",
             "theory"
-          ]
+          ],
+          "max_capacity": 68,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "30% Midterm, 30% Final, 30% Quiz, 10% Attendance",
@@ -822,7 +891,10 @@
             "image processing",
             "deep learning",
             "CNN"
-          ]
+          ],
+          "max_capacity": 68,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "35% Midterm, 35% Final, 30% Individual Assignment",
@@ -854,7 +926,10 @@
             "regression",
             "neural networks",
             "algorithms"
-          ]
+          ],
+          "max_capacity": 80,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "35% Midterm, 35% Final, 30% Individual Assignment",
@@ -886,7 +961,10 @@
             "classification",
             "neural networks",
             "models"
-          ]
+          ],
+          "max_capacity": 48,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "30% Midterm, 30% Final, 30% Individual Assignment, 10% Attendance",
@@ -919,7 +997,10 @@
             "threejs",
             "rendering",
             "blender"
-          ]
+          ],
+          "max_capacity": 39,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "30% Midterm, 30% Final, 18% Individual Assignment, 10% Team Project, 5% Quiz, 5% Attendance, 2% Q/A",
@@ -959,7 +1040,10 @@
             "philosophy of ai",
             "ethics",
             "safety"
-          ]
+          ],
+          "max_capacity": 18,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "30% Midterm, 30% Final, 10% Individual Assignment, 20% Team Assignment, 10% Attendance",
@@ -999,7 +1083,10 @@
             "post-training",
             "llm",
             "large language models"
-          ]
+          ],
+          "max_capacity": 26,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "20% Midterm, 30% Final, 10% Quiz, 20% Individual Assignment, 20% Team Assignment",
@@ -1040,7 +1127,10 @@
             "pp",
             "tp",
             "model accuracy"
-          ]
+          ],
+          "max_capacity": 85,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "30% Midterm, 30% Final, 30% Individual Assignment, 10% Attendance",
@@ -1073,7 +1163,10 @@
             "AI system design",
             "research trends",
             "exhibition"
-          ]
+          ],
+          "max_capacity": 16,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "70% team projects, 10% attendance, 20% other",
@@ -1109,7 +1202,10 @@
             "project management",
             "independent coding",
             "problem solving"
-          ]
+          ],
+          "max_capacity": 16,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "100% Team Project (Evaluated via Research Proposals, Progress Supervision, and Final Exhibition)",
@@ -1147,7 +1243,10 @@
             "memorization",
             "unlearning",
             "watermarking"
-          ]
+          ],
+          "max_capacity": 35,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "45% midterm, 45% final, 10% individual assignments",
@@ -1183,7 +1282,10 @@
             "hardware security",
             "attack payloads",
             "defensive programming"
-          ]
+          ],
+          "max_capacity": 74,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "20% midterm, 20% final, 55% individual assignments, 5% attendance",
@@ -1220,7 +1322,10 @@
             "matrix multiplication",
             "reduction",
             "deep learning kernels"
-          ]
+          ],
+          "max_capacity": 63,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "30% midterm, 40% final, 25% individual assignments, 5% attendance",
@@ -1252,7 +1357,10 @@
             "LLM",
             "creativity",
             "education"
-          ]
+          ],
+          "max_capacity": 32,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "40% individual assignments, 30% team projects, 10% attendance, 20% participation",
@@ -1289,7 +1397,10 @@
             "RAG",
             "AI agents",
             "multi-modality"
-          ]
+          ],
+          "max_capacity": 85,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "20% midterm, 30% final, 40% individual assignments, 10% attendance",
@@ -1325,7 +1436,10 @@
             "human-centered design",
             "perception",
             "color"
-          ]
+          ],
+          "max_capacity": 65,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "25% midterm, 25% final, 20% individual assignments, 20% team projects, 10% other",
@@ -1360,7 +1474,10 @@
             "POC",
             "growth hacking",
             "self-directed learning"
-          ]
+          ],
+          "max_capacity": 30,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "50% individual assignments, 20% attendance, 30% other",
@@ -1399,7 +1516,10 @@
             "inverse RL",
             "RLHF",
             "PyTorch"
-          ]
+          ],
+          "max_capacity": 98,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "30% midterm, 30% final, 35% individual assignments, 5% other",
@@ -1432,7 +1552,10 @@
             "open source",
             "DevOps",
             "media"
-          ]
+          ],
+          "max_capacity": 15,
+          "capacity_source": "holdout_exact",
+          "capacity_source_column": "inferred_class_size"
         },
         "text_chunks": {
           "grading_and_syllabus": "30% midterm, 30% final, 20% individual assignment, 20% team project",

@@ -25,7 +25,6 @@ from schedule_utils import (
     extract_schedule_actions,
     schedule_total_credits,
 )
-from strategy_engine import format_strategy_for_chat, get_strategy_for_ranked_list
 
 import base64
 
@@ -353,12 +352,6 @@ def course_label_from_filtered(code):
     course_obj = st.session_state.filtered_courses.get(code, {})
     meta = course_obj.get("metadata", {})
     return f"{display_course_name(meta.get('name', code))} ({code})"
-
-
-def selected_student_year(prefs):
-    year_text = str(prefs.get("major_year") or "").lower()
-    match = re.search(r"[1-4]", year_text)
-    return int(match.group()) if match else 3
 
 
 def iter_json_values(text):
@@ -757,12 +750,7 @@ else:
                 with st.expander("Selected Courses", expanded=True):
                     for code, course in selected_schedule.items():
                         st.write(f"**{display_course_name(course.get('course_name'))}** ({code})")
-                        capacity = course.get("max_capacity") or "Capacity not listed"
-                        st.caption(
-                            f"{course.get('credits', 0)} credits | "
-                            f"capacity {capacity} | "
-                            f"{course.get('time') or 'Time not listed'}"
-                        )
+                        st.caption(f"{course.get('credits', 0)} credits | {course.get('time') or 'Time not listed'}")
             else:
                 st.info("The timetable is empty. Ask the assistant to add a course.")
 
@@ -827,27 +815,6 @@ else:
                 
                 # Just in case there are lingering commas or brackets right before the split:
                 display_text = display_text.rstrip(',;:[ ]\n')
-
-                ranked_list = []
-                for fallback_rank, (code, course) in enumerate(selected_schedule.items(), start=1):
-                    ranked_list.append({
-                        "code": code,
-                        "name": course.get("course_name", code),
-                        "rank": int(suggested_rankings.get(code, fallback_rank)),
-                    })
-                ranked_list.sort(key=lambda item: item["rank"])
-
-                try:
-                    strategy_results = get_strategy_for_ranked_list(
-                        ranked_list,
-                        {"year": selected_student_year(st.session_state.prefs)},
-                    )
-                    display_text += "\n\n" + format_strategy_for_chat(strategy_results)
-                except Exception as exc:
-                    display_text += (
-                        "\n\nMileage strategy could not be generated from the deterministic backend "
-                        f"for this selection: {exc}"
-                    )
                 
                 st.session_state.messages.append({"role": "assistant", "content": format_assistant_reply(display_text)})
                 st.session_state.timetable_confirmed = True

@@ -36,8 +36,7 @@ def build_candidate_catalog(filtered_courses):
         rows.append(
             f"{display_course_name(meta.get('name'))} ({code}) | {format_field(meta.get('professor'))} | "
             f"{format_field(meta.get('credits'))} credits | raw time: {format_field(meta.get('time'))} | "
-            f"expanded time: {expand_course_time(meta.get('time'))} | "
-            f"capacity: {format_field(meta.get('max_capacity'))}{conflict_str}"
+            f"expanded time: {expand_course_time(meta.get('time'))}{conflict_str}"
         )
     return "\n".join(rows)
 
@@ -69,7 +68,6 @@ Prerequisites: {format_field(meta.get('prerequisites'))}
 Workload: {format_field(meta.get('workload'))}
 Difficulty: {format_field(meta.get('difficulty'))}
 Mileage ETA: {format_field(meta.get('mileage_historical_eta'))}
-Max capacity: {format_field(meta.get('max_capacity'))}
 Keywords: {format_field(meta.get('keywords'))}
 Syllabus/grading evidence: {syllabus}
 Student review evidence: {reviews}
@@ -86,9 +84,7 @@ def format_current_schedule(selected_schedule):
     for code, course in selected_schedule.items():
         rows.append(
             f"{display_course_name(course.get('course_name'))} ({code}) | "
-            f"{format_field(course.get('credits'))} credits | "
-            f"capacity: {format_field(course.get('max_capacity'))} | "
-            f"raw time: {format_field(course.get('time'))}"
+            f"{format_field(course.get('credits'))} credits | raw time: {format_field(course.get('time'))}"
         )
     return "\n".join(rows)
 

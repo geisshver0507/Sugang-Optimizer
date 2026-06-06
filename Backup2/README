@@ -1,0 +1,42 @@
+python3 -m streamlit run app.py
+
+windows - python -m streamlit run app.py
+
+Storing personal API Keys
+
+1. Pull the latest updates
+Open your VS Code terminal and run:
+
+Bash
+git pull origin main
+2. Create your local secrets folder
+In the root directory of our project folder, create a new folder named exactly .streamlit and a file inside it named secrets.toml.
+
+3. Add your free Groq API Key
+Go to Groq Cloud Console, make a free account, grab a key, and paste it into your new secrets.toml file exactly like this:
+
+Ini, TOML
+GROQ_API_KEY = "gsk_your_actual_key_here"
+
+
+
+Model Framework
+1. pip3 install xgboost
+2. /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+3. eval "$(/opt/homebrew/bin/brew shellenv)"
+4. brew install libomp
+5. python3 install shap
+6. python3 model.py --train
+
+
+Model Testing Optimizer
+python3 -m streamlit run optimizer_testing.py
+
+
+scraping data logic
+# One year at a time
+python3 scrape_mileage.py --years 2022 --semesters 1 2 --visible
+python3 scrape_mileage.py --years 2023 --semesters 1 2 --visible
+python3 scrape_mileage.py --years 2024 --semesters 1 2 --visible
+python3 scrape_mileage.py --years 2025 --semesters 1 2 --visible
+python3 scrape_mileage.py --years 2026 --semesters 1 --visible

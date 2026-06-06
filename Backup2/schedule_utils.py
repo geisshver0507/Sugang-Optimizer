@@ -174,7 +174,6 @@ def build_schedule_course(code, course_obj, color_index=0):
         "course_name": display_course_name(meta.get("name", code)),
         "professor": meta.get("professor", "Not listed"),
         "credits": int(meta.get("credits") or 0),
-        "max_capacity": meta.get("max_capacity"),
         "time": meta.get("time", ""),
         "location": meta.get("location", "Not listed"),
         "days": sorted({meeting["day"] for meeting in parse_time_to_meetings(meta.get("time"))}),
@@ -310,8 +309,6 @@ def course_summary_for_prompt(schedule):
     for index, (code, course) in enumerate(schedule.items(), start=1):
         rows.append(
             f"{index}. {course.get('course_name')} ({code}) | "
-            f"{course.get('credits', 0)} credits | "
-            f"capacity {course.get('max_capacity') or 'Not listed'} | "
-            f"{course.get('time') or 'Not listed'}"
+            f"{course.get('credits', 0)} credits | {course.get('time') or 'Not listed'}"
         )
     return "\n".join(rows)

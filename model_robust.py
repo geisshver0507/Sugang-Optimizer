@@ -53,13 +53,18 @@ from sklearn.model_selection import GroupKFold, KFold
 
 from feature_extractor import flatten_json, load_features
 from synthetic_data_generator import FEATURE_COLS as BASE_FEATURE_COLS
+from mileage_capacity_pipeline import (
+    apply_cold_start_weight,
+    build_average_mileage_training_frame,
+    capacity_application_correlation,
+)
 
 ROOT = Path(__file__).resolve().parent
 TRAIN_CSV = ROOT / "mileage_training_real.csv"
 HOLDOUT_CSV = ROOT / "mileage_holdout_2026_1.csv"
 JSON_PATH = ROOT / "segmented_cs_courses.json"
 MODEL_PATH = ROOT / "mileage_model_robust.pkl"
-TARGET_COL = "winning_threshold"
+TARGET_COL = "average_mileage"
 MAX_BID_PER_COURSE = 36.0
 
 # Extra forward-looking features. We deliberately avoid post-registration columns
@@ -71,11 +76,19 @@ ML_FEATURE_COLS = list(dict.fromkeys(BASE_FEATURE_COLS + [
 ]))
 
 FEATURE_LABELS = {
-    "history_prior": "similar-course historical threshold",
+    "history_prior": "similar-course historical average mileage",
     "history_strength": "amount of matching history",
     "ml_estimate": "course-feature model estimate",
     "high_demand_probability": "chance this is a high-demand course",
     "eta_added": "historical demand from ETA adds",
+    "cold_start_multiplier": "cold-start heuristic multiplier",
+    "cold_start_condition": "cold-start condition code",
+    "predicted_average_mileage": "predicted average mileage",
+    "recommended_bid": "recommended bid after +3.5 safety buffer",
+    "max_capacity": "classroom/applicant capacity",
+    "demand_proxy": "future demand proxy from ETA/cart adds",
+    "demand_capacity_ratio": "ETA demand divided by capacity",
+    "capacity_demand_gap": "ETA demand minus capacity",
     "review_score": "professor review score",
     "is_major_elective": "major elective status",
     "is_major_req": "major requirement status",
@@ -145,6 +158,17 @@ def _weighted_median(values: Iterable[float], weights: Iterable[float]) -> float
     order = np.argsort(v)
     v = v[order]
     w = w[order]
+    if target_mode == "average_mileage":
+        for column in (
+            "average_mileage",
+            "avg_all_bids",
+            "avg_winning_bid",
+            "major_quota_threshold",
+            "winning_threshold",
+        ):
+            if column in df.columns:
+                return df[column]
+        raise ValueError("No usable average mileage target column found")
     cutoff = w.sum() / 2.0
     return float(v[np.searchsorted(np.cumsum(w), cutoff, side="left")])
 
@@ -229,6 +253,7 @@ def _prepare_frame(
     max_idx = int(max_semester_index or df["semester_index"].max())
     df["recency_age"] = (max_idx - df["semester_index"]).clip(lower=0)
     df["is_spring"] = (df["semester"] == 1).astype(float)
+    df, _capacity_corr = build_average_mileage_training_frame(df)
 
     expanded = _expand_student_year_targets(df, target_mode)
     expanded["target"] = _clean_target(expanded["target_raw"])
@@ -243,6 +268,20 @@ def _prepare_frame(
 
     feat_reset = features_df.reset_index()
     expanded = expanded.merge(feat_reset, on="course_code", how="left", suffixes=("", "_feat"))
+    for col in ("max_capacity", "eta_added", "demand_proxy", "demand_capacity_ratio", "capacity_demand_gap"):
+        feat_col = f"{col}_feat"
+        if col not in expanded.columns and feat_col in expanded.columns:
+            expanded[col] = expanded[feat_col]
+        elif feat_col in expanded.columns:
+            current = pd.to_numeric(expanded[col], errors="coerce")
+            fallback = pd.to_numeric(expanded[feat_col], errors="coerce")
+            expanded[col] = current.where(current > 0, fallback)
+
+    if "num_applied" in expanded.columns:
+        applied = pd.to_numeric(expanded["num_applied"], errors="coerce").fillna(0.0)
+        expanded["demand_proxy"] = applied.where(applied > 0, pd.to_numeric(expanded.get("eta_added", 0.0), errors="coerce").fillna(0.0))
+        safe_capacity = pd.to_numeric(expanded.get("max_capacity", 0.0), errors="coerce").fillna(0.0).where(lambda s: s > 0, 1.0)
+        expanded["demand_capacity_ratio"] = (expanded["demand_proxy"] / safe_capacity).clip(lower=0.0, upper=8.0)
 
     for col in BASE_FEATURE_COLS:
         if col not in expanded.columns:
@@ -398,6 +437,10 @@ def _feature_row_from_course(
     rank_in_list: float = 1.0,
     semester: int = 1,
 ) -> Dict[str, float]:
+    def numeric_or_zero(value: Any) -> float:
+        converted = pd.to_numeric(value, errors="coerce")
+        return 0.0 if pd.isna(converted) else float(converted)
+
     features_by_code = bundle.get("course_features", {})
     row = dict(features_by_code.get(course_code, {}))
     row["course_code"] = course_code
@@ -410,6 +453,13 @@ def _feature_row_from_course(
     row["semester"] = int(semester)
     row["is_spring"] = 1.0 if int(semester) == 1 else 0.0
     row["recency_age"] = 0.0
+    row["max_capacity"] = numeric_or_zero(row.get("max_capacity", 0.0))
+    row["eta_added"] = numeric_or_zero(row.get("eta_added", 0.0))
+    row["demand_proxy"] = row["eta_added"]
+    safe_capacity = max(row["max_capacity"], 1.0)
+    row["demand_capacity_ratio"] = min(max(row["demand_proxy"] / safe_capacity, 0.0), 8.0)
+    row["capacity_demand_gap"] = row["demand_proxy"] - row["max_capacity"]
+    row["historical_records"] = 0.0
     return row
 
 
@@ -425,7 +475,7 @@ def _ml_matrix_from_rows(rows: List[Dict[str, Any]]) -> np.ndarray:
 def train(
     train_csv: str | Path = TRAIN_CSV,
     json_path: str | Path = JSON_PATH,
-    target_mode: str = "by_year",
+    target_mode: str = "average_mileage",
     save: bool = True,
     anchor_csv: str | Path | None = None,
     anchor_weight: float = 4.0,
@@ -458,6 +508,7 @@ def train(
 
     features_df = load_features(str(json_path))
     train_df, max_idx = _prepare_frame(raw, features_df, target_mode)
+    capacity_corr = capacity_application_correlation(raw)
 
     X = train_df[ML_FEATURE_COLS].astype(float).values
     y = train_df["target"].astype(float).values
@@ -480,7 +531,7 @@ def train(
     }
 
     bundle: Dict[str, Any] = {
-        "version": "robust-v1",
+        "version": "robust-average-v2",
         "target_mode": target_mode,
         "ml_feature_cols": ML_FEATURE_COLS,
         "regressor": regressor,
@@ -493,10 +544,12 @@ def train(
         "raw_training_rows": int(len(raw)),
         "anchor_rows": int(anchor_rows),
         "anchor_weight": float(anchor_weight) if anchor_csv else 0.0,
+        "capacity_application_correlation": capacity_corr,
     }
 
     if verbose:
         print(f"Prepared rows: {len(train_df)} from {len(raw)} historical course-semester rows")
+        print(f"Capacity/applicant correlation: {capacity_corr:.3f}")
         print(f"Global weighted median target: {priors['global']['median']:.1f} pts")
         _print_cv(train_df)
 
@@ -522,6 +575,11 @@ def _predict_from_row(bundle: Dict[str, Any], feature_row: Dict[str, Any]) -> Tu
     row["semester"] = int(row.get("semester", 1) or 1)
     row["is_spring"] = 1.0 if int(row["semester"]) == 1 else 0.0
     row["recency_age"] = float(row.get("recency_age", 0.0) or 0.0)
+    safe_capacity = max(float(row.get("max_capacity", 0.0) or 0.0), 1.0)
+    if not row.get("demand_proxy"):
+        row["demand_proxy"] = float(row.get("eta_added", 0.0) or 0.0)
+    row["demand_capacity_ratio"] = float(np.clip(float(row.get("demand_proxy", 0.0)) / safe_capacity, 0.0, 8.0))
+    row["capacity_demand_gap"] = float(row.get("demand_proxy", 0.0)) - float(row.get("max_capacity", 0.0) or 0.0)
 
     X = _ml_matrix_from_rows([row])
     ml_pred = float(bundle["regressor"].predict(X)[0])
@@ -552,11 +610,27 @@ def _predict_from_row(bundle: Dict[str, Any], feature_row: Dict[str, Any]) -> Tu
         pred = 0.82 * pred + 0.18 * max(pred, high_anchor)
 
     pred = float(np.clip(pred, 1.0, MAX_BID_PER_COURSE))
+    pred, cold_start = apply_cold_start_weight(
+        pred,
+        historical_records=int(round(hist_details.get("history_matches", 0.0))),
+        course_id=course_code,
+        professor=professor_norm,
+        review_score=row.get("review_score"),
+        has_known_professor=bool(professor_norm),
+    )
+    recommended_bid = float(np.clip(pred + 3.5, 1.0, MAX_BID_PER_COURSE))
+
     breakdown = {
         "history_prior": hist_details["history_prior"],
         "history_strength": hist_details["history_strength"],
         "ml_estimate": ml_pred,
         "high_demand_probability": high_prob,
+        "cold_start_multiplier": cold_start.multiplier,
+        "cold_start_condition": cold_start.condition,
+        "predicted_average_mileage": pred,
+        "recommended_bid": recommended_bid,
+        "max_capacity": float(row.get("max_capacity", 0.0) or 0.0),
+        "demand_capacity_ratio": float(row.get("demand_capacity_ratio", 0.0) or 0.0),
     }
     return pred, breakdown
 
@@ -719,7 +793,7 @@ def main() -> None:
     parser.add_argument("--num-courses", type=int, default=5, help="Number of courses wanted")
     parser.add_argument("--rank", type=int, default=1, help="Rank of this course in student preference list")
     parser.add_argument("--semester", type=int, default=1, help="Target semester number")
-    parser.add_argument("--target-mode", choices=["by_year", "major_quota_threshold", "winning_threshold"], default="by_year")
+    parser.add_argument("--target-mode", choices=["average_mileage", "by_year", "major_quota_threshold", "winning_threshold"], default="average_mileage")
     parser.add_argument("--anchor-csv", default="", help="Optional current-semester CSV to anchor production training, e.g. mileage_holdout_2026_1.csv")
     parser.add_argument("--anchor-weight", type=float, default=4.0, help="Sample weight multiplier for --anchor-csv rows")
     parser.add_argument("--train-csv", default=str(TRAIN_CSV))
@@ -758,7 +832,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-
-
 
