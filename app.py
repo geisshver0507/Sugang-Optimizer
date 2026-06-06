@@ -5,24 +5,24 @@ import re
 import streamlit as st
 from groq import Groq
 
-from course_competitiveness import (
-    build_competitiveness_prompt,
-    is_historical_mileage_query,
-    records_for_schedule,
-)
+
+import streamlit as st
+from groq import Groq
+
 from course_repository import load_tree_database
 from course_utils import display_course_name
 from filters import filter_tree_courses
 from guardrails import recent_conversation, validate_grounding
-from prompts import build_priority_ranking_system_prompt, build_system_prompt
+from prompts import build_system_prompt
 from retrieval import select_relevant_courses
 from schedule_utils import (
     apply_schedule_actions,
+    course_summary_for_prompt,
     extract_schedule_actions,
     schedule_total_credits,
 )
 
-# import base64
+import base64
 
 # ── 0. Page config (must be first Streamlit call) ───────────────────────────
 st.set_page_config(page_title="NightHawk AI - Yonsei Course Assistant", layout="wide")
@@ -55,7 +55,7 @@ for key, default in [
     ("schedule_action_log", []),
     ("timetable_confirmed", False),
     ("priority_rankings", {}),
-    ("priority_ranking_version", 0),
+    ("ai_suggested_rankings", {}),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -273,12 +273,12 @@ def strip_schedule_action_text(reply):
         return "I updated the timetable based on your request."
     return cleaned
 
-
 def format_assistant_reply(reply):
     """Prepare assistant text for display without exposing internal actions."""
     text = strip_schedule_action_text(reply)
     text = text.replace("\r\n", "\n")
     text = re.sub(r"[^\x00-\x7F]+\s*\(([^()]*[A-Za-z][^()]*)\)", r"\1", text)
+
 
     section_labels = (
         "Fit",
@@ -456,6 +456,13 @@ if not st.session_state.intake_done:
     # ── SPLIT LAYOUT: Centered Title Left, Single-Column Form Right ──
     col_title, col_filters = st.columns([1.1, 1], gap="large")
 
+
+    def gif_to_base64(path):
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+
+    gif_b64 = gif_to_base64("sonic.gif")
+
     with col_title:
         st.markdown("""
         <div style='display: flex;
@@ -467,11 +474,12 @@ if not st.session_state.intake_done:
                     min-height: 500px;'>
 
             <h1 style='margin-bottom: 0px;
-                        font-size: 5.5rem;
-                        font-weight: 800;
-                        line-height: 1.1;'>
+                       font-size: 5.5rem;
+                       font-weight: 800;
+                       line-height: 1.1;'>
                 Hi! I'm NightHawk AI 🦅
             </h1>
+
         </div>
     """, unsafe_allow_html=True)
 
@@ -652,29 +660,14 @@ else:
             if st.session_state.timetable_confirmed and selected_schedule:
                 st.markdown("### Priority Ranking")
                 course_count = len(selected_schedule)
-                priority_options = list(range(1, course_count + 1))
-                priority_version = st.session_state.priority_ranking_version
-                schedule_order = list(selected_schedule.keys())
-                ranked_schedule_items = sorted(
-                    selected_schedule.items(),
-                    key=lambda item: (
-                        st.session_state.priority_rankings.get(item[0], course_count + 1),
-                        schedule_order.index(item[0]),
-                    ),
-                )
-                st.caption("AI recommended ranks are prefilled below. You can change any number before saving.")
                 with st.form("priority_ranking_form"):
                     ranking_values = {}
-                    for default_index, (code, course) in enumerate(ranked_schedule_items, start=1):
+                    for code, course in selected_schedule.items():
                         label = f"{display_course_name(course.get('course_name'))} ({code})"
-                        default_rank = st.session_state.priority_rankings.get(code, default_index)
-                        if default_rank not in priority_options:
-                            default_rank = default_index
                         ranking_values[code] = st.selectbox(
                             label,
-                            priority_options,
-                            index=priority_options.index(default_rank),
-                            key=f"priority_{priority_version}_{code}",
+                            list(range(1, course_count + 1)),
+                            key=f"priority_{code}",
                         )
                     submitted_rankings = st.form_submit_button("Save Priority Ranking", use_container_width=True)
                     if submitted_rankings:
@@ -700,32 +693,32 @@ else:
                 with st.expander("Schedule Action Log"):
                     for item in st.session_state.schedule_action_log[-8:]:
                         st.write(item)
+
             if st.button("Confirm Timetable", disabled=not selected_schedule, use_container_width=True):
+                final_list = course_summary_for_prompt(selected_schedule)
                 confirmation_prompt = (
-                    "The user clicked Confirm Timetable. Generate the initial editable priority ranking now. "
-                    "Use the confirmed timetable, onboarding filters, course evidence, and especially the conversation context."
+                    "The user has confirmed this timetable. Ask the user to rank the selected courses "
+                    "from 1 to N, where 1 is highest priority and N is lowest priority. "
+                    "Here is the final selected course list:\n"
+                    f"{final_list}"
                 )
                 llm_messages = st.session_state.messages + [{"role": "user", "content": confirmation_prompt}]
-                ranking_system_prompt = build_priority_ranking_system_prompt(
-                    p,
-                    selected_schedule,
-                    st.session_state.filtered_courses,
-                )
                 ranking_reply = call_llm(
-                    ranking_system_prompt,
+                    "You are NightHawk AI. The timetable is confirmed. Ask for priority rankings only; do not add or remove courses.",
                     llm_messages,
                 )
-                priority_items = normalize_priority_recommendation(ranking_reply, selected_schedule)
-                st.session_state.priority_rankings = {
-                    item["course_id"]: item["rank"]
-                    for item in priority_items
-                }
-                st.session_state.priority_ranking_version += 1
-                ranking_message = format_priority_recommendation_message(priority_items, selected_schedule)
                 st.session_state.messages.append({"role": "user", "content": "Confirmed timetable."})
-                st.session_state.messages.append({"role": "assistant", "content": ranking_message})
+                st.session_state.messages.append({"role": "assistant", "content": format_assistant_reply(ranking_reply)})
                 st.session_state.timetable_confirmed = True
                 st.rerun()
+
+                submitted_rankings = st.form_submit_button("Save Priority Ranking", use_container_width=True)
+                if submitted_rankings:
+                    if len(set(ranking_values.values())) != course_count:
+                        st.warning("Each course needs a unique priority number.")
+                    else:
+                        st.session_state.priority_rankings = ranking_values
+                        st.success("Priority ranking saved.")
 
     # ==========================================
     # 🌟 MAIN AREA: CHAT INTERFACE
@@ -755,40 +748,19 @@ else:
 
         with st.chat_message("assistant"):
             with st.spinner("Analyzing targeted data chunks..."):
-                selected_courses = {}
-                competitiveness_records = []
-                action_results = []
-
-                if (
-                    st.session_state.timetable_confirmed
-                    and st.session_state.selected_schedule
-                    and is_historical_mileage_query(prompt)
-                ):
-                    competitiveness_records = records_for_schedule(st.session_state.selected_schedule)
-                    st.session_state.retrieved_course_codes = []
-                    if competitiveness_records:
-                        reply = call_llm(
-                            build_competitiveness_prompt(competitiveness_records),
-                            st.session_state.messages,
-                        )
-                    else:
-                        reply = (
-                            "I could not find matching historical mileage records for the courses "
-                            "currently in your confirmed timetable."
-                        )
-                else:
-                    selected_courses = select_relevant_courses(st.session_state.filtered_courses, prompt)
-                    st.session_state.retrieved_course_codes = list(selected_courses.keys())
-                    system_prompt = build_system_prompt(
-                        p,
-                        selected_courses,
-                        st.session_state.filtered_courses,
-                        st.session_state.selected_schedule,
-                    )
-                    reply = call_llm(system_prompt, st.session_state.messages)
-                    reply = validate_grounding(reply, selected_courses, st.session_state.filtered_courses)
+                selected_courses = select_relevant_courses(st.session_state.filtered_courses, prompt)
+                st.session_state.retrieved_course_codes = list(selected_courses.keys())
+                system_prompt = build_system_prompt(
+                    p,
+                    selected_courses,
+                    st.session_state.filtered_courses,
+                    st.session_state.selected_schedule,
+                )
+                reply = call_llm(system_prompt, st.session_state.messages)
+                reply = validate_grounding(reply, selected_courses, st.session_state.filtered_courses)
 
                 actions = extract_schedule_actions(reply)
+                action_results = []
                 if actions:
                     updated_schedule, action_results = apply_schedule_actions(
                         actions,
@@ -806,14 +778,6 @@ else:
                     for code in st.session_state.retrieved_course_codes
                 ]
                 st.caption("Evidence used: " + ", ".join(evidence_labels))
-            elif competitiveness_records:
-                evidence_labels = sorted(
-                    {
-                        f"{record['course_name']} ({record['year']}-{record['semester']})"
-                        for record in competitiveness_records
-                    }
-                )
-                st.caption("Competitiveness evidence used: " + ", ".join(evidence_labels))
 
             display_reply = format_assistant_reply(reply)
             if action_results:
