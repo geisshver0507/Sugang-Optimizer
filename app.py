@@ -1,4 +1,5 @@
 from html import escape
+import json
 import re
 
 import streamlit as st
@@ -8,11 +9,10 @@ from course_repository import load_tree_database
 from course_utils import display_course_name
 from filters import filter_tree_courses
 from guardrails import recent_conversation, validate_grounding
-from prompts import build_system_prompt
+from prompts import build_priority_ranking_system_prompt, build_system_prompt
 from retrieval import select_relevant_courses
 from schedule_utils import (
     apply_schedule_actions,
-    course_summary_for_prompt,
     extract_schedule_actions,
     schedule_total_credits,
 )
@@ -77,6 +77,7 @@ for key, default in [
     ("schedule_action_log", []),
     ("timetable_confirmed", False),
     ("priority_rankings", {}),
+    ("priority_ranking_version", 0),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -331,6 +332,106 @@ def course_label_from_filtered(code):
     meta = course_obj.get("metadata", {})
     return f"{display_course_name(meta.get('name', code))} ({code})"
 
+
+def iter_json_values(text):
+    """Yield JSON values embedded in model text."""
+    decoder = json.JSONDecoder()
+    source = str(text or "")
+    for match in re.finditer(r"[\[{]", source):
+        try:
+            parsed, _ = decoder.raw_decode(source[match.start():])
+        except json.JSONDecodeError:
+            continue
+        yield parsed
+
+
+def normalize_priority_recommendation(reply, selected_schedule):
+    course_codes = list(selected_schedule.keys())
+    course_set = set(course_codes)
+    ranking_items = []
+
+    for parsed in iter_json_values(reply):
+        if isinstance(parsed, dict):
+            candidate_items = (
+                parsed.get("ranking")
+                or parsed.get("rankings")
+                or parsed.get("priorities")
+                or parsed.get("courses")
+            )
+        elif isinstance(parsed, list):
+            candidate_items = parsed
+        else:
+            candidate_items = None
+
+        if isinstance(candidate_items, list):
+            ranking_items = candidate_items
+            break
+
+    normalized = []
+    seen = set()
+    for fallback_index, item in enumerate(ranking_items, start=1):
+        if not isinstance(item, dict):
+            continue
+        code = str(
+            item.get("course_id")
+            or item.get("course_code")
+            or item.get("code")
+            or ""
+        ).strip()
+        if code not in course_set or code in seen:
+            continue
+
+        try:
+            model_rank = int(item.get("rank") or item.get("priority") or fallback_index)
+        except (TypeError, ValueError):
+            model_rank = fallback_index
+
+        reasons = item.get("reasons") or item.get("reason") or item.get("rationale") or []
+        if isinstance(reasons, str):
+            reasons = [reasons]
+        reasons = [str(reason).strip() for reason in reasons if str(reason).strip()]
+        if not reasons:
+            reasons = ["The model selected this position from the confirmed timetable evidence, but did not return a detailed rationale."]
+
+        normalized.append({
+            "course_id": code,
+            "model_rank": model_rank,
+            "reasons": reasons[:3],
+        })
+        seen.add(code)
+
+    normalized.sort(key=lambda item: (item["model_rank"], course_codes.index(item["course_id"])))
+
+    for code in course_codes:
+        if code not in seen:
+            normalized.append({
+                "course_id": code,
+                "model_rank": len(normalized) + 1,
+                "reasons": ["Included in your confirmed timetable; ranking evidence was limited for this course."],
+            })
+
+    for rank, item in enumerate(normalized, start=1):
+        item["rank"] = rank
+
+    return normalized
+
+
+def format_priority_recommendation_message(priority_items, selected_schedule):
+    lines = [
+        "I generated an editable starting priority ranking for your confirmed timetable. "
+        "This is only a recommendation, and you can change any number in the Priority Ranking panel before final submission."
+    ]
+
+    for item in priority_items:
+        code = item["course_id"]
+        course = selected_schedule.get(code, {})
+        name = display_course_name(course.get("course_name", code))
+        lines.append(f"{item['rank']}. {name}")
+        for reason in item["reasons"]:
+            lines.append(f"- {reason}")
+
+    return "\n".join(lines)
+
 # ── 4. INTAKE SCREEN ─────────────────────────────────────────────────────────
 if not st.session_state.intake_done:
     
@@ -537,14 +638,20 @@ else:
             if st.session_state.timetable_confirmed and selected_schedule:
                 st.markdown("### Priority Ranking")
                 course_count = len(selected_schedule)
+                priority_options = list(range(1, course_count + 1))
+                priority_version = st.session_state.priority_ranking_version
                 with st.form("priority_ranking_form"):
                     ranking_values = {}
-                    for code, course in selected_schedule.items():
+                    for default_index, (code, course) in enumerate(selected_schedule.items(), start=1):
                         label = f"{display_course_name(course.get('course_name'))} ({code})"
+                        default_rank = st.session_state.priority_rankings.get(code, default_index)
+                        if default_rank not in priority_options:
+                            default_rank = default_index
                         ranking_values[code] = st.selectbox(
                             label,
-                            list(range(1, course_count + 1)),
-                            key=f"priority_{code}",
+                            priority_options,
+                            index=priority_options.index(default_rank),
+                            key=f"priority_{priority_version}_{code}",
                         )
                     submitted_rankings = st.form_submit_button("Save Priority Ranking", use_container_width=True)
                     if submitted_rankings:
@@ -572,30 +679,31 @@ else:
                         st.write(item)
 
             if st.button("Confirm Timetable", disabled=not selected_schedule, use_container_width=True):
-                final_list = course_summary_for_prompt(selected_schedule)
                 confirmation_prompt = (
-                    "The user has confirmed this timetable. Ask the user to rank the selected courses "
-                    "from 1 to N, where 1 is highest priority and N is lowest priority. "
-                    "Here is the final selected course list:\n"
-                    f"{final_list}"
+                    "The user clicked Confirm Timetable. Generate the initial editable priority ranking now. "
+                    "Use the confirmed timetable, onboarding filters, course evidence, and especially the conversation context."
                 )
                 llm_messages = st.session_state.messages + [{"role": "user", "content": confirmation_prompt}]
+                ranking_system_prompt = build_priority_ranking_system_prompt(
+                    p,
+                    selected_schedule,
+                    st.session_state.filtered_courses,
+                )
                 ranking_reply = call_llm(
-                    "You are NightHawk AI. The timetable is confirmed. Ask for priority rankings only; do not add or remove courses.",
+                    ranking_system_prompt,
                     llm_messages,
                 )
+                priority_items = normalize_priority_recommendation(ranking_reply, selected_schedule)
+                st.session_state.priority_rankings = {
+                    item["course_id"]: item["rank"]
+                    for item in priority_items
+                }
+                st.session_state.priority_ranking_version += 1
+                ranking_message = format_priority_recommendation_message(priority_items, selected_schedule)
                 st.session_state.messages.append({"role": "user", "content": "Confirmed timetable."})
-                st.session_state.messages.append({"role": "assistant", "content": format_assistant_reply(ranking_reply)})
+                st.session_state.messages.append({"role": "assistant", "content": ranking_message})
                 st.session_state.timetable_confirmed = True
                 st.rerun()
-
-                submitted_rankings = st.form_submit_button("Save Priority Ranking", use_container_width=True)
-                if submitted_rankings:
-                    if len(set(ranking_values.values())) != course_count:
-                        st.warning("Each course needs a unique priority number.")
-                    else:
-                        st.session_state.priority_rankings = ranking_values
-                        st.success("Priority ranking saved.")
 
     # ==========================================
     # 🌟 MAIN AREA: CHAT INTERFACE

@@ -130,3 +130,53 @@ COURSE EVIDENCE RETRIEVED FOR THIS TURN:
 {format_course_context(selected_courses)}
 """
 
+
+def build_priority_ranking_system_prompt(prefs, selected_schedule, filtered_courses):
+    selected_evidence = {}
+    for code, course in selected_schedule.items():
+        if code in filtered_courses:
+            selected_evidence[code] = filtered_courses[code]
+        else:
+            selected_evidence[code] = {
+                "metadata": {
+                    "name": course.get("course_name", code),
+                    "credits": course.get("credits"),
+                    "time": course.get("time"),
+                    "professor": course.get("professor"),
+                },
+                "text_chunks": {},
+            }
+
+    return f"""
+You are NightHawk AI, a Yonsei CS course recommendation assistant for Part 1 of this project.
+The user has clicked Confirm Timetable. Generate an initial recommended priority ranking for the confirmed courses.
+
+Ranking rules:
+- Rank all and only the selected course codes from 1 to N, where 1 is highest priority.
+- Make ranks unique.
+- The ranking is only an editable recommendation, not a final decision.
+- Weigh the user's conversation context most heavily, especially interests, academic goals, workload tolerance, assessment preferences, and stated concerns.
+- Also use onboarding filters, course reviews and ratings when available, syllabus/evaluation evidence, workload, difficulty, keywords, course type, and mileage competitiveness.
+- Never invent course facts, review sentiment, ratings, professors, grading policies, prerequisites, or outcomes.
+- If evidence is missing, say that the evidence is limited instead of guessing.
+- Keep each reason concise and grounded in the supplied evidence or conversation context.
+
+Return valid JSON only. Do not include Markdown or explanatory text outside JSON.
+Use this exact shape:
+{{"ranking":[{{"course_id":"COURSE_CODE","rank":1,"reasons":["Reason tied to conversation context or filters.","Reason tied to reviews, ratings, workload, syllabus, or course evidence."]}}]}}
+
+Student profile from onboarding filters:
+- Language: {prefs.get('language')}
+- Lecture type: {prefs.get('lecture_type')}
+- Major years: {display_major_years(prefs)}
+- Credit window: {prefs.get('min_credits')} to {prefs.get('max_credits')}
+- Focus areas: {', '.join(clean_focus_area(a) for a in prefs.get('focus_areas', [])) or 'All'}
+- Available mileage points: {prefs.get('mileage')}
+
+CONFIRMED TIMETABLE TO RANK:
+{format_current_schedule(selected_schedule)}
+
+COURSE EVIDENCE FOR CONFIRMED COURSES:
+{format_course_context(selected_evidence)}
+"""
+
