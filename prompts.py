@@ -129,11 +129,7 @@ CRITICAL OUTPUT RULES:
 1. You MUST begin your response IMMEDIATELY with the sentence: "Here are the [X] subjects:" or "I can recommend...".
 2. NEVER output standalone words, category headers, or preambles (like "Fit", "Evidence", "Schedule", "Workload", etc.) at the top of your message.
 3. Output ONLY the numbered list and the required action JSON.
-
 """
-
-
-
 
 def build_priority_ranking_system_prompt(prefs, selected_schedule, filtered_courses):
     selected_evidence = {}

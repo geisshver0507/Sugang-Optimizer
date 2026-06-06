@@ -759,13 +759,17 @@ else:
             if st.button("Confirm Timetable", disabled=not selected_schedule, use_container_width=True):
                 final_list = course_summary_for_prompt(selected_schedule)
                 
-                # 1. Update the prompt to ask for text first, JSON last
+                # 1. Update the prompt to ask for the concluding reminder
                 confirmation_prompt = (
-                    "The user has confirmed this timetable. "
-                    "First, explain your overall strategic reasoning in a short, friendly paragraph. "
-                    "Second, list the courses in priority order using a numbered list. "
-                    "Finally, append the raw JSON object at the very end. "
-                    "Here is the final selected course list:\n"
+                    "The user has just clicked 'Confirm Timetable'.\n\n"
+                    "Please structure your response in exactly this order:\n"
+                    "1. A short, friendly paragraph explaining your strategic reasoning for this ranking.\n"
+                    "2. A clean numbered list of the courses in your suggested priority order.\n"
+                    "3. A friendly closing paragraph reminding the user that they can ask you questions, "
+                    "state stronger preferences to adjust the schedule, or manually edit the priority "
+                    "ranking numbers in the side panel before saving.\n\n"
+                    "Finally, on a new line at the VERY END, output the raw JSON ranking dictionary.\n\n"
+                    "Here is the confirmed course list:\n"
                     f"{final_list}"
                 )
                 
@@ -773,7 +777,8 @@ else:
                 
                 ranking_reply = call_llm(
                     "You are NightHawk AI. The timetable is confirmed. "
-                    "Explain your reasoning first, provide a numbered list, and place the JSON dictionary {\"COURSE_CODE\": rank_number, ...} at the VERY END.",
+                    "Explain reasoning, provide the numbered list, add the final reminder, "
+                    "and place the JSON dictionary {\"COURSE_CODE\": rank_number, ...} at the VERY END.",
                     llm_messages,
                 )
             
@@ -800,9 +805,13 @@ else:
             
                 st.session_state.messages.append({"role": "user", "content": "Confirmed timetable."})
                 
-                # 2. 🚨 ERASE THE JSON FROM THE CHAT DISPLAY 🚨
-                # This regex finds the dictionary block and deletes it from the text the user sees
-                display_text = re.sub(r'\{[^{}]+\}', '', ranking_reply).strip()
+                # 2. 🚨 THE NEW CLEANUP TRICK 🚨
+                # Split the text at the first '{' and keep only the first part. 
+                # This guarantees the JSON and its formatting commas are completely erased.
+                display_text = ranking_reply.split('{')[0].strip()
+                
+                # Just in case there are lingering commas or brackets right before the split:
+                display_text = display_text.rstrip(',;:[ ]\n')
                 
                 st.session_state.messages.append({"role": "assistant", "content": format_assistant_reply(display_text)})
                 st.session_state.timetable_confirmed = True
