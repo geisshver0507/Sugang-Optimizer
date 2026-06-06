@@ -108,7 +108,7 @@ def flatten_json(json_path: str) -> dict[str, dict]:
     The JSON stores the same course under multiple category keys
     (major_requirement, major_basic, major_elective) — we deduplicate.
     """
-    with open(json_path) as f:
+    with open(json_path, encoding="utf-8") as f:
         data = json.load(f)
 
     courses = {}
