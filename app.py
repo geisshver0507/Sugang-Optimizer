@@ -2,7 +2,14 @@ import base64
 from html import escape
 from importlib.resources import path
 import re
+from html import escape
 import json
+import re
+
+import streamlit as st
+from groq import Groq
+
+
 import streamlit as st
 from groq import Groq
 
@@ -19,7 +26,7 @@ from schedule_utils import (
     schedule_total_credits,
 )
 
-# import base64
+import base64
 
 # ── 0. Page config (must be first Streamlit call) ───────────────────────────
 st.set_page_config(page_title="NightHawk AI - Yonsei Course Assistant", layout="wide")
@@ -297,13 +304,12 @@ def strip_schedule_action_text(reply):
         return "I updated the timetable based on your request."
     return cleaned
 
-
 def format_assistant_reply(reply):
     """Prepare assistant text for display without exposing internal actions."""
     text = strip_schedule_action_text(reply)
     text = text.replace("\r\n", "\n")
     text = re.sub(r"[^\x00-\x7F]+\s*\(([^()]*[A-Za-z][^()]*)\)", r"\1", text)
-    text = re.sub(r"[\uac00-\ud7a3]+", "", text)
+
 
     section_labels = (
         "Fit",
@@ -323,8 +329,35 @@ def format_assistant_reply(reply):
             text,
             flags=re.IGNORECASE,
         )
+        "Fit",
+        "Evidence",
+        "Caveat",
+        "Schedule",
+        "Workload",
+        "Mileage",
+        "Credits",
+        "Prerequisites",
+        "Why it fits",
+    
+    for label in section_labels:
+        text = re.sub(
+            rf"(?<!^)(?<!\n)\s+({re.escape(label)}:)",
+            rf"\n\1",
+            text,
+            flags=re.IGNORECASE,
+        )
 
     text = re.sub(r"(?<!\n)\s+(\d+\.\s+)", r"\n\n\1", text)
+    cleaned_lines = []
+    for line in text.splitlines():
+        cleaned = line.strip()
+        if re.fullmatch(r"[-*•]+\s*", cleaned):
+            continue
+        cleaned = re.sub(r"^[-*•]\s+", "", cleaned)
+        cleaned = re.sub(r"(?<!\*)\*\s*$", "", cleaned).strip()
+        cleaned_lines.append(cleaned)
+
+    text = "\n".join(cleaned_lines)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
@@ -333,6 +366,106 @@ def course_label_from_filtered(code):
     course_obj = st.session_state.filtered_courses.get(code, {})
     meta = course_obj.get("metadata", {})
     return f"{display_course_name(meta.get('name', code))} ({code})"
+
+
+def iter_json_values(text):
+    """Yield JSON values embedded in model text."""
+    decoder = json.JSONDecoder()
+    source = str(text or "")
+    for match in re.finditer(r"[\[{]", source):
+        try:
+            parsed, _ = decoder.raw_decode(source[match.start():])
+        except json.JSONDecodeError:
+            continue
+        yield parsed
+
+
+def normalize_priority_recommendation(reply, selected_schedule):
+    course_codes = list(selected_schedule.keys())
+    course_set = set(course_codes)
+    ranking_items = []
+
+    for parsed in iter_json_values(reply):
+        if isinstance(parsed, dict):
+            candidate_items = (
+                parsed.get("ranking")
+                or parsed.get("rankings")
+                or parsed.get("priorities")
+                or parsed.get("courses")
+            )
+        elif isinstance(parsed, list):
+            candidate_items = parsed
+        else:
+            candidate_items = None
+
+        if isinstance(candidate_items, list):
+            ranking_items = candidate_items
+            break
+
+    normalized = []
+    seen = set()
+    for fallback_index, item in enumerate(ranking_items, start=1):
+        if not isinstance(item, dict):
+            continue
+        code = str(
+            item.get("course_id")
+            or item.get("course_code")
+            or item.get("code")
+            or ""
+        ).strip()
+        if code not in course_set or code in seen:
+            continue
+
+        try:
+            model_rank = int(item.get("rank") or item.get("priority") or fallback_index)
+        except (TypeError, ValueError):
+            model_rank = fallback_index
+
+        reasons = item.get("reasons") or item.get("reason") or item.get("rationale") or []
+        if isinstance(reasons, str):
+            reasons = [reasons]
+        reasons = [str(reason).strip() for reason in reasons if str(reason).strip()]
+        if not reasons:
+            reasons = ["The model selected this position from the confirmed timetable evidence, but did not return a detailed rationale."]
+
+        normalized.append({
+            "course_id": code,
+            "model_rank": model_rank,
+            "reasons": reasons[:3],
+        })
+        seen.add(code)
+
+    normalized.sort(key=lambda item: (item["model_rank"], course_codes.index(item["course_id"])))
+
+    for code in course_codes:
+        if code not in seen:
+            normalized.append({
+                "course_id": code,
+                "model_rank": len(normalized) + 1,
+                "reasons": ["Included in your confirmed timetable; ranking evidence was limited for this course."],
+            })
+
+    for rank, item in enumerate(normalized, start=1):
+        item["rank"] = rank
+
+    return normalized
+
+
+def format_priority_recommendation_message(priority_items, selected_schedule):
+    lines = [
+        "I generated an editable starting priority ranking for your confirmed timetable. "
+        "This is only a recommendation, and you can change any number in the Priority Ranking panel before final submission."
+    ]
+
+    for item in priority_items:
+        code = item["course_id"]
+        course = selected_schedule.get(code, {})
+        name = display_course_name(course.get("course_name", code))
+        lines.append(f"{item['rank']}. {name}")
+        for reason in item["reasons"]:
+            lines.append(f"- {reason}")
+
+    return "\n".join(lines)
 
 # ── 4. INTAKE SCREEN ─────────────────────────────────────────────────────────
 if not st.session_state.intake_done:
@@ -756,7 +889,7 @@ else:
 
             display_reply = format_assistant_reply(reply)
             if action_results:
-                display_reply += "\n\nSchedule update:\n" + "\n".join(f"- {result}" for result in action_results)
+                display_reply += "\n\nSchedule update:\n" + "\n".join(action_results)
             st.write(display_reply)
 
         st.session_state.messages.append({"role": "assistant", "content": display_reply})
