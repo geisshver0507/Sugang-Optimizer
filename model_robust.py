@@ -626,7 +626,7 @@ def _predict_from_row(bundle: Dict[str, Any], feature_row: Dict[str, Any]) -> Tu
         review_score=row.get("review_score"),
         has_known_professor=bool(professor_norm),
     )
-    recommended_bid = float(np.clip(pred + 3.5, 1.0, MAX_BID_PER_COURSE))
+    recommended_bid = float(np.clip(pred + 2.0, 1.0, MAX_BID_PER_COURSE))
 
     breakdown = {
         "history_prior": hist_details["history_prior"],

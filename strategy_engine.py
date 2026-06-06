@@ -78,7 +78,7 @@ def get_strategy_for_ranked_list(
         })
 
         predicted_avg, shap = predict_threshold(model, explainer, feat)
-        recommended_bid = int(round(min(MAX_BID_PER_COURSE, max(1.0, predicted_avg + 3.5))))
+        recommended_bid = int(round(min(MAX_BID_PER_COURSE, max(1.0, predicted_avg + 2.0))))
         ratio = recommended_bid / max(predicted_avg, 1.0)
 
         if ratio >= 1.20:
@@ -97,7 +97,7 @@ def get_strategy_for_ranked_list(
         elif recommended_bid == MAX_BID_PER_COURSE:
             note = f"At university maximum ({MAX_BID_PER_COURSE} pts)."
         else:
-            note = "Recommended bid = predicted average mileage + 3.5 safety buffer."
+            note = "Recommended bid = predicted average mileage + 2.0 safety buffer."
 
         results.append(BidResult(
             code                = code,
@@ -143,7 +143,7 @@ def format_strategy_for_chat(results: list) -> str:
         lines.append(
             f"**{r.rank}. {r.name}**  →  Bid **{r.recommended_bid} pts**  "
             f"{e} {r.risk_level} ({r.confidence_pct:.0f}% confidence)  "
-            f"*(predicted avg ~{r.predicted_threshold:.1f} pts; +3.5 buffer)*"
+            f"*(predicted avg ~{r.predicted_threshold:.1f} pts; +2.0 buffer)*"
         )
         if r.note:
             lines.append(f"   > {r.note}")
