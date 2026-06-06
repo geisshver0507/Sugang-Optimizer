@@ -1,0 +1,4 @@
+﻿no,rank,mileage_bid,전공자(전공자정원_포함여부),num_courses_applied,graduation_applicant,first_time_enrollment,total_credit_ratio,prev_semester_credit_ratio,grade_year,enrolled,특수교육대상자,course_code,scraped_code,course_name,year,semester,professor,professor_norm,lecture_time,capacity,major_quota,avg_mileage,total_applicants
+,,,,,,,,,,,,CAS1102-01,CCO1102-01,OBJECT-ORIENTED PROGRAMMING,2022,2,김선주,김선주,"화7,8,9",130.0,130.0,12.0,2.0
+1,,12,Y(Y),6,N,Y,0.154,1,1,Y,Y,CAS1102-01,CCO1102-01,OBJECT-ORIENTED PROGRAMMING,2022,2,김선주,김선주,"화7,8,9",130.0,130.0,12.0,2.0
+2,,12,Y(Y),6,N,Y,0.096,0.75,1,Y,Y,CAS1102-01,CCO1102-01,OBJECT-ORIENTED PROGRAMMING,2022,2,김선주,김선주,"화7,8,9",130.0,130.0,12.0,2.0
