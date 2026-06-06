@@ -21,7 +21,7 @@ from course_utils import display_course_name
 from filters import filter_tree_courses
 from guardrails import recent_conversation, validate_grounding
 from prompts import build_system_prompt
-from retrieval import select_relevant_courses
+from retrieval import extract_course_codes, select_relevant_courses
 from schedule_utils import (
     apply_schedule_actions,
     course_summary_for_prompt,
@@ -85,6 +85,7 @@ for key, default in [
     ("filtered_courses",      {}),
     ("prefs",                 {}),
     ("retrieved_course_codes",[]),
+    ("last_recommended_course_codes", []),
     ("selected_schedule",     {}),
     ("schedule_action_log",   []),
     ("timetable_confirmed",   False),
@@ -604,6 +605,7 @@ else:
                 st.session_state.prefs            = updated_p
                 st.session_state.filtered_courses = updated_filtered
                 st.session_state.retrieved_course_codes = []
+                st.session_state.last_recommended_course_codes = []
                 p = updated_p
                 if not updated_filtered:
                     st.warning("No courses match the current sidebar filters.")
@@ -623,7 +625,7 @@ else:
                 for k in ("intake_done","messages","retrieved_course_codes","selected_schedule",
                           "schedule_action_log","timetable_confirmed","priority_rankings",
                           "ai_suggested_rankings","strategy_results","strategy_generated",
-                          "chat_major_years","chat_language"):
+                          "last_recommended_course_codes","chat_major_years","chat_language"):
                     st.session_state.pop(k, None)
                 st.session_state.intake_done = False
                 st.rerun()
@@ -837,7 +839,17 @@ else:
 
         with st.chat_message("assistant"):
             with st.spinner("Analyzing targeted data chunks..."):
-                selected_courses = select_relevant_courses(st.session_state.filtered_courses, prompt)
+                prior_course_codes = (
+                    st.session_state.get("last_recommended_course_codes")
+                    or st.session_state.get("retrieved_course_codes")
+                    or []
+                )
+                selected_courses = select_relevant_courses(
+                    st.session_state.filtered_courses,
+                    prompt,
+                    limit=max(10, len(prior_course_codes)),
+                    prior_codes=prior_course_codes,
+                )
                 st.session_state.retrieved_course_codes = list(selected_courses.keys())
                 system_prompt = build_system_prompt(
                     p,
@@ -875,6 +887,13 @@ else:
             if action_results:
                 display_reply += "\n\nSchedule update:\n" + "\n".join(action_results)
             st.write(display_reply)
+
+        mentioned_codes = [
+            code for code in extract_course_codes(display_reply)
+            if code in st.session_state.filtered_courses
+        ]
+        if mentioned_codes:
+            st.session_state.last_recommended_course_codes = mentioned_codes
 
         st.session_state.messages.append({"role":"assistant","content":display_reply})
         st.rerun()

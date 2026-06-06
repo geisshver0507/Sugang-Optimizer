@@ -49,13 +49,29 @@ def format_course_context(selected_courses):
     for code, data in selected_courses.items():
         meta = data.get("metadata", {})
         text_chunks = data.get("text_chunks", {})
-        raw_time = format_field(meta.get("time"))
-        expanded_time = expand_course_time(meta.get("time"))
+        reviews = clip_text(text_chunks.get("student_reviews"), 700)
+        alt_reviews = clip_text(text_chunks.get("alternative_professor_reviews"), 500)
+        syllabus = clip_text(text_chunks.get("grading_and_syllabus"), 650)
         chunks.append(f"""
 [COURSE {code}]
 Name: {display_course_name(meta.get('name'))}
-Fit info: {clip_text(text_chunks.get('student_reviews'))}
-Difficulty: {format_field(meta.get('workload'))}
+Professor: {format_field(meta.get('professor'))}
+Credits: {format_field(meta.get('credits'))}
+Course type: {format_field(meta.get('course_type'))}
+Language: {format_field(meta.get('language_medium'))}
+Lecture type: {format_field(meta.get('lecture_type'))}
+Raw time: {format_field(meta.get('time'))}
+Expanded time: {expand_course_time(meta.get('time'))}
+Location: {format_field(meta.get('location'))}
+Evaluation type: {format_field(meta.get('evaluation_type'))}
+Prerequisites: {format_field(meta.get('prerequisites'))}
+Workload: {format_field(meta.get('workload'))}
+Difficulty: {format_field(meta.get('difficulty'))}
+Mileage ETA: {format_field(meta.get('mileage_historical_eta'))}
+Keywords: {format_field(meta.get('keywords'))}
+Syllabus/grading evidence: {syllabus}
+Student review evidence: {reviews}
+Alternative professor review evidence: {alt_reviews}
 [/COURSE]
 """)
     return "\n".join(chunks)
