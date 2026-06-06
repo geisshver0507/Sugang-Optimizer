@@ -216,7 +216,7 @@
       "CAS2103-03": {
         "metadata": {
           "name": "DATA STRUCTURE",
-          "professor": "김지응 (Kim Jieung)",
+          "professor": "Kim Jieung",
           "language_medium": "English",
           "lecture_type": "In-person",
           "course_type": "major requirement",
@@ -257,7 +257,7 @@
       "CAS2101-01": {
         "metadata": {
           "name": "DISCRETE MATHEMATICS",
-          "professor": "이진규 (Lee Jinkyu)",
+          "professor": "Lee Jinkyu",
           "language_medium": "English",
           "lecture_type": "In-person",
           "course_type": "major requirement",
@@ -292,7 +292,7 @@
       "CAS2101-02": {
         "metadata": {
           "name": "DISCRETE MATHEMATICS",
-          "professor": "이종민 (Lee Jongmin)",
+          "professor": "Lee Jongmin",
           "language_medium": "English",
           "lecture_type": "In-person",
           "course_type": "major requirement",
@@ -327,7 +327,7 @@
       "MAT2013-03": {
         "metadata": {
           "name": "PROBABILITY AND STATISTICS",
-          "professor": "최장열 (Jangyeol Choi)",
+          "professor": "Jangyeol Choi",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
           "course_type": "major requirement",
@@ -360,7 +360,7 @@
       "MAT2013-04": {
         "metadata": {
           "name": "PROBABILITY AND STATISTICS",
-          "professor": "김현정 (Hyunjung Kim)",
+          "professor": "Hyunjung Kim",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
           "course_type": "major requirement",
@@ -393,7 +393,7 @@
       "MAT2011-03": {
         "metadata": {
           "name": "LINEAR ALGEBRA AND ITS APPLICATIONS",
-          "professor": "최장열 (Jangyeol Choi)",
+          "professor": "Jangyeol Choi",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
           "credits": 3,
@@ -427,7 +427,7 @@
       "CAS2101-01": {
         "metadata": {
           "name": "DISCRETE MATHEMATICS",
-          "professor": "이진규 (Lee Jinkyu)",
+          "professor": "Lee Jinkyu",
           "language_medium": "English",
           "lecture_type": "In-person",
           "credits": 3,
@@ -462,7 +462,7 @@
       "CAS2101-02": {
         "metadata": {
           "name": "DISCRETE MATHEMATICS",
-          "professor": "이종민 (Lee Jongmin)",
+          "professor": "Lee Jongmin",
           "language_medium": "English",
           "lecture_type": "In-person",
           "credits": 3,
@@ -497,7 +497,7 @@
       "MAT2013-03": {
         "metadata": {
           "name": "PROBABILITY AND STATISTICS",
-          "professor": "최장열 (Jangyeol Choi)",
+          "professor": "Jangyeol Choi",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
           "credits": 3,
@@ -530,7 +530,7 @@
       "MAT2013-04": {
         "metadata": {
           "name": "PROBABILITY AND STATISTICS",
-          "professor": "김현정 (Hyunjung Kim)",
+          "professor": "Hyunjung Kim",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
           "credits": 3,
@@ -563,7 +563,7 @@
       "MAT2011-03": {
         "metadata": {
           "name": "LINEAR ALGEBRA AND ITS APPLICATIONS",
-          "professor": "최장열 (Jangyeol Choi)",
+          "professor": "Jangyeol Choi",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
           "credits": 3,
@@ -597,7 +597,7 @@
       "CAS2106-01": {
         "metadata": {
           "name": "INTRODUCTION TO COMPUTER SCIENCE",
-          "professor": "박상휸 (Park Sang Hyun)",
+          "professor": "Park Sang Hyun",
           "language_medium": "Korean",
           "lecture_type": "On-Off Blended (Video Recorded)",
           "credits": 3,
@@ -635,7 +635,7 @@
       "CAS2109-01": {
         "metadata": {
           "name": "INTERNET PROGRAMMING",
-          "professor": "Lee, Kyong Ho",
+          "professor": "Lee Kyong Ho",
           "language_medium": "Korean",
           "lecture_type": "On-Off Blended (Video Recorded)",
           "credits": 3,
@@ -669,7 +669,7 @@
       "CAS3101-02": {
         "metadata": {
           "name": "OPERATING SYSTEM",
-          "professor": "정진규 (Jeong Jinkyu)",
+          "professor": "Jeong Jinkyu",
           "language_medium": "Korean",
           "lecture_type": "In-person",
           "credits": 3,
@@ -705,7 +705,7 @@
       "CAS3102-01": {
         "metadata": {
           "name": "ARCHITECTURE OF COMPUTERS",
-          "professor": "이경우 (Lee Kyoungwoo)",
+          "professor": "Lee Kyoungwoo",
           "language_medium": "Korean",
           "lecture_type": "On-Off Blended (Flipped Classroom)",
           "credits": 3,
@@ -936,7 +936,7 @@
           "credits": 3,
           "workload": "Light",
           "difficulty": "Low",
-          "time": "Mon 2, Wed 11, Wed 12",
+          "time": "Mon 2",
           "location": "EngHD408 / Pre-recorded lecture",
           "evaluation_type": "Relative",
           "prerequisites": [
@@ -1055,7 +1055,7 @@
       "CAS4102-01": {
         "metadata": {
           "name": "AI CAPSTONE DESIGN",
-          "professor": "이봉신 (Bongshin Lee)",
+          "professor": "Bongshin Lee",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
           "credits": 3,
@@ -1122,7 +1122,7 @@
       "CAS4108-01": {
         "metadata": {
           "name": "DATA PRIVACY",
-          "professor": "노일버트 (Albert No)",
+          "professor": "Albert No",
           "language_medium": "English",
           "lecture_type": "In-person",
           "credits": 3,
@@ -1158,7 +1158,7 @@
       "CAS4109-01": {
         "metadata": {
           "name": "COMPUTER SECURITY",
-          "professor": "송도경 (Dokyung Song)",
+          "professor": "Dokyung Song",
           "language_medium": "English",
           "lecture_type": "On-Off Blended (Flipped Classroom)",
           "credits": 3,
@@ -1194,7 +1194,7 @@
       "CAS4119-01": {
         "metadata": {
           "name": "MULTICORE AND GPU PROGRAMMING",
-          "professor": "박영준 (Yongjun Park)",
+          "professor": "Yongjun Park",
           "language_medium": "English",
           "lecture_type": "In-person",
           "credits": 3,
@@ -1231,7 +1231,7 @@
       "CAS4127-01": {
         "metadata": {
           "name": "HUMAN-AI INTERACTION",
-          "professor": "김대현 (Daehyun Kim)",
+          "professor": "Daehyun Kim",
           "language_medium": "English",
           "lecture_type": "In-person",
           "credits": 3,
@@ -1263,7 +1263,7 @@
       "CAS4133-01": {
         "metadata": {
           "name": "LARGE LANGUAGE MODELS",
-          "professor": "김재형 (Jaehyung Kim)",
+          "professor": "Jaehyung Kim",
           "language_medium": "English",
           "lecture_type": "In-person",
           "credits": 3,
@@ -1300,7 +1300,7 @@
       "CAS4150-01": {
         "metadata": {
           "name": "INTRODUCTION TO DATA VISUALISATION",
-          "professor": "강민석 (Minsuk Kang)",
+          "professor": "Minsuk Kang",
           "language_medium": "English",
           "lecture_type": "In-person",
           "credits": 3,
@@ -1336,7 +1336,7 @@
       "CAS4151-01": {
         "metadata": {
           "name": "SW-AI BUSINESS APPLICATION DESIGN",
-          "professor": "김현수 (Hyunsoo Kim)",
+          "professor": "Hyunsoo Kim",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
           "credits": 3,
@@ -1371,9 +1371,9 @@
       "CAS4160-01": {
         "metadata": {
           "name": "REINFORCEMENT LEARNING",
-          "professor": "이영운 (Youngwoon Lee)",
+          "professor": "Lee Youngwoon",
           "language_medium": "English",
-          "lecture_type": "In-person",
+          "lecture_type": "On-Off Blended (Flipped Classroom)",
           "credits": 3,
           "workload": "High",
           "difficulty": "High",
@@ -1410,7 +1410,7 @@
       "CAS4131-01": {
         "metadata": {
           "name": "THEORY AND PRACTICE OF CONNECTED PLATFORM",
-          "professor": "이경우 (Kyoungwoo Lee)",
+          "professor": "Lee Kyoungwoo",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
           "credits": 3,
