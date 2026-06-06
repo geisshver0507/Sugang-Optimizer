@@ -1,0 +1,4 @@
+﻿no,rank,mileage_bid,전공자(전공자정원_포함여부),num_courses_applied,graduation_applicant,first_time_enrollment,total_credit_ratio,prev_semester_credit_ratio,grade_year,enrolled,특수교육대상자,course_code,scraped_code,course_name,year,semester,professor,professor_norm,lecture_time,capacity,major_quota,avg_mileage,total_applicants
+,,,,,,,,,,,,CAS1102-01,CCO1102-01,OBJECT-ORIENTED PROGRAMMING,2024,2,박광현,박광현,"월4,5,6",180.0,180.0,18.5,2.0
+1,1,36,Y(Y),6,Y,N,1,0.4736,4,Y,N,CAS1102-01,CCO1102-01,OBJECT-ORIENTED PROGRAMMING,2024,2,박광현,박광현,"월4,5,6",180.0,180.0,18.5,2.0
+2,2,1,Y(Y),6,N,Y,0.1538,1,2,Y,N,CAS1102-01,CCO1102-01,OBJECT-ORIENTED PROGRAMMING,2024,2,박광현,박광현,"월4,5,6",180.0,180.0,18.5,2.0
