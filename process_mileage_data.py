@@ -72,19 +72,43 @@ def parse_major_quota(val: str) -> tuple:
     return False, False
 
 
-def safe_threshold(enrolled: pd.DataFrame, rejected: pd.DataFrame) -> float:
+def safe_threshold(enrolled: pd.DataFrame,
+                   rejected: pd.DataFrame) -> tuple:
     """
-    Compute the safe winning threshold:
-    = max bid among rejected students + 1
-    If nobody rejected, minimum enrolled bid is enough.
+    Compute the safe winning threshold and whether course is tie-break dominated.
+
+    Returns (threshold, is_tiebreak_dominated)
+
+    is_tiebreak_dominated = True when rejected students bid SAME OR MORE
+    than enrolled students — meaning bid alone doesn't determine outcome.
+    In this case threshold = min enrolled bid (any bid gets you in the pool)
+    and the real differentiator is credit ratio / year level.
     """
     if len(enrolled) == 0:
-        return 0.0
-    if len(rejected) > 0:
-        max_rejected  = rejected["mileage_bid"].max()
-        min_enrolled  = enrolled["mileage_bid"].min()
-        return float(max(max_rejected + 1, min_enrolled))
-    return float(enrolled["mileage_bid"].min())
+        return 0.0, False
+
+    min_enrolled = float(enrolled["mileage_bid"].min())
+
+    if len(rejected) == 0:
+        # Nobody rejected — everyone who bid got in
+        return min_enrolled, False
+
+    max_rejected = float(rejected["mileage_bid"].max())
+
+    # Tie-break dominated: if rejected students bid >= enrolled students
+    # at the margin, bid amount alone doesn't separate winners from losers
+    # Check overlap: are there rejected students who bid MORE than some enrolled?
+    min_enrolled_bid = enrolled["mileage_bid"].min()
+    overlap = (rejected["mileage_bid"] >= min_enrolled_bid).any()
+
+    if overlap:
+        # Tie-break dominated course
+        # Threshold = minimum bid to enter the pool (1pt if anyone got in at 1pt)
+        # But flag it so the system can warn the student
+        return min_enrolled_bid, True
+    else:
+        # Clean threshold — bid above max rejected guarantees enrollment
+        return float(max_rejected + 1), False
 
 
 def compute_stats(group: pd.DataFrame) -> dict:
@@ -104,7 +128,7 @@ def compute_stats(group: pd.DataFrame) -> dict:
     priority_enr  = group[(group["rank"] == 0) & (group["enrolled_bool"] == 1)]
 
     # ── Overall safe threshold ────────────────────────────────────────────
-    winning_threshold = safe_threshold(enrolled_comp, not_enr_comp)
+    winning_threshold, is_tiebreak = safe_threshold(enrolled_comp, not_enr_comp)
     max_winning_bid   = float(enrolled_comp["mileage_bid"].max())                         if len(enrolled_comp) > 0 else 0.0
     avg_winning_bid   = float(enrolled_comp["mileage_bid"].mean())                         if len(enrolled_comp) > 0 else 0.0
     raw_min_bid       = float(enrolled_comp["mileage_bid"].min())                         if len(enrolled_comp) > 0 else 0.0
@@ -130,7 +154,7 @@ def compute_stats(group: pd.DataFrame) -> dict:
         major_rejected  = competitive[
             competitive["in_major_quota"] & (competitive["enrolled_bool"] == 0)
         ]
-        major_threshold = safe_threshold(major_enrolled, major_rejected)
+        major_threshold, _ = safe_threshold(major_enrolled, major_rejected)
     else:
         major_threshold = winning_threshold
 
@@ -142,7 +166,8 @@ def compute_stats(group: pd.DataFrame) -> dict:
             yr_enr = enrolled_comp[enrolled_comp["grade_year"] == yr]
             yr_rej = not_enr_comp[not_enr_comp["grade_year"] == yr]                      if len(not_enr_comp) > 0 else pd.DataFrame()
             if len(yr_enr) > 0:
-                yr_thresholds[yr] = safe_threshold(yr_enr, yr_rej)
+                yr_t, _ = safe_threshold(yr_enr, yr_rej)
+                yr_thresholds[yr] = yr_t
 
     # ── Competition stats ─────────────────────────────────────────────────
     inferred_class_size = len(enrolled_all)
@@ -162,6 +187,10 @@ def compute_stats(group: pd.DataFrame) -> dict:
     return {
         # Primary training target
         "winning_threshold":         winning_threshold,
+        # Whether enrollment is decided by tie-break not bid amount
+        # If True, any bid ≥ 1pt puts you in the pool
+        # and credit ratio / year level determines who gets a seat
+        "is_tiebreak_dominated":     int(is_tiebreak),
         # Major quota specific (for CS major users)
         "major_quota_threshold":     major_threshold,
         # Per-year thresholds
@@ -207,9 +236,15 @@ def process():
     df["rank"]        = pd.to_numeric(df["rank"],        errors="coerce")
     df["mileage_bid"] = pd.to_numeric(df["mileage_bid"], errors="coerce")
     df["grade_year"]  = pd.to_numeric(df["grade_year"],  errors="coerce")
+    # IMPORTANT: The mileage helper site only shows "Y" for enrolled students.
+    # Non-enrolled students either show "N" or leave the cell blank.
+    # Blank = not enrolled (NaN → 0)
     df["enrolled_bool"] = df["enrolled"].map(
         {"Y": 1, "N": 0, "y": 1, "n": 0}
     ).fillna(0).astype(int)
+    # Also treat empty string as not enrolled
+    if df["enrolled"].dtype == object:
+        df.loc[df["enrolled"].str.strip() == "", "enrolled_bool"] = 0
 
     # Normalize professor names
     if "professor" not in df.columns:
@@ -222,21 +257,12 @@ def process():
     df["base_code"] = df["course_code"].apply(get_base_code)
 
     # ── Recency weights ───────────────────────────────────────────────────
-    # Drop rows that are missing critical year or semester values to prevent NaN crashes
-    df = df.dropna(subset=["year", "semester"])
-    
-    # Force columns to integers early to guarantee safe dictionary lookups
-    df["year"] = df["year"].astype(int)
-    df["semester"] = df["semester"].astype(int)
-
     all_sems = sorted(
-        df[["year", "semester"]].drop_duplicates().values.tolist()
+        df[["year","semester"]].drop_duplicates().values.tolist()
     )
     n_sems = len(all_sems)
-    
-    # Safe dictionary construction since elements are guaranteed to be integers
     recency_map = {
-        (y, s): 0.5 + 0.5 * (i / max(n_sems - 1, 1))
+        (int(y), int(s)): 0.5 + 0.5 * (i / max(n_sems - 1, 1))
         for i, (y, s) in enumerate(all_sems)
     }
     print(f"Semesters found: {[f'{y}-{s}' for y,s in all_sems]}")

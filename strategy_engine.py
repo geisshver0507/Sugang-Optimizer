@@ -72,24 +72,37 @@ def get_strategy_for_ranked_list(
         # Build feature row — mileage is always 72, budget_ratio always 1.0
         feat = df_features.loc[code].to_dict()
         feat.update({
-            "student_year":       student_year,
-            "num_courses_wanted": float(n_courses),
-            "rank_in_list":       float(rank),
-            "priority_ratio":     (n_courses - rank + 1) / max(n_courses, 1),
-            # is_cs_major always True since system is for CS majors only
-            "is_cs_major":        1.0,
+            "student_year": student_year,
+            # rank_in_list, priority_ratio, num_courses_wanted removed —
+            # model gave them 0% importance
         })
 
         threshold, shap = predict_threshold(model, explainer, feat)
 
         c_info = flat_courses.get(code, {})
+
+        # Check if 2026-1 holdout data says this course is tiebreak dominated
+        import pandas as pd
+        from pathlib import Path
+        is_tiebreak = False
+        holdout_path = Path("mileage_holdout_2026_1.csv")
+        if holdout_path.exists():
+            try:
+                df_h = pd.read_csv(holdout_path, encoding="utf-8-sig")
+                row_h = df_h[df_h["course_code"] == code]
+                if len(row_h) > 0 and "is_tiebreak_dominated" in df_h.columns:
+                    is_tiebreak = bool(row_h["is_tiebreak_dominated"].iloc[0])
+            except Exception:
+                pass
+
         course_inputs.append(CourseInput(
-            code                = code,
-            name                = name,
-            rank                = rank,
-            predicted_threshold = threshold,
-            is_major_req        = (c_info.get("category") == "major_requirement"),
-            shap_breakdown      = shap,
+            code                  = code,
+            name                  = name,
+            rank                  = rank,
+            predicted_threshold   = threshold,
+            is_major_req          = (c_info.get("category") == "major_requirement"),
+            is_tiebreak_dominated = is_tiebreak,
+            shap_breakdown        = shap,
         ))
 
     if skipped:

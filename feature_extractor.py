@@ -141,11 +141,19 @@ def extract_features(courses: dict[str, dict]) -> pd.DataFrame:
         # Combine reviews for scoring
         combined_review = review_text + " " + alt_review
 
+        eta_added     = float(c.get("mileage_historical_eta", 0) or 0)
+        # Class capacity from database if available
+        capacity      = float(c.get("capacity", 0) or 0)
+        # Demand ratio: ETA adds / capacity — better signal than raw ETA
+        # High ratio = oversubscribed = high competition
+        demand_ratio  = (eta_added / capacity) if capacity > 0 else 0.0
+
         row = {
             "course_code": code,
 
             # ── Demand signal ────────────────────────────────────────────
-            "eta_added": float(c.get("mileage_historical_eta", 0) or 0),
+            "eta_added":    eta_added,
+            "demand_ratio": demand_ratio,  # ETA adds / class capacity
 
             # ── Course structure ─────────────────────────────────────────
             "credits": float(c.get("credits", 3) or 3),

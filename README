@@ -30,7 +30,7 @@ Model Framework
 
 
 Model Testing Optimizer
-python3 -m streamlit run optimizer_testing.py
+python3 -m streamlit run strategy_app.py
 
 
 scraping data logic

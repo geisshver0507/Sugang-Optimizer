@@ -29,12 +29,13 @@ MAX_BID_PER_COURSE = 36   # university hard cap per course
 
 @dataclass
 class CourseInput:
-    code:                str
-    name:                str
-    rank:                int      # 1 = highest priority
-    predicted_threshold: float    # model's min bid estimate
-    is_major_req:        bool  = False
-    shap_breakdown:      dict  = field(default_factory=dict)
+    code:                  str
+    name:                  str
+    rank:                  int      # 1 = highest priority
+    predicted_threshold:   float    # model's min bid estimate
+    is_major_req:          bool  = False
+    is_tiebreak_dominated: bool  = False  # tie-break decides, not bid amount
+    shap_breakdown:        dict  = field(default_factory=dict)
 
 
 @dataclass
@@ -200,7 +201,11 @@ def allocate_bids(
             risk, confidence = "Risky",    max(10.0, ratio * 50.0)
 
         note = ""
-        if bid == max_per_course:
+        if course.is_tiebreak_dominated:
+            note = ("⚠ This course is decided by tie-break, not bid amount. "
+                    "Any bid ≥ 1pt enters the pool — enrollment depends on "
+                    "your credit completion ratio and year level.")
+        elif bid == max_per_course:
             note = f"⚠ At university maximum ({max_per_course}pts) — highest possible bid."
         elif course.is_major_req and ratio < 0.85:
             note = "⚠ Major requirement — consider bidding higher."

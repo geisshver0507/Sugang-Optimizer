@@ -13,19 +13,15 @@ from groq import Groq
 import streamlit as st
 from groq import Groq
 
-from course_competitiveness import (
-    build_competitiveness_prompt,
-    is_historical_mileage_query,
-    records_for_schedule,
-)
 from course_repository import load_tree_database
 from course_utils import display_course_name
 from filters import filter_tree_courses
 from guardrails import recent_conversation, validate_grounding
-from prompts import build_priority_ranking_system_prompt, build_system_prompt
+from prompts import build_system_prompt
 from retrieval import select_relevant_courses
 from schedule_utils import (
     apply_schedule_actions,
+    course_summary_for_prompt,
     extract_schedule_actions,
     schedule_total_credits,
 )
@@ -34,33 +30,6 @@ from schedule_utils import (
 
 # ── 0. Page config (must be first Streamlit call) ───────────────────────────
 st.set_page_config(page_title="NightHawk AI - Yonsei Course Assistant", layout="wide")
-
-# def set_background(image_file):
-#     """Encodes a local image and injects it as the Streamlit app background."""
-#     with open(image_file, "rb") as file:
-#         encoded_string = base64.b64encode(file.read()).decode()
-    
-#     css = f"""
-#     <style>
-#     .stApp {{
-#         background-image: url("data:image/jpeg;base64,{encoded_string}");
-#         background-size: cover;
-#         background-position: center;
-#         background-attachment: fixed;
-#     }}
-#     /* Optional: Adds a slight dark overlay so your text remains readable */
-#     .stApp > header {{
-#         background-color: transparent;
-#     }}
-#     </style>
-#     """
-#     st.markdown(css, unsafe_allow_html=True)
-
-# Call this right after your Session State init (Section 3)
-# if os.path.exists("Night_Sky.jpg"):
-#     set_background("Night_Sky.jpg")
-# else:
-#     st.warning("Background image 'Night_Sky.jpg' not found in directory.")
 
 # ── 1. Groq client ──────────────────────────────────────────────────────────
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
@@ -90,7 +59,7 @@ for key, default in [
     ("schedule_action_log", []),
     ("timetable_confirmed", False),
     ("priority_rankings", {}),
-    ("priority_ranking_version", 0),
+    ("ai_suggested_rankings", {}),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -314,6 +283,7 @@ def format_assistant_reply(reply):
     text = strip_schedule_action_text(reply)
     text = text.replace("\r\n", "\n")
     text = re.sub(r"[^\x00-\x7F]+\s*\(([^()]*[A-Za-z][^()]*)\)", r"\1", text)
+    text = re.sub(r"[\uac00-\ud7a3]+", "", text)
 
     section_labels = (
 <<<<<<< HEAD
@@ -510,6 +480,13 @@ if not st.session_state.intake_done:
 
     # ── SPLIT LAYOUT: Centered Title Left, Single-Column Form Right ──
     col_title, col_filters = st.columns([1.1, 1], gap="large")
+
+
+    def gif_to_base64(path):
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+
+    gif_b64 = gif_to_base64("sonic.gif")
 
     with col_title:
         st.markdown("""
@@ -851,40 +828,19 @@ else:
 
         with st.chat_message("assistant"):
             with st.spinner("Analyzing targeted data chunks..."):
-                selected_courses = {}
-                competitiveness_records = []
-                action_results = []
-
-                if (
-                    st.session_state.timetable_confirmed
-                    and st.session_state.selected_schedule
-                    and is_historical_mileage_query(prompt)
-                ):
-                    competitiveness_records = records_for_schedule(st.session_state.selected_schedule)
-                    st.session_state.retrieved_course_codes = []
-                    if competitiveness_records:
-                        reply = call_llm(
-                            build_competitiveness_prompt(competitiveness_records),
-                            st.session_state.messages,
-                        )
-                    else:
-                        reply = (
-                            "I could not find matching historical mileage records for the courses "
-                            "currently in your confirmed timetable."
-                        )
-                else:
-                    selected_courses = select_relevant_courses(st.session_state.filtered_courses, prompt)
-                    st.session_state.retrieved_course_codes = list(selected_courses.keys())
-                    system_prompt = build_system_prompt(
-                        p,
-                        selected_courses,
-                        st.session_state.filtered_courses,
-                        st.session_state.selected_schedule,
-                    )
-                    reply = call_llm(system_prompt, st.session_state.messages)
-                    reply = validate_grounding(reply, selected_courses, st.session_state.filtered_courses)
+                selected_courses = select_relevant_courses(st.session_state.filtered_courses, prompt)
+                st.session_state.retrieved_course_codes = list(selected_courses.keys())
+                system_prompt = build_system_prompt(
+                    p,
+                    selected_courses,
+                    st.session_state.filtered_courses,
+                    st.session_state.selected_schedule,
+                )
+                reply = call_llm(system_prompt, st.session_state.messages)
+                reply = validate_grounding(reply, selected_courses, st.session_state.filtered_courses)
 
                 actions = extract_schedule_actions(reply)
+                action_results = []
                 if actions:
                     updated_schedule, action_results = apply_schedule_actions(
                         actions,
@@ -902,14 +858,6 @@ else:
                     for code in st.session_state.retrieved_course_codes
                 ]
                 st.caption("Evidence used: " + ", ".join(evidence_labels))
-            elif competitiveness_records:
-                evidence_labels = sorted(
-                    {
-                        f"{record['course_name']} ({record['year']}-{record['semester']})"
-                        for record in competitiveness_records
-                    }
-                )
-                st.caption("Competitiveness evidence used: " + ", ".join(evidence_labels))
 
             display_reply = format_assistant_reply(reply)
             if action_results:

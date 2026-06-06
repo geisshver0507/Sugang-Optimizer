@@ -24,6 +24,7 @@ from feature_extractor import load_features
 FEATURE_COLS = [
     # Course-level features (from segmented_cs_courses.json)
     "eta_added",            # how many people added on ETA — direct demand signal
+    "demand_ratio",         # eta_added / class capacity — oversubscription ratio
     "credits",
     "major_year_target",    # which year the course is aimed at
     "is_major_req",         # mandatory = more seats usually
