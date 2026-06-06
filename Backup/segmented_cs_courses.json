@@ -847,7 +847,7 @@
             "Linear Algebra",
             "Python"
           ],
-          "mileage_historical_eta": 85,
+          "mileage_historical_eta": 45,
           "course_type": "major elective",
           "keywords": [
             "math",
@@ -879,7 +879,7 @@
             "Differential Equation",
             "Programming"
           ],
-          "mileage_historical_eta": 63,
+          "mileage_historical_eta": 60,
           "course_type": "major elective",
           "keywords": [
             "pytorch",
@@ -943,7 +943,7 @@
             "Data Structures",
             "Discrete Mathematics"
           ],
-          "mileage_historical_eta": 27,
+          "mileage_historical_eta": 41,
           "course_type": "major elective",
           "keywords": [
             "ai",
@@ -980,7 +980,7 @@
           "location": "ERC170E",
           "evaluation_type": "Relative",
           "prerequisites": [],
-          "mileage_historical_eta": 31,
+          "mileage_historical_eta": 42,
           "course_type": "major elective",
           "keywords": [
             "nlp",
@@ -1096,7 +1096,7 @@
           "prerequisites": [
             "Data Structures"
           ],
-          "mileage_historical_eta": 54,
+          "mileage_historical_eta": 30,
           "course_type": "major requirement",
           "keywords": [
             "capstone",
