@@ -31,3 +31,12 @@ Model Framework
 
 Model Testing Optimizer
 python3 -m streamlit run optimizer_testing.py
+
+
+scraping data logic
+# One year at a time
+python3 scrape_mileage.py --years 2022 --semesters 1 2 --visible
+python3 scrape_mileage.py --years 2023 --semesters 1 2 --visible
+python3 scrape_mileage.py --years 2024 --semesters 1 2 --visible
+python3 scrape_mileage.py --years 2025 --semesters 1 2 --visible
+python3 scrape_mileage.py --years 2026 --semesters 1 --visible
