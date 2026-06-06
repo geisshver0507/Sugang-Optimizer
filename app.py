@@ -278,7 +278,6 @@ def strip_schedule_action_text(reply):
         "'action'",
     )
     resume_prefixes = (
-        "grounding note:",
         "grounding check:",
         "schedule update:",
     )
@@ -310,7 +309,6 @@ def format_assistant_reply(reply):
     text = text.replace("\r\n", "\n")
     text = re.sub(r"[^\x00-\x7F]+\s*\(([^()]*[A-Za-z][^()]*)\)", r"\1", text)
 
-
     section_labels = (
         "Fit",
         "Evidence",
@@ -322,45 +320,32 @@ def format_assistant_reply(reply):
         "Prerequisites",
         "Why it fits",
     )
-    for label in section_labels:
-        text = re.sub(
-            rf"(?<!^)(?<!\n)\s+({re.escape(label)}:)",
-            rf"\n- \1",
-            text,
-            flags=re.IGNORECASE,
-        )
-        "Fit",
-        "Evidence",
-        "Caveat",
-        "Schedule",
-        "Workload",
-        "Mileage",
-        "Credits",
-        "Prerequisites",
-        "Why it fits",
     
+    # 1. Format the labels nicely with bullet points
     for label in section_labels:
         text = re.sub(
             rf"(?<!^)(?<!\n)\s+({re.escape(label)}:)",
-            rf"\n\1",
+            rf"\n- **\1**", # Added markdown bolding for extra visual polish
             text,
             flags=re.IGNORECASE,
         )
 
+    # 2. Add extra spacing between numbered list items
     text = re.sub(r"(?<!\n)\s+(\d+\.\s+)", r"\n\n\1", text)
+    
     cleaned_lines = []
     for line in text.splitlines():
         cleaned = line.strip()
+        # Skip weird standalone bullet points
         if re.fullmatch(r"[-*•]+\s*", cleaned):
             continue
-        cleaned = re.sub(r"^[-*•]\s+", "", cleaned)
+        # Clean up stray markers at ends of sentences
         cleaned = re.sub(r"(?<!\*)\*\s*$", "", cleaned).strip()
         cleaned_lines.append(cleaned)
 
     text = "\n".join(cleaned_lines)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
-
 
 def course_label_from_filtered(code):
     course_obj = st.session_state.filtered_courses.get(code, {})
@@ -773,34 +758,33 @@ else:
 
             if st.button("Confirm Timetable", disabled=not selected_schedule, use_container_width=True):
                 final_list = course_summary_for_prompt(selected_schedule)
+                
+                # 1. Update the prompt to ask for text first, JSON last
                 confirmation_prompt = (
                     "The user has confirmed this timetable. "
-                    "First, suggest a priority ranking for each course from 1 to N based on "
-                    "factors like major requirements, prerequisites, course difficulty, and typical demand. "
-                    "Return your suggested ranking as a JSON object like: "
-                    "{\"COURSE_CODE\": rank, ...} "
-                    "Then explain your reasoning briefly. "
+                    "First, explain your overall strategic reasoning in a short, friendly paragraph. "
+                    "Second, list the courses in priority order using a numbered list. "
+                    "Finally, append the raw JSON object at the very end. "
                     "Here is the final selected course list:\n"
                     f"{final_list}"
                 )
+                
                 llm_messages = st.session_state.messages + [{"role": "user", "content": confirmation_prompt}]
+                
                 ranking_reply = call_llm(
                     "You are NightHawk AI. The timetable is confirmed. "
-                    "Suggest a priority ranking for the courses as a JSON object first, then explain why. "
-                    "Format: {\"COURSE_CODE\": rank_number, ...} on its own line, then your explanation.",
+                    "Explain your reasoning first, provide a numbered list, and place the JSON dictionary {\"COURSE_CODE\": rank_number, ...} at the VERY END.",
                     llm_messages,
                 )
             
-                # Extract the suggested JSON ranking from the reply
+                # Extract the suggested JSON ranking from the reply for your UI Dropdowns
                 suggested_rankings = {}
                 try:
                     json_match = re.search(r'\{[^{}]+\}', ranking_reply, re.DOTALL)
                     if json_match:
                         suggested_rankings = json.loads(json_match.group())
-                        # Normalize to int ranks
                         suggested_rankings = {k: int(v) for k, v in suggested_rankings.items()}
                 except Exception:
-                    # If parsing fails, just default to order in schedule
                     for i, code in enumerate(selected_schedule.keys(), 1):
                         suggested_rankings[code] = i
             
@@ -815,9 +799,14 @@ else:
                         used_ranks.add(next_rank)
             
                 st.session_state.messages.append({"role": "user", "content": "Confirmed timetable."})
-                st.session_state.messages.append({"role": "assistant", "content": format_assistant_reply(ranking_reply)})
+                
+                # 2. 🚨 ERASE THE JSON FROM THE CHAT DISPLAY 🚨
+                # This regex finds the dictionary block and deletes it from the text the user sees
+                display_text = re.sub(r'\{[^{}]+\}', '', ranking_reply).strip()
+                
+                st.session_state.messages.append({"role": "assistant", "content": format_assistant_reply(display_text)})
                 st.session_state.timetable_confirmed = True
-                st.session_state.ai_suggested_rankings = suggested_rankings   # <-- store AI suggestion
+                st.session_state.ai_suggested_rankings = suggested_rankings   
                 st.rerun()
                 
                 submitted_rankings = st.form_submit_button("Save Priority Ranking", use_container_width=True)
