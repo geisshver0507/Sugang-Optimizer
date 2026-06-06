@@ -50,6 +50,39 @@ COURSE_COLORS = [
     "#a16207",
 ]
 
+SCHEDULE_EDIT_RE = re.compile(
+    r"\b("
+    r"add|put|include|insert|remove|drop|delete|take out|swap|replace|change|"
+    r"optimize|build|make|create|update|schedule"
+    r")\b",
+    re.IGNORECASE,
+)
+SCHEDULE_TARGET_RE = re.compile(
+    r"\b(timetable|schedule|calendar|selected courses|my courses|course list)\b",
+    re.IGNORECASE,
+)
+COURSE_ACTION_RE = re.compile(
+    r"\b(add|put|include|insert|remove|drop|delete|swap|replace)\b",
+    re.IGNORECASE,
+)
+
+
+def is_schedule_edit_request(text):
+    """Return True only when the user is explicitly asking to edit the timetable."""
+    user_text = str(text or "")
+    lowered = user_text.lower()
+    if not SCHEDULE_EDIT_RE.search(user_text):
+        return False
+    if COURSE_ACTION_RE.search(user_text):
+        return True
+    if "optimize" in lowered and SCHEDULE_TARGET_RE.search(user_text):
+        return True
+    if SCHEDULE_TARGET_RE.search(user_text) and any(
+        word in lowered for word in ("build", "make", "create", "update", "change")
+    ):
+        return True
+    return False
+
 
 def normalize_action_name(action_name):
     value = str(action_name or "").strip().lower().replace("-", "_").replace(" ", "_")
@@ -188,9 +221,11 @@ def course_label(course_code, course_obj=None, schedule_course=None):
     return str(course_code)
 
 
-def extract_schedule_actions(reply):
+def extract_schedule_actions(reply, user_prompt=None):
     """Extract action dicts from JSON objects/arrays embedded in the assistant reply."""
     if not reply:
+        return []
+    if user_prompt is not None and not is_schedule_edit_request(user_prompt):
         return []
 
     decoder = json.JSONDecoder()

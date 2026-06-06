@@ -860,7 +860,7 @@ else:
                 reply  = call_llm(system_prompt, st.session_state.messages)
                 reply  = validate_grounding(reply, selected_courses, st.session_state.filtered_courses)
 
-                actions = extract_schedule_actions(reply)
+                actions = extract_schedule_actions(reply, user_prompt=prompt)
                 action_results = []
                 if actions:
                     updated_schedule, action_results = apply_schedule_actions(
