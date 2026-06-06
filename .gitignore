@@ -1,9 +1,21 @@
+# Local secrets
+.streamlit/secrets.toml
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# OS/editor noise
+.DS_Store
+
+# Generated model artifacts
+*.pkl
+
+# Generated mileage/data outputs
 .streamlit/mileage_history_all.csv
 course_summary_all.csv
 mileage_training_real.csv
 mileage_holdout_2026_1.csv
 training_final.csv
 mileage_analysis.csv
-*.pkl
-.streamlit/secrets.toml
-.streamlit/secrets.toml
+mileage_csvs/
