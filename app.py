@@ -4,6 +4,11 @@ import re
 import streamlit as st
 from groq import Groq
 
+from course_competitiveness import (
+    build_competitiveness_prompt,
+    is_historical_mileage_query,
+    records_for_schedule,
+)
 from course_repository import load_tree_database
 from course_utils import display_course_name
 from filters import filter_tree_courses
@@ -300,7 +305,6 @@ def format_assistant_reply(reply):
     text = strip_schedule_action_text(reply)
     text = text.replace("\r\n", "\n")
     text = re.sub(r"[^\x00-\x7F]+\s*\(([^()]*[A-Za-z][^()]*)\)", r"\1", text)
-    text = re.sub(r"[\uac00-\ud7a3]+", "", text)
 
     section_labels = (
         "Fit",
@@ -369,15 +373,43 @@ if not st.session_state.intake_done:
     col_title, col_filters = st.columns([1.1, 1], gap="large")
 
     with col_title:
-        # Using Flexbox to vertically and horizontally center the massive text
         st.markdown("""
-            <div style='display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 100%; min-height: 500px;'>
-                <h1 style='margin-bottom: 0px; font-size: 5.5rem; font-weight: 800; line-height: 1.1;'>Hi!    I'm NightHawk AI🦅</h1>
-                <h5 style='color: #94a3b8; margin-top: 15px; font-weight: 400; font-size: 1.3rem; line-height: 1.6; max-width: 85%;'>
-                    Yonsei Course Assistant &mdash; Customize your targets to extract your optimal course alignment.
-                </h5>
-            </div>
-        """, unsafe_allow_html=True)
+        <div style='display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    text-align: center;
+                    height: 100%;
+                    min-height: 500px;'>
+
+            <h1 style='margin-bottom: 0px;
+                       font-size: 5.5rem;
+                       font-weight: 800;
+                       line-height: 1.1;'>
+                Hi! I'm NightHawk AI 🦅
+            </h1>
+
+        </div>
+    """, unsafe_allow_html=True)
+
+    # GIF
+    st.image("eagle.gif", width=250)
+
+    st.markdown("""
+        <div style='text-align: center;'>
+            <h5 style='color: #94a3b8;
+                       margin-top: 15px;
+                       font-weight: 400;
+                       font-size: 1.3rem;
+                       line-height: 1.6;
+                       max-width: 85%;
+                       margin-left: auto;
+                       margin-right: auto;'>
+                Yonsei Course Assistant &mdash;
+                Customize your targets to extract your optimal course alignment.
+            </h5>
+        </div>
+    """, unsafe_allow_html=True)
 
     with col_filters:
         # Push the form down slightly to align with the middle of the text
@@ -625,19 +657,40 @@ else:
 
         with st.chat_message("assistant"):
             with st.spinner("Analyzing targeted data chunks..."):
-                selected_courses = select_relevant_courses(st.session_state.filtered_courses, prompt)
-                st.session_state.retrieved_course_codes = list(selected_courses.keys())
-                system_prompt = build_system_prompt(
-                    p,
-                    selected_courses,
-                    st.session_state.filtered_courses,
-                    st.session_state.selected_schedule,
-                )
-                reply = call_llm(system_prompt, st.session_state.messages)
-                reply = validate_grounding(reply, selected_courses, st.session_state.filtered_courses)
+                selected_courses = {}
+                competitiveness_records = []
+                action_results = []
+
+                if (
+                    st.session_state.timetable_confirmed
+                    and st.session_state.selected_schedule
+                    and is_historical_mileage_query(prompt)
+                ):
+                    competitiveness_records = records_for_schedule(st.session_state.selected_schedule)
+                    st.session_state.retrieved_course_codes = []
+                    if competitiveness_records:
+                        reply = call_llm(
+                            build_competitiveness_prompt(competitiveness_records),
+                            st.session_state.messages,
+                        )
+                    else:
+                        reply = (
+                            "I could not find matching historical mileage records for the courses "
+                            "currently in your confirmed timetable."
+                        )
+                else:
+                    selected_courses = select_relevant_courses(st.session_state.filtered_courses, prompt)
+                    st.session_state.retrieved_course_codes = list(selected_courses.keys())
+                    system_prompt = build_system_prompt(
+                        p,
+                        selected_courses,
+                        st.session_state.filtered_courses,
+                        st.session_state.selected_schedule,
+                    )
+                    reply = call_llm(system_prompt, st.session_state.messages)
+                    reply = validate_grounding(reply, selected_courses, st.session_state.filtered_courses)
 
                 actions = extract_schedule_actions(reply)
-                action_results = []
                 if actions:
                     updated_schedule, action_results = apply_schedule_actions(
                         actions,
@@ -655,6 +708,14 @@ else:
                     for code in st.session_state.retrieved_course_codes
                 ]
                 st.caption("Evidence used: " + ", ".join(evidence_labels))
+            elif competitiveness_records:
+                evidence_labels = sorted(
+                    {
+                        f"{record['course_name']} ({record['year']}-{record['semester']})"
+                        for record in competitiveness_records
+                    }
+                )
+                st.caption("Competitiveness evidence used: " + ", ".join(evidence_labels))
 
             display_reply = format_assistant_reply(reply)
             if action_results:
