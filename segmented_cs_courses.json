@@ -143,7 +143,7 @@
             "polymorphism",
             "virtual functions"
           ],
-          "max_capacity": 34,
+          "max_capacity": 100,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -182,7 +182,7 @@
             "sorting",
             "hashing"
           ],
-          "max_capacity": 39,
+          "max_capacity": 75,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -221,7 +221,7 @@
             "sorting",
             "hashing"
           ],
-          "max_capacity": 77,
+          "max_capacity": 75,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -303,7 +303,7 @@
             "combination",
             "graphs"
           ],
-          "max_capacity": 69,
+          "max_capacity": 75,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -413,7 +413,7 @@
             "variance",
             "regression analysis"
           ],
-          "max_capacity": 52,
+          "max_capacity": 80,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
