@@ -471,7 +471,7 @@ if not st.session_state.intake_done:
             return base64.b64encode(f.read()).decode()
 
     try:
-        gif_b64 = gif_to_base64("sonic.gif")
+        gif_b64 = gif_to_base64("eagle2.gif")
         gif_html = f"<div class='nh-gif-wrap'><img src='data:image/gif;base64,{gif_b64}' alt='NightHawk animation'/></div>"
     except FileNotFoundError:
         gif_html = ""
@@ -487,7 +487,7 @@ if not st.session_state.intake_done:
         .nh-title     {{ margin:0;font-size:5.5rem;font-weight:800;line-height:1.1;opacity:0;animation:fadeSlideUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.1s forwards; }}
         .nh-subtitle  {{ color:#94a3b8;margin-top:15px;font-weight:400;font-size:1.3rem;line-height:1.6;max-width:85%;opacity:0;animation:fadeSlideUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.4s forwards; }}
         .nh-gif-wrap  {{ margin-top:28px;opacity:0;animation:fadeSlideUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.7s forwards; }}
-        .nh-gif-wrap img {{ width:220px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.45); }}
+        
         </style>
         <div class='nh-hero-wrap'>
             <h1 class='nh-title'>Hi! I'm NightHawk AI🦅</h1>
