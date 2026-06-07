@@ -138,25 +138,47 @@ def allocate_bids(
                 break
 
     else:
-        # Budget too tight — protect high-priority courses first
-        allocated = np.zeros(n)
-        remaining = float(total_mileage)
+        # Budget too tight: protect high-priority courses up to their cutoff,
+        # then avoid over-buffering one course while peer priorities are thin.
+        allocated = np.full(n, float(min_bid))
+        remaining = float(total_mileage) - allocated.sum()
+        order = np.argsort(ranks)
 
-        for idx in np.argsort(ranks):   # rank 1 first
-            give = min(min_needed[idx], remaining, float(max_per_course))
-            allocated[idx] = max(give, float(min_bid))
-            remaining -= allocated[idx]
-            if remaining <= 0:
+        core_count = max(1, int(np.ceil(n / 2.0)))
+        cutoff_rank = ranks[order[min(core_count - 1, n - 1)]]
+        core_mask = ranks <= cutoff_rank
+        non_core_indices = np.array([idx for idx in order if not core_mask[idx]])
+
+        def fill_to_targets(indices, targets):
+            nonlocal remaining, allocated
+            for idx in indices:
+                if remaining <= 0:
+                    break
+                target = min(float(targets[idx]), float(max_per_course))
+                need = max(0.0, target - allocated[idx])
+                give = min(need, remaining)
+                allocated[idx] += give
+                remaining -= give
+
+        cutoff_targets = np.maximum(thresholds, float(min_bid))
+        fill_to_targets(order[core_mask[order]], cutoff_targets)
+
+        tight_safety = np.where(ranks <= 1.0, safety_margin * 0.25, safety_margin)
+        core_targets = thresholds * (1.0 + tight_safety)
+        fill_to_targets(order[core_mask[order]], core_targets)
+
+        partial_targets = thresholds * 0.65
+        fill_to_targets(non_core_indices, partial_targets)
+
+        while remaining > 0.001:
+            rooms = np.maximum(0.0, float(max_per_course) - allocated)
+            if rooms.sum() <= 0:
                 break
-
-        # Distribute any remaining budget by combined weight
-        if remaining > 0:
-            for idx in np.argsort(ranks):
-                room = max_per_course - allocated[idx]
-                if room > 0 and remaining > 0:
-                    extra = min(combined[idx] * remaining, room)
-                    allocated[idx] += extra
-                    remaining -= extra
+            scores = combined * rooms
+            idx = int(np.argmax(scores))
+            give = min(remaining, rooms[idx])
+            allocated[idx] += give
+            remaining -= give
 
     # ── Integer enforcement ───────────────────────────────────────────────
     # Scale down if somehow over budget

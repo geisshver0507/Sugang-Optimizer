@@ -256,6 +256,7 @@ with tab_select:
                 if line.strip():
                     st.caption(line.strip())
 
+<<<<<<< HEAD
             # Survival curve mini-chart
             with st.expander("📈 Bid vs win probability curve"):
                 curve = build_curve(df_raw, r.code, r.professor,
@@ -270,6 +271,23 @@ with tab_select:
                         f"Data source: **{curve.source}** · "
                         f"Years: {curve.data_years} · "
                         f"Effective sample: {curve.n_effective:.0f} weighted rows"
+=======
+            with st.expander("Why this bid?"):
+                st.markdown(explain_threshold(
+                    r.recommended_bid, r.shap_breakdown, r.name
+                ))
+
+                shap_df = pd.DataFrame([
+                    {"factor": FEATURE_LABELS.get(k, k), "impact": float(v)}
+                    for k, v in r.shap_breakdown.items()
+                    if isinstance(v, (int, float)) and abs(v) > 0.3
+                ]).sort_values("impact", key=abs, ascending=False).head(8)
+
+                if not shap_df.empty:
+                    st.bar_chart(
+                        shap_df.set_index("factor")["impact"],
+                        height=200
+>>>>>>> 3ffbabfef7e88edcb0aed97b0801a63fce5093e1
                     )
                     st.caption(
                         f"The recommended bid of **{r.bid}pt** sits at "
@@ -376,6 +394,7 @@ with tab_explore:
                         student_year=explore_year, meta=meta)
     conf, conf_pct = confidence_label(curve)
 
+<<<<<<< HEAD
     col1, col2, col3 = st.columns(3)
     col1.metric("Data source",     curve.source)
     col2.metric("Confidence",      f"{conf} ({conf_pct:.0f}%)")
@@ -413,3 +432,14 @@ with tab_explore:
     else:
         st.warning("No historical data for this course. "
                    "Predictions use ETA demand proxy only.")
+=======
+    st.markdown(f"""
+    ---
+    **Data summary**
+    - Training rows: check `training_final.csv`
+    - Yonsei budget: **{TOTAL_MILEAGE} pts** per semester (fixed)
+    - Per-course cap: **{MAX_BID_PER_COURSE} pts** (fixed)
+    - Most courses have low competition (threshold ≈ 1pt)
+    - Model quality improves as more semesters are scraped
+    """)
+>>>>>>> 3ffbabfef7e88edcb0aed97b0801a63fce5093e1

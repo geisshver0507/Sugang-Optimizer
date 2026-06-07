@@ -24,7 +24,14 @@ from feature_extractor import load_features
 FEATURE_COLS = [
     # Course-level features (from segmented_cs_courses.json)
     "eta_added",            # how many people added on ETA — direct demand signal
+<<<<<<< HEAD
     "demand_ratio",         # eta_added / class capacity — oversubscription ratio
+=======
+    "max_capacity",         # physical/applicant capacity from holdout enrichment
+    "demand_proxy",         # historical num_applied when known, otherwise ETA/cart adds
+    "demand_capacity_ratio", # demand pressure relative to seats
+    "capacity_demand_gap",  # positive means demand exceeds available seats
+>>>>>>> 3ffbabfef7e88edcb0aed97b0801a63fce5093e1
     "credits",
     "major_year_target",    # which year the course is aimed at
     "is_major_req",         # mandatory = more seats usually
@@ -87,6 +94,8 @@ def generate_synthetic_bids(
 
             comp = (
                 (feat["eta_added"] / 10.0)             * noise()   # raw demand
+                + feat.get("demand_capacity_ratio", 0.0) * 5.0     * noise()
+                - (feat.get("max_capacity", 0.0) / 100.0)          * noise()
                 + feat["review_score"]       * 1.5     * noise()   # good prof = more demand
                 + feat["is_major_elective"]  * 4.0     * noise()   # popular electives fought over
                 - feat["is_major_req"]       * 1.0     * noise()   # req = more seats usually

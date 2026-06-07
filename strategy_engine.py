@@ -12,18 +12,57 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 
+<<<<<<< HEAD
 st.set_page_config(
     page_title="Mileage Strategy Engine",
     page_icon="🎯",
     layout="wide"
 )
+=======
+from feature_extractor import load_features, flatten_json
+from model_robust import load_model, predict_threshold, FEATURE_LABELS
+from optimizer import BidResult, TOTAL_MILEAGE, MAX_BID_PER_COURSE
+>>>>>>> 3ffbabfef7e88edcb0aed97b0801a63fce5093e1
 
 from survival_model import load_applicant_data, load_course_meta, build_curve, confidence_label
 from allocator import build_strategy, TOTAL_MILEAGE, MAX_BID
 from strategy_engine_v2 import get_strategy_for_ranked_list, format_strategy_for_chat
 
 JSON_PATH = "segmented_cs_courses.json"
+<<<<<<< HEAD
 RAW_CSV   = "mileage_history_all.csv"
+=======
+BASE_SAFETY_BUFFER = 3.0
+HIGH_DEMAND_RATIO = 1.18
+
+
+def _calibrated_bid_adjustment(predicted_avg: float, shap: dict, rank: int, n_courses: int) -> tuple[float, list[str]]:
+    """Post-model bid calibration using only deterministic course signals."""
+    priority_ratio = (n_courses - rank + 1) / max(n_courses, 1)
+    demand_ratio = float(shap.get("demand_capacity_ratio", 0.0) or 0.0)
+    cold_condition = str(shap.get("cold_start_condition", "") or "")
+
+    adjustment = 0.0
+    reasons = []
+
+    if demand_ratio >= HIGH_DEMAND_RATIO and priority_ratio >= 0.5 and cold_condition != "A":
+        if predicted_avg < 12.0:
+            adjustment += 6.0
+            reasons.append("high ETA/capacity pressure with low predicted average")
+        elif predicted_avg < 13.5:
+            adjustment += 4.0
+            reasons.append("high ETA/capacity pressure with likely underprediction")
+
+    if cold_condition == "A":
+        adjustment -= 2.5
+        reasons.append("cold-start penalty for low-trust sparse history")
+
+    if cold_condition in {"A", "B"} and priority_ratio < 0.5:
+        adjustment -= 7.0
+        reasons.append("low-priority sparse-history discount")
+
+    return adjustment, reasons
+>>>>>>> 3ffbabfef7e88edcb0aed97b0801a63fce5093e1
 
 # ── Styling ────────────────────────────────────────────────────────────────────
 
@@ -77,7 +116,12 @@ def get_course_list():
             if code in courses:
                 courses[code]["professor"] = prof
 
+<<<<<<< HEAD
     return courses
+=======
+    results = []
+    skipped       = []
+>>>>>>> 3ffbabfef7e88edcb0aed97b0801a63fce5093e1
 
 @st.cache_data
 def get_survival_data():
@@ -89,6 +133,7 @@ def get_meta():
 
 # ── Header ─────────────────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 st.title("🎯 Mileage Strategy Engine")
 st.markdown(
     f'<div class="rule-box">'
@@ -100,6 +145,48 @@ st.markdown(
 )
 
 # ── Check data ─────────────────────────────────────────────────────────────────
+=======
+        predicted_avg, shap = predict_threshold(model, explainer, feat)
+        bid_adjustment, adjustment_reasons = _calibrated_bid_adjustment(
+            predicted_avg, shap, rank, n_courses
+        )
+        raw_bid = predicted_avg + BASE_SAFETY_BUFFER + bid_adjustment
+        recommended_bid = int(round(min(MAX_BID_PER_COURSE, max(1.0, raw_bid))))
+        shap["bid_adjustment"] = bid_adjustment
+        ratio = recommended_bid / max(predicted_avg, 1.0)
+
+        if ratio >= 1.20:
+            risk_level = "Safe"
+            confidence_pct = min(95.0, 55.0 + ratio * 20.0)
+        elif ratio >= 0.90:
+            risk_level = "Moderate"
+            confidence_pct = 40.0 + ratio * 20.0
+        else:
+            risk_level = "Risky"
+            confidence_pct = max(10.0, ratio * 50.0)
+
+        c_info = flat_courses.get(code, {})
+        if c_info.get("category") == "major_requirement" and risk_level != "Safe":
+            note = "Major requirement; review whether this bid deserves extra priority."
+        elif recommended_bid == MAX_BID_PER_COURSE:
+            note = f"At university maximum ({MAX_BID_PER_COURSE} pts)."
+        elif adjustment_reasons:
+            note = "Calibrated from predicted average + 3.0 buffer: " + "; ".join(adjustment_reasons) + "."
+        else:
+            note = "Recommended bid = predicted average mileage + 3.0 safety buffer."
+
+        results.append(BidResult(
+            code                = code,
+            name                = name,
+            rank                = rank,
+            recommended_bid     = recommended_bid,
+            predicted_threshold = round(predicted_avg, 1),
+            risk_level          = risk_level,
+            confidence_pct      = round(confidence_pct, 1),
+            shap_breakdown      = shap,
+            note                = note,
+        ))
+>>>>>>> 3ffbabfef7e88edcb0aed97b0801a63fce5093e1
 
 if not Path(RAW_CSV).exists():
     st.error(f"**{RAW_CSV} not found.**")
@@ -107,6 +194,7 @@ if not Path(RAW_CSV).exists():
             "then copy the output here.")
     st.stop()
 
+<<<<<<< HEAD
 courses = get_course_list()
 df_raw  = get_survival_data()
 meta    = get_meta()
@@ -120,6 +208,9 @@ with st.sidebar:
         "Your year", [1, 2, 3, 4], index=2,
         help="Affects year-quota dynamics (some courses favour certain years)"
     )
+=======
+    return sorted(results, key=lambda item: item.rank)
+>>>>>>> 3ffbabfef7e88edcb0aed97b0801a63fce5093e1
 
     st.divider()
     st.markdown("### 💰 Budget")
@@ -141,6 +232,7 @@ with st.sidebar:
     for (yr, sem), cnt in sems.items():
         st.caption(f"{yr}-{sem}: {cnt:,} applicant rows")
 
+<<<<<<< HEAD
 # ── Tabs ───────────────────────────────────────────────────────────────────────
 
 tab_select, tab_api, tab_explore = st.tabs([
@@ -195,10 +287,46 @@ with tab_select:
                 "Rank", min_value=1, max_value=len(selected_codes),
                 value=i + 1, key=f"rank_{code}",
                 label_visibility="collapsed"
+=======
+    lines = [
+        "## 🎯 Recommended Mileage Strategy\n",
+        f"**Total suggested: {total}/{TOTAL_MILEAGE} pts**  "
+        f"*(max {MAX_BID_PER_COURSE}pts per course)*\n",
+    ]
+    if total > TOTAL_MILEAGE:
+        lines.append(
+            f"Warning: these per-course secure bids exceed the {TOTAL_MILEAGE} point semester budget. "
+            "Drop or reprioritize lower-ranked courses before final submission.\n"
+        )
+
+    for r in results:
+        e = EMOJI.get(r.risk_level, "⚪")
+        lines.append(
+            f"**{r.rank}. {r.name}**  →  Bid **{r.recommended_bid} pts**  "
+            f"{e} {r.risk_level} ({r.confidence_pct:.0f}% confidence)  "
+            f"*(predicted avg ~{r.predicted_threshold:.1f} pts; +3.0 buffer)*"
+        )
+        if r.note:
+            lines.append(f"   > {r.note}")
+
+        # Top 2 SHAP drivers
+        numeric_breakdown = {
+            key: value
+            for key, value in r.shap_breakdown.items()
+            if isinstance(value, (int, float))
+        }
+        top = sorted(numeric_breakdown.items(),
+                     key=lambda x: abs(x[1]), reverse=True)[:2]
+        if top:
+            drivers = "  |  ".join(
+                f"{'↑' if v > 0 else '↓'} {FEATURE_LABELS.get(k, k)}"
+                for k, v in top
+>>>>>>> 3ffbabfef7e88edcb0aed97b0801a63fce5093e1
             )
         rank_data.append({"code": code, "name": courses[code]["name"],
                            "rank": rank, "professor": courses[code]["professor"]})
 
+<<<<<<< HEAD
     st.divider()
 
     if st.button("🚀 Generate Strategy", type="primary", use_container_width=True):
@@ -413,3 +541,6 @@ with tab_explore:
     else:
         st.warning("No historical data for this course. "
                    "Predictions use ETA demand proxy only.")
+=======
+    return "\n".join(lines)
+>>>>>>> 3ffbabfef7e88edcb0aed97b0801a63fce5093e1

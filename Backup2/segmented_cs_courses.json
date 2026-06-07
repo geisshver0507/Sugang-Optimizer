@@ -1,0 +1,1445 @@
+{
+  "major_year_1": {
+    "major_requirement": {
+      "CAS1102-01": {
+        "metadata": {
+          "name": "OBJECT-ORIENTED PROGRAMMING",
+          "professor": "Lee Sheayun",
+          "language_medium": "Korean",
+          "lecture_type": "In-person",
+          "course_type": "major requirement",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Tue 2, Thu 2, Thu 3",
+          "location": "공D504 (EngHD504)",
+          "evaluation_type": "relative",
+          "prerequisites": [],
+          "mileage_historical_eta": 74,
+          "keywords": [
+            "oop",
+            "programming",
+            "object-oriented",
+            "c++",
+            "adt",
+            "classes",
+            "inheritance",
+            "polymorphism",
+            "virtual functions"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "30% midterm, 40% final, 25% individual assignment, 5% attendance",
+          "student_reviews": "No previous reviews.",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS2103-01": {
+        "metadata": {
+          "name": "DATA STRUCTURE",
+          "professor": "An Hyung-Chan",
+          "language_medium": "English",
+          "lecture_type": "In-person",
+          "course_type": "major requirement",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Wed 5, Fri 5, Fri 6",
+          "location": "EngHD408",
+          "evaluation_type": "absolute",
+          "prerequisites": [],
+          "mileage_historical_eta": 74,
+          "keywords": [
+            "data structures",
+            "algorithms",
+            "java",
+            "complexity",
+            "asymptotic notation",
+            "stacks",
+            "queues",
+            "lists",
+            "trees",
+            "graphs",
+            "sorting",
+            "hashing"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "35% midterm, 40% final, 20% individual assignment, 5% attendance",
+          "student_reviews": "",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS2103-02": {
+        "metadata": {
+          "name": "DATA STRUCTURE",
+          "professor": "Hwang Seong Jae",
+          "language_medium": "English",
+          "lecture_type": "In-person",
+          "course_type": "major requirement",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Wed 5, Fri 5, Fri 6",
+          "location": "EngHD504",
+          "evaluation_type": "absolute",
+          "prerequisites": [],
+          "mileage_historical_eta": 92,
+          "keywords": [
+            "data structures",
+            "algorithms",
+            "python",
+            "complexity",
+            "asymptotic notation",
+            "stacks",
+            "queues",
+            "lists",
+            "trees",
+            "graphs",
+            "sorting",
+            "hashing"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "30% midterm, 30% final, 30% individual assignment, 10% attendance",
+          "student_reviews": "",
+          "alternative_professor_reviews": ""
+        }
+      }
+    },
+    "major_basic": {
+      "CAS1102-01": {
+        "metadata": {
+          "name": "OBJECT-ORIENTED PROGRAMMING",
+          "professor": "Lee Sheayun",
+          "language_medium": "Korean",
+          "lecture_type": "In-person",
+          "course_type": "major requirement",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Tue 2, Thu 2, Thu 3",
+          "location": "공D504 (EngHD504)",
+          "evaluation_type": "relative",
+          "prerequisites": [],
+          "mileage_historical_eta": 74,
+          "keywords": [
+            "oop",
+            "programming",
+            "object-oriented",
+            "c++",
+            "adt",
+            "classes",
+            "inheritance",
+            "polymorphism",
+            "virtual functions"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "30% midterm, 40% final, 25% individual assignment, 5% attendance",
+          "student_reviews": "No previous reviews.",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS2103-01": {
+        "metadata": {
+          "name": "DATA STRUCTURE",
+          "professor": "An Hyung-Chan",
+          "language_medium": "English",
+          "lecture_type": "In-person",
+          "course_type": "major requirement",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Wed 5, Fri 5, Fri 6",
+          "location": "EngHD408",
+          "evaluation_type": "absolute",
+          "prerequisites": [],
+          "mileage_historical_eta": 74,
+          "keywords": [
+            "data structures",
+            "algorithms",
+            "java",
+            "complexity",
+            "asymptotic notation",
+            "stacks",
+            "queues",
+            "lists",
+            "trees",
+            "graphs",
+            "sorting",
+            "hashing"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "35% midterm, 40% final, 20% individual assignment, 5% attendance",
+          "student_reviews": "",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS2103-02": {
+        "metadata": {
+          "name": "DATA STRUCTURE",
+          "professor": "Hwang Seong Jae",
+          "language_medium": "English",
+          "lecture_type": "In-person",
+          "course_type": "major requirement",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Wed 5, Fri 5, Fri 6",
+          "location": "EngHD504",
+          "evaluation_type": "absolute",
+          "prerequisites": [],
+          "mileage_historical_eta": 92,
+          "keywords": [
+            "data structures",
+            "algorithms",
+            "python",
+            "complexity",
+            "asymptotic notation",
+            "stacks",
+            "queues",
+            "lists",
+            "trees",
+            "graphs",
+            "sorting",
+            "hashing"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "30% midterm, 30% final, 30% individual assignment, 10% attendance",
+          "student_reviews": "",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS2103-03": {
+        "metadata": {
+          "name": "DATA STRUCTURE",
+          "professor": "Kim Jieung",
+          "language_medium": "English",
+          "lecture_type": "In-person",
+          "course_type": "major requirement",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Wed 5, Fri 5, Fri 6",
+          "location": "공D508 (EngHD508)",
+          "evaluation_type": "absolute",
+          "prerequisites": [],
+          "mileage_historical_eta": 79,
+          "keywords": [
+            "data structures",
+            "algorithms",
+            "c++",
+            "c",
+            "complexity",
+            "asymptotic notation",
+            "stacks",
+            "queues",
+            "lists",
+            "trees",
+            "graphs",
+            "sorting",
+            "hashing"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "35% midterm, 40% final, 3% quiz, 17% individual assignment, 5% attendance",
+          "student_reviews": "",
+          "alternative_professor_reviews": ""
+        }
+      }
+    }
+  },
+  "major_year_2": {
+    "major_requirement": {
+      "CAS2101-01": {
+        "metadata": {
+          "name": "DISCRETE MATHEMATICS",
+          "professor": "Lee Jinkyu",
+          "language_medium": "English",
+          "lecture_type": "In-person",
+          "course_type": "major requirement",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Tue 8, Tue 9, Thu 7",
+          "location": "공D508 (EngHD508)",
+          "evaluation_type": "absolute",
+          "prerequisites": [],
+          "mileage_historical_eta": 70,
+          "keywords": [
+            "math",
+            "discrete",
+            "logic",
+            "proofs",
+            "sets",
+            "calculus",
+            "induction",
+            "recursion",
+            "permutation",
+            "combination",
+            "graphs"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "20% midterm, 40% final, 20% individual assignment, 10% attendance, 10% other",
+          "student_reviews": "",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS2101-02": {
+        "metadata": {
+          "name": "DISCRETE MATHEMATICS",
+          "professor": "Lee Jongmin",
+          "language_medium": "English",
+          "lecture_type": "In-person",
+          "course_type": "major requirement",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Tue 8, Tue 9, Thu 7",
+          "location": "공D408 (EngHD408)",
+          "evaluation_type": "absolute",
+          "prerequisites": [],
+          "mileage_historical_eta": 85,
+          "keywords": [
+            "math",
+            "discrete",
+            "logic",
+            "proofs",
+            "sets",
+            "calculus",
+            "induction",
+            "recursion",
+            "permutation",
+            "combination",
+            "graphs"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "30% midterm, 30% final, 40% individual assignment",
+          "student_reviews": "",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "MAT2013-03": {
+        "metadata": {
+          "name": "PROBABILITY AND STATISTICS",
+          "professor": "Jangyeol Choi",
+          "language_medium": "Korean (no explicit English label)",
+          "lecture_type": "In-person",
+          "course_type": "major requirement",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Mon 7, Mon 8, Wed 8",
+          "location": "공학월170E",
+          "evaluation_type": "relative",
+          "prerequisites": [],
+          "mileage_historical_eta": 93,
+          "keywords": [
+            "probability",
+            "statistics",
+            "random variables",
+            "probability distributions",
+            "expectation",
+            "conditional probability",
+            "joint density",
+            "marginal density",
+            "MGF"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "40% midterm, 40% final, 10% quiz, 10% attendance",
+          "student_reviews": "good teaching, cheatsheet allowed only for exams, can be absent for 9 class hours with no penalty, exams include half proofing questions and half calculation questions, stricter scoring method, quizzes are relatively easy compared to exams, past year questions are provided and helpful for exams and quizzes",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "MAT2013-04": {
+        "metadata": {
+          "name": "PROBABILITY AND STATISTICS",
+          "professor": "Hyunjung Kim",
+          "language_medium": "Korean (no explicit English label)",
+          "lecture_type": "In-person",
+          "course_type": "major requirement",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Fri 1, Fri 2, Fri 3",
+          "location": "공D408 (EngHD408)",
+          "evaluation_type": "relative",
+          "prerequisites": [],
+          "mileage_historical_eta": 74,
+          "keywords": [
+            "probability",
+            "statistics",
+            "random variables",
+            "discrete distributions",
+            "continuous distributions",
+            "central limit theorem",
+            "expected value",
+            "variance",
+            "regression analysis"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "40% midterm, 40% final, 20% individual assignments",
+          "student_reviews": "professor is nice, lecture slides, notes, videos, assignment sample solutions are posted on learnus making it easy to study, moderate test difficulty although partical scores are given, past year papers are provided",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "MAT2011-03": {
+        "metadata": {
+          "name": "LINEAR ALGEBRA AND ITS APPLICATIONS",
+          "professor": "Jangyeol Choi",
+          "language_medium": "Korean (no explicit English label)",
+          "lecture_type": "In-person",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Mon 9, Mon 10, Wed 10",
+          "location": "공학월170E",
+          "evaluation_type": "relative",
+          "course_type": "major requirement",
+          "prerequisites": [],
+          "mileage_historical_eta": 92,
+          "keywords": [
+            "linear algebra",
+            "vector space",
+            "linear independence",
+            "basis",
+            "linear operators",
+            "matrices",
+            "eigenvalues",
+            "eigenvectors"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "40% midterm, 40% final, 10% quiz, 10% attendance",
+          "student_reviews": "good teaching, open book exams, can be absent for 9 class hours with no penalty, exams include half proofing questions and half calculation questions, stricter scoring method, quizzes are relatively easy compared to exams",
+          "alternative_professor_reviews": ""
+        }
+      }
+    },
+    "major_basic": {
+      "CAS2101-01": {
+        "metadata": {
+          "name": "DISCRETE MATHEMATICS",
+          "professor": "Lee Jinkyu",
+          "language_medium": "English",
+          "lecture_type": "In-person",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Tue 8, Tue 9, Thu 7",
+          "location": "공D508 (EngHD508)",
+          "evaluation_type": "absolute",
+          "prerequisites": [],
+          "mileage_historical_eta": 70,
+          "course_type": "major requirement",
+          "keywords": [
+            "math",
+            "discrete",
+            "logic",
+            "proofs",
+            "sets",
+            "calculus",
+            "induction",
+            "recursion",
+            "permutation",
+            "combination",
+            "graphs"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "20% midterm, 40% final, 20% individual assignment, 10% attendance, 10% other",
+          "student_reviews": "",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS2101-02": {
+        "metadata": {
+          "name": "DISCRETE MATHEMATICS",
+          "professor": "Lee Jongmin",
+          "language_medium": "English",
+          "lecture_type": "In-person",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Tue 8, Tue 9, Thu 7",
+          "location": "공D408 (EngHD408)",
+          "evaluation_type": "absolute",
+          "prerequisites": [],
+          "mileage_historical_eta": 85,
+          "course_type": "major requirement",
+          "keywords": [
+            "math",
+            "discrete",
+            "logic",
+            "proofs",
+            "sets",
+            "calculus",
+            "induction",
+            "recursion",
+            "permutation",
+            "combination",
+            "graphs"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "30% midterm, 30% final, 40% individual assignment",
+          "student_reviews": "",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "MAT2013-03": {
+        "metadata": {
+          "name": "PROBABILITY AND STATISTICS",
+          "professor": "Jangyeol Choi",
+          "language_medium": "Korean (no explicit English label)",
+          "lecture_type": "In-person",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Mon 7, Mon 8, Wed 8",
+          "location": "공학월170E",
+          "evaluation_type": "relative",
+          "prerequisites": [],
+          "mileage_historical_eta": 93,
+          "course_type": "major requirement",
+          "keywords": [
+            "probability",
+            "statistics",
+            "random variables",
+            "probability distributions",
+            "expectation",
+            "conditional probability",
+            "joint density",
+            "marginal density",
+            "MGF"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "40% midterm, 40% final, 10% quiz, 10% attendance",
+          "student_reviews": "good teaching, cheatsheet allowed only for exams, can be absent for 9 class hours with no penalty, exams include half proofing questions and half calculation questions, stricter scoring method, quizzes are relatively easy compared to exams, past year questions are provided and helpful for exams and quizzes",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "MAT2013-04": {
+        "metadata": {
+          "name": "PROBABILITY AND STATISTICS",
+          "professor": "Hyunjung Kim",
+          "language_medium": "Korean (no explicit English label)",
+          "lecture_type": "In-person",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Fri 1, Fri 2, Fri 3",
+          "location": "공D408 (EngHD408)",
+          "evaluation_type": "relative",
+          "prerequisites": [],
+          "mileage_historical_eta": 74,
+          "course_type": "major requirement",
+          "keywords": [
+            "probability",
+            "statistics",
+            "random variables",
+            "discrete distributions",
+            "continuous distributions",
+            "central limit theorem",
+            "expected value",
+            "variance",
+            "regression analysis"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "40% midterm, 40% final, 20% individual assignments",
+          "student_reviews": "professor is nice, lecture slides, notes, videos, assignment sample solutions are posted on learnus making it easy to study, moderate test difficulty although partical scores are given, past year papers are provided",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "MAT2011-03": {
+        "metadata": {
+          "name": "LINEAR ALGEBRA AND ITS APPLICATIONS",
+          "professor": "Jangyeol Choi",
+          "language_medium": "Korean (no explicit English label)",
+          "lecture_type": "In-person",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Mon 9, Mon 10, Wed 10",
+          "location": "공학월170E",
+          "evaluation_type": "relative",
+          "prerequisites": [],
+          "mileage_historical_eta": 92,
+          "course_type": "major requirement",
+          "keywords": [
+            "linear algebra",
+            "vector space",
+            "linear independence",
+            "basis",
+            "linear operators",
+            "matrices",
+            "eigenvalues",
+            "eigenvectors"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "40% midterm, 40% final, 10% quiz, 10% attendance",
+          "student_reviews": "good teaching, open book exams, can be absent for 9 class hours with no penalty, exams include half proofing questions and half calculation questions, stricter scoring method, quizzes are relatively easy compared to exams",
+          "alternative_professor_reviews": ""
+        }
+      }
+    },
+    "major_elective": {
+      "CAS2106-01": {
+        "metadata": {
+          "name": "INTRODUCTION TO COMPUTER SCIENCE",
+          "professor": "Park Sang Hyun",
+          "language_medium": "Korean",
+          "lecture_type": "On-Off Blended (Video Recorded)",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Tue 7, Thu 12, Thu 13",
+          "location": "공D504 (EngHD504) / Pre-recorded lecture",
+          "evaluation_type": "relative",
+          "prerequisites": [],
+          "mileage_historical_eta": 108,
+          "course_type": "major elective",
+          "keywords": [
+            "computer science",
+            "intro",
+            "foundations",
+            "data storage",
+            "data manipulation",
+            "operating systems",
+            "networking",
+            "algorithms",
+            "programming languages",
+            "software engineering",
+            "data abstractions",
+            "databases",
+            "artificial intelligence",
+            "theory of computation"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "35% midterm, 35% final, 20% quiz, 10% attendance",
+          "student_reviews": "",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS2109-01": {
+        "metadata": {
+          "name": "INTERNET PROGRAMMING",
+          "professor": "Lee Kyong Ho",
+          "language_medium": "Korean",
+          "lecture_type": "On-Off Blended (Video Recorded)",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Tue 5, Tue 6, Thu 11",
+          "location": "공D504 (EngHD504) / Pre-recorded lecture",
+          "evaluation_type": "relative",
+          "prerequisites": [],
+          "mileage_historical_eta": 47,
+          "course_type": "major elective",
+          "keywords": [
+            "web",
+            "internet",
+            "html",
+            "css",
+            "javascript",
+            "programming"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "25% midterm, 25% final, 45% individual assignment, 5% attendance",
+          "student_reviews": "",
+          "alternative_professor_reviews": ""
+        }
+      }
+    }
+  },
+  "major_year_3": {
+    "major_requirement": {
+      "CAS3101-02": {
+        "metadata": {
+          "name": "OPERATING SYSTEM",
+          "professor": "Jeong Jinkyu",
+          "language_medium": "Korean",
+          "lecture_type": "In-person",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Mon 7, Mon 8, Wed 8",
+          "location": "EngHB039",
+          "evaluation_type": "relative",
+          "prerequisites": [],
+          "mileage_historical_eta": 169,
+          "course_type": "major requirement",
+          "keywords": [
+            "os",
+            "operating system",
+            "processes",
+            "cpu scheduling",
+            "virtual memory",
+            "paging",
+            "threads",
+            "synchronization",
+            "semaphores",
+            "file systems",
+            "linux",
+            "c programming"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "20% midterm, 25% final, 45% individual assignment, 10% attendance",
+          "student_reviews": "",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS3102-01": {
+        "metadata": {
+          "name": "ARCHITECTURE OF COMPUTERS",
+          "professor": "Lee Kyoungwoo",
+          "language_medium": "Korean",
+          "lecture_type": "On-Off Blended (Flipped Classroom)",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Mon 5, Mon 6, Wed 6",
+          "location": "공D504 (EngHD504) / Pre-recorded lecture",
+          "evaluation_type": "relative",
+          "prerequisites": [],
+          "mileage_historical_eta": 80,
+          "course_type": "major requirement",
+          "keywords": [
+            "architecture",
+            "computer architecture",
+            "assembly",
+            "mips",
+            "isa",
+            "pipelining",
+            "hazards",
+            "caches",
+            "virtual memory",
+            "out-of-order execution",
+            "tomasulo",
+            "superscalar",
+            "multi-threading",
+            "multi-core"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "0% midterm, 20% final, 40% quiz, 40% individual assignment",
+          "student_reviews": "",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS3102-02": {
+        "metadata": {
+          "name": "ARCHITECTURE OF COMPUTERS",
+          "professor": "Park Kwanghyun",
+          "language_medium": "English",
+          "lecture_type": "Offline",
+          "credits": 3,
+          "workload": "Light",
+          "difficulty": "Low",
+          "time": "Mon 5, Mon 6, Wed 6",
+          "location": "EngHD408",
+          "evaluation_type": "Absolute",
+          "prerequisites": [],
+          "mileage_historical_eta": 96,
+          "course_type": "major requirement",
+          "keywords": [
+            "hardware",
+            "processor",
+            "cpu",
+            "memory"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "20% Midterm, 20% Final, 20% Quiz, 30% Individual Assignment, 10% Attendance",
+          "student_reviews": "Highly positive sentiment (4.83/5). Very generous absolute grading and manageable exams. However, lectures are slow-paced, and the professor tends to read straight from textbook PPTs, requiring heavily independent study.",
+          "alternative_professor_reviews": ""
+        }
+      }
+    },
+    "major_elective": {
+      "CAS3109-01": {
+        "metadata": {
+          "name": "AUTOMATA AND FORMAL LANGUAGES",
+          "professor": "Han Yo-Sub",
+          "language_medium": "English",
+          "lecture_type": "Offline",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "High",
+          "time": "Tue 4, Thu 5, Thu 6",
+          "location": "EngHD504",
+          "evaluation_type": "Absolute",
+          "prerequisites": [],
+          "mileage_historical_eta": 74,
+          "course_type": "major elective",
+          "keywords": [
+            "automata",
+            "turing machines",
+            "computation",
+            "theory"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "30% Midterm, 30% Final, 30% Quiz, 10% Attendance",
+          "student_reviews": "Exceptional lecture quality (4.75/5) but notorious for extreme exam difficulty. Explains complex theoretical concepts thoroughly. Highly generous grading grants A+ even to subpar outputs to balance the brutal exams.",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS3116-01": {
+        "metadata": {
+          "name": "COMPUTER VISION",
+          "professor": "Kim Seon Joo",
+          "language_medium": "English",
+          "lecture_type": "Offline",
+          "credits": 3,
+          "workload": "Heavy",
+          "difficulty": "Medium",
+          "time": "Tue 8, Tue 9, Thu 7",
+          "location": "EngHD504",
+          "evaluation_type": "Absolute",
+          "prerequisites": [
+            "Calculus",
+            "Linear Algebra",
+            "Probability"
+          ],
+          "mileage_historical_eta": 84,
+          "course_type": "major elective",
+          "keywords": [
+            "vision",
+            "image processing",
+            "deep learning",
+            "CNN"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "35% Midterm, 35% Final, 30% Individual Assignment",
+          "student_reviews": "Excellent delivery with high-quality materials (4.50/5). Workload is demanding with time-consuming coding assignments and TA interviews, but grading is incredibly smooth and generous.",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS3120-01": {
+        "metadata": {
+          "name": "MACHINE LEARNING",
+          "professor": "Lee Dongha",
+          "language_medium": "English",
+          "lecture_type": "Offline",
+          "credits": 3,
+          "workload": "Heavy",
+          "difficulty": "High",
+          "time": "Wed 9, Fri 9, Fri 10",
+          "location": "EngHD404",
+          "evaluation_type": "Absolute",
+          "prerequisites": [
+            "Probability",
+            "Linear Algebra",
+            "Python"
+          ],
+          "mileage_historical_eta": 45,
+          "course_type": "major elective",
+          "keywords": [
+            "math",
+            "regression",
+            "neural networks",
+            "algorithms"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "35% Midterm, 35% Final, 30% Individual Assignment",
+          "student_reviews": "Mixed/frustrated sentiment. Very high mathematical barrier assuming significant prior knowledge. Features high discrimination power on exams and strictly capped grades, making it highly competitive.",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS3120-02": {
+        "metadata": {
+          "name": "MACHINE LEARNING",
+          "professor": "Jeon Hae-Gon",
+          "language_medium": "English",
+          "lecture_type": "Offline",
+          "credits": 3,
+          "workload": "Light",
+          "difficulty": "Medium",
+          "time": "Wed 9, Fri 9, Fri 10",
+          "location": "EngHD408",
+          "evaluation_type": "Absolute",
+          "prerequisites": [
+            "Linear Algebra",
+            "Differential Equation",
+            "Programming"
+          ],
+          "mileage_historical_eta": 60,
+          "course_type": "major elective",
+          "keywords": [
+            "pytorch",
+            "classification",
+            "neural networks",
+            "models"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "30% Midterm, 30% Final, 30% Individual Assignment, 10% Attendance",
+          "student_reviews": "Generally well-liked for its light workload and engaging, friendly teaching style. However, notorious for an exceptionally strict electronic attendance policy that heavily impacts grades.",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS3205-01": {
+        "metadata": {
+          "name": "COMPUTER GRAPHICS",
+          "professor": "Lee In Kwon",
+          "language_medium": "Korean",
+          "lecture_type": "On-Off Blended (Video Recorded)",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "High",
+          "time": "Tue 11, Thu 8, Thu 9",
+          "location": "Pre-recorded lecture / EngHD504",
+          "evaluation_type": "Relative",
+          "prerequisites": [
+            "OOP",
+            "Data Structures",
+            "Calculus"
+          ],
+          "mileage_historical_eta": 52,
+          "course_type": "major elective",
+          "keywords": [
+            "graphics",
+            "webgl",
+            "threejs",
+            "rendering",
+            "blender"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "30% Midterm, 30% Final, 18% Individual Assignment, 10% Team Project, 5% Quiz, 5% Attendance, 2% Q/A",
+          "student_reviews": "Overwhelmingly negative sentiment (4.36/5) characterized by a frustrating flipped-classroom structure. Highly criticized for ambiguous quizzes, severe time constraints on exams, and punitive relative grading.",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS3208-01": {
+        "metadata": {
+          "name": "ARTIFICIAL INTELLIGENCE",
+          "professor": "CHO Sung-Bae",
+          "language_medium": "Korean",
+          "lecture_type": "On-Off Blended (Pre-recorded & Offline)",
+          "credits": 3,
+          "workload": "Light",
+          "difficulty": "Low",
+          "time": "Mon 2",
+          "location": "EngHD408 / Pre-recorded lecture",
+          "evaluation_type": "Relative",
+          "prerequisites": [
+            "Data Structures",
+            "Discrete Mathematics"
+          ],
+          "mileage_historical_eta": 41,
+          "course_type": "major elective",
+          "keywords": [
+            "ai",
+            "search algorithms",
+            "adversarial search",
+            "games",
+            "logic",
+            "probabilistic reasoning",
+            "bayesian networks",
+            "machine learning basics",
+            "neural networks",
+            "deep learning",
+            "philosophy of ai",
+            "ethics",
+            "safety"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "30% Midterm, 30% Final, 10% Individual Assignment, 20% Team Assignment, 10% Attendance",
+          "student_reviews": "Highly critical sentiment (2.12/5.00). Most students describe it as a low-value course with an old-fashioned mindset from the teaching staff. It covers a shallow, liberal-arts-style historical overview of AI rather than deep engineering concepts, making it easy to cram for exams via rote memorization.",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS3301-01": {
+        "metadata": {
+          "name": "NATURAL LANGUAGE PROCESSING",
+          "professor": "Yeo Jinyoung",
+          "language_medium": "Korean",
+          "lecture_type": "Offline",
+          "credits": 3,
+          "workload": "Heavy",
+          "difficulty": "High",
+          "time": "Tue 5, Tue 6, Thu 6",
+          "location": "ERC170E",
+          "evaluation_type": "Relative",
+          "prerequisites": [],
+          "mileage_historical_eta": 42,
+          "course_type": "major elective",
+          "keywords": [
+            "nlp",
+            "natural language processing",
+            "word embedding",
+            "rnn",
+            "recurrent neural networks",
+            "text classification",
+            "sequence to sequence",
+            "seq2seq",
+            "attention",
+            "transformer",
+            "text generation",
+            "pretraining",
+            "prompting",
+            "post-training",
+            "llm",
+            "large language models"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "20% Midterm, 30% Final, 10% Quiz, 20% Individual Assignment, 20% Team Assignment",
+          "student_reviews": "Highly critical historical reviews regarding unorganized course structures and material, though recent semesters show visible improvements in content depth. The professor takes an abstract, freestyled approach that frequently shifts between English and Korean. Operations can feel chaotic due to sudden cancellations and backloaded deadlines.",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS3400-01": {
+        "metadata": {
+          "name": "AI SYSTEMS",
+          "professor": "Han Dong-Jun",
+          "language_medium": "English",
+          "lecture_type": "Offline",
+          "credits": 3,
+          "workload": "Light",
+          "difficulty": "High",
+          "time": "Wed 5, Fri 5, Fri 6",
+          "location": "ERC170E",
+          "evaluation_type": "Absolute",
+          "prerequisites": [
+            "Machine Learning",
+            "Deep Learning"
+          ],
+          "mileage_historical_eta": 104,
+          "course_type": "major elective",
+          "keywords": [
+            "ai systems",
+            "on-device training",
+            "distributed learning",
+            "federated learning",
+            "model compression",
+            "quantization",
+            "knowledge distillation",
+            "adaptive inference",
+            "efficiency",
+            "runtime optimization",
+            "dp",
+            "pp",
+            "tp",
+            "model accuracy"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "30% Midterm, 30% Final, 30% Individual Assignment, 10% Attendance",
+          "student_reviews": "Fanatically positive reviews (5.00/5.00) with intense praise, with multiple students calling it the finest senior-level lecture at the university. Features impeccable instructional delivery paired with high-quality presentation decks. While the cumulative midterm exam is notoriously difficult and can cause panic, the overall grading is incredibly forgiving.",
+          "alternative_professor_reviews": ""
+        }
+      }
+    }
+  },
+  "major_year_4": {
+    "major_requirement": {
+      "CAS4102-01": {
+        "metadata": {
+          "name": "AI CAPSTONE DESIGN",
+          "professor": "Bongshin Lee",
+          "language_medium": "Korean (no explicit English label)",
+          "lecture_type": "In-person",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Wed 7, Fri 7, Fri 8",
+          "location": "공D508 (EngHD508)",
+          "evaluation_type": "absolute",
+          "prerequisites": [],
+          "mileage_historical_eta": 40,
+          "course_type": "major requirement",
+          "keywords": [
+            "capstone design",
+            "team project",
+            "AI system design",
+            "research trends",
+            "exhibition"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "70% team projects, 10% attendance, 20% other",
+          "student_reviews": "",
+          "alternative_professor_reviews": "Deducts marks despite unclear assignment requirements, passionate about teaching and receptive to feedback, very strict attendance policy, provides vague project instructions while expecting high-quality work."
+        }
+      },
+      "CAS4101-01": {
+        "metadata": {
+          "name": "COMPUTER CAPSTONE DESIGN",
+          "professor": "Han Seungjae",
+          "language_medium": "Korean",
+          "lecture_type": "Offline",
+          "credits": 3,
+          "workload": "Heavy",
+          "difficulty": "High",
+          "time": "Wed 7, Fri 7, Fri 8",
+          "location": "EngHD504",
+          "evaluation_type": "Absolute",
+          "prerequisites": [
+            "Data Structures"
+          ],
+          "mileage_historical_eta": 30,
+          "course_type": "major requirement",
+          "keywords": [
+            "capstone",
+            "design",
+            "team project",
+            "research proposal",
+            "exhibition",
+            "software engineering",
+            "system design",
+            "project management",
+            "independent coding",
+            "problem solving"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "100% Team Project (Evaluated via Research Proposals, Progress Supervision, and Final Exhibition)",
+          "student_reviews": "Highly polarized reviews regarding intense workload and project assignment clarity, but universally praised for ultimate grading generosity. The lecturing delivery faces criticism for an exceptionally slow pace and stuttering pronunciation. Programming specifications can be confusing, forcing complete reliance on independent troubleshooting and team collaboration.",
+          "alternative_professor_reviews": ""
+        }
+      }
+    },
+    "major_elective": {
+      "CAS4108-01": {
+        "metadata": {
+          "name": "DATA PRIVACY",
+          "professor": "Albert No",
+          "language_medium": "English",
+          "lecture_type": "In-person",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Tue 4, Thu 5, Thu 6",
+          "location": "공D508 (EngHD508)",
+          "evaluation_type": "absolute",
+          "prerequisites": [
+            "Probability theory",
+            "Linear algebra",
+            "Calculus"
+          ],
+          "mileage_historical_eta": 37,
+          "course_type": "major elective",
+          "keywords": [
+            "differential privacy",
+            "generative diffusion models",
+            "large language models",
+            "privacy",
+            "federated learning",
+            "memorization",
+            "unlearning",
+            "watermarking"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "45% midterm, 45% final, 10% individual assignments",
+          "student_reviews": "responsive to questions, good teaching quality, high difficulty, professor good at explaining, test questions are mostly proof questions, taking courses like probability theory, linear algebra and calculus will help a lot, fair grading distribution",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS4109-01": {
+        "metadata": {
+          "name": "COMPUTER SECURITY",
+          "professor": "Dokyung Song",
+          "language_medium": "English",
+          "lecture_type": "On-Off Blended (Flipped Classroom)",
+          "credits": 3,
+          "workload": "High",
+          "difficulty": "High",
+          "time": "Tue 7, Thu 12, Thu 13",
+          "location": "공D408 (EngHD408) / online video (duplicate registration not allowed)",
+          "evaluation_type": "absolute",
+          "prerequisites": [
+            "Operating Systems",
+            "Computer Architecture"
+          ],
+          "mileage_historical_eta": 87,
+          "course_type": "major elective",
+          "keywords": [
+            "computer security",
+            "threat modeling",
+            "access control",
+            "authentication",
+            "cryptography",
+            "software security",
+            "hardware security",
+            "attack payloads",
+            "defensive programming"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "20% midterm, 20% final, 55% individual assignments, 5% attendance",
+          "student_reviews": "",
+          "alternative_professor_reviews": "lots of assignments with high technical difficulty but class content is interesting, professor mostly just reads through powerpoint slides, professor pronunciation is spot on, gives good grades"
+        }
+      },
+      "CAS4119-01": {
+        "metadata": {
+          "name": "MULTICORE AND GPU PROGRAMMING",
+          "professor": "Yongjun Park",
+          "language_medium": "English",
+          "lecture_type": "In-person",
+          "credits": 3,
+          "workload": "High",
+          "difficulty": "High",
+          "time": "Wed 3, Fri 3, Fri 4",
+          "location": "공D504 (EngHD504)",
+          "evaluation_type": "absolute",
+          "prerequisites": [
+            "OS (Operating Systems)",
+            "CA (Computer Architecture)",
+            "Algorithm"
+          ],
+          "mileage_historical_eta": 97,
+          "course_type": "major elective",
+          "keywords": [
+            "multi-core",
+            "GPU",
+            "CUDA",
+            "Pthread",
+            "openMP",
+            "parallel programming",
+            "matrix multiplication",
+            "reduction",
+            "deep learning kernels"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "30% midterm, 40% final, 25% individual assignments, 5% attendance",
+          "student_reviews": "practical course, heavy load but you learn a lot, professor gives good grades, open book exams with hand coding",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS4127-01": {
+        "metadata": {
+          "name": "HUMAN-AI INTERACTION",
+          "professor": "Daehyun Kim",
+          "language_medium": "English",
+          "lecture_type": "In-person",
+          "credits": 3,
+          "workload": "High",
+          "difficulty": "Medium",
+          "time": "Tue 2, Tue 3, Thu 1",
+          "location": "공D408 (EngHD504)",
+          "evaluation_type": "absolute",
+          "prerequisites": [],
+          "mileage_historical_eta": 41,
+          "course_type": "major elective",
+          "keywords": [
+            "human-AI interaction",
+            "HCI",
+            "AI collaboration",
+            "user modeling",
+            "simulating human behavior",
+            "LLM",
+            "creativity",
+            "education"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "40% individual assignments, 30% team projects, 10% attendance, 20% participation",
+          "student_reviews": "",
+          "alternative_professor_reviews": "very generous with grades, passionate teaching, open and adaptive to course feedback from students, professor is good at answering questions"
+        }
+      },
+      "CAS4133-01": {
+        "metadata": {
+          "name": "LARGE LANGUAGE MODELS",
+          "professor": "Jaehyung Kim",
+          "language_medium": "English",
+          "lecture_type": "In-person",
+          "credits": 3,
+          "workload": "High",
+          "difficulty": "High",
+          "time": "Mon 5, Mon 6, Wed 6",
+          "location": "공D508 (EngHD508)",
+          "evaluation_type": "absolute",
+          "prerequisites": [
+            "Machine learning",
+            "Deep learning"
+          ],
+          "mileage_historical_eta": 93,
+          "course_type": "major elective",
+          "keywords": [
+            "large language models",
+            "LLM",
+            "pre-training",
+            "scaling laws",
+            "alignment",
+            "instruction tuning",
+            "RLHF",
+            "RAG",
+            "AI agents",
+            "multi-modality"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "20% midterm, 30% final, 40% individual assignments, 10% attendance",
+          "student_reviews": "professor gives good grades, tough assignments, professor struggles with english, assignments include modifying skeleton code and a free topic project, midterms only consist of True/False and MCQ questions, overall interesting class content",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS4150-01": {
+        "metadata": {
+          "name": "INTRODUCTION TO DATA VISUALISATION",
+          "professor": "Minsuk Kang",
+          "language_medium": "English",
+          "lecture_type": "In-person",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Tue 12, Thu 8, Thu 9",
+          "location": "동영상콘텐츠 / 공D408 (EngHD408) (video content + room D408)",
+          "evaluation_type": "absolute",
+          "prerequisites": [
+            "Basic programming knowledge",
+            "HTML/CSS (recommended)"
+          ],
+          "mileage_historical_eta": 81,
+          "course_type": "major elective",
+          "keywords": [
+            "data visualization",
+            "interactive visualization",
+            "JavaScript",
+            "D3",
+            "Tableau",
+            "exploratory data analysis",
+            "human-centered design",
+            "perception",
+            "color"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "25% midterm, 25% final, 20% individual assignments, 20% team projects, 10% other",
+          "student_reviews": "professor is friendly and generous with grades, exams include one hand coding question and the rest is PPT memorization, high quality lectures, individual assignments are manageable but team assignments are taxing",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS4151-01": {
+        "metadata": {
+          "name": "SW-AI BUSINESS APPLICATION DESIGN",
+          "professor": "Hyunsoo Kim",
+          "language_medium": "Korean (no explicit English label)",
+          "lecture_type": "In-person",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Wed 5, Fri 5, Fri 6",
+          "location": "공A343 / 공D507 (EngHA343/EngHD507)",
+          "evaluation_type": "absolute",
+          "prerequisites": [
+            "Basic coding skills (coding methods not taught in class)"
+          ],
+          "mileage_historical_eta": 31,
+          "course_type": "major elective",
+          "keywords": [
+            "business",
+            "AI",
+            "SW",
+            "problem solving",
+            "market testing",
+            "MVP",
+            "POC",
+            "growth hacking",
+            "self-directed learning"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "50% individual assignments, 20% attendance, 30% other",
+          "student_reviews": "no exams, only presentations for midterms and finals, professor is responsive and helpful, aim of class is to create your own startup product, certain level of coding experience especially in web development is required, generous with grades as long as you put in the effort",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS4160-01": {
+        "metadata": {
+          "name": "REINFORCEMENT LEARNING",
+          "professor": "Lee Youngwoon",
+          "language_medium": "English",
+          "lecture_type": "On-Off Blended (Flipped Classroom)",
+          "credits": 3,
+          "workload": "High",
+          "difficulty": "High",
+          "time": "Wed 4, Fri 11, Fri 12",
+          "location": "공D504 (EngHD504) / online video (duplicate registration not allowed)",
+          "evaluation_type": "absolute",
+          "prerequisites": [
+            "Machine Learning",
+            "Deep Learning",
+            "PyTorch"
+          ],
+          "mileage_historical_eta": 110,
+          "course_type": "major elective",
+          "keywords": [
+            "reinforcement learning",
+            "deep RL",
+            "policy gradients",
+            "actor-critic",
+            "PPO",
+            "Q-learning",
+            "offline RL",
+            "model-based RL",
+            "inverse RL",
+            "RLHF",
+            "PyTorch"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "30% midterm, 30% final, 35% individual assignments, 5% other",
+          "student_reviews": "high quality lecture and assignments, professor is passionate, generous with grades, uses recap slides in class for revision, overall perfect course, will regret if you dont take this professors class at least once in your lifetime",
+          "alternative_professor_reviews": ""
+        }
+      },
+      "CAS4131-01": {
+        "metadata": {
+          "name": "THEORY AND PRACTICE OF CONNECTED PLATFORM",
+          "professor": "Lee Kyoungwoo",
+          "language_medium": "Korean (no explicit English label)",
+          "lecture_type": "In-person",
+          "credits": 3,
+          "workload": "Medium",
+          "difficulty": "Medium",
+          "time": "Mon 2, Mon 3, Mon 4",
+          "location": "공D508 (EngHD508)",
+          "evaluation_type": "absolute",
+          "prerequisites": [],
+          "mileage_historical_eta": 25,
+          "course_type": "major elective",
+          "keywords": [
+            "webOS",
+            "LG Smart TV",
+            "embedded platform",
+            "connected devices",
+            "voice recognition",
+            "AI",
+            "open source",
+            "DevOps",
+            "media"
+          ]
+        },
+        "text_chunks": {
+          "grading_and_syllabus": "30% midterm, 30% final, 20% individual assignment, 20% team project",
+          "student_reviews": "",
+          "alternative_professor_reviews": ""
+        }
+      }
+    }
+  }
+}
