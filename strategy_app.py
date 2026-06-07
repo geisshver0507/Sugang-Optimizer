@@ -2,10 +2,7 @@
 strategy_app.py
 ---------------
 Standalone Streamlit UI for Part 2: Mileage Betting Strategy.
-
-Yonsei fixed rules (no user input needed):
-  - Total budget: 72 pts per semester
-  - Max per course: 36 pts
+Uses the survival-curve based system (no training required).
 
 Run: streamlit run strategy_app.py
 """
@@ -13,7 +10,6 @@ Run: streamlit run strategy_app.py
 import json
 import streamlit as st
 import pandas as pd
-import numpy as np
 from pathlib import Path
 
 st.set_page_config(
@@ -22,29 +18,12 @@ st.set_page_config(
     layout="wide"
 )
 
-from feature_extractor import load_features, flatten_json
-from model import load_model, predict_threshold, explain_threshold, FEATURE_LABELS
-from optimizer import (
-    CourseInput, allocate_bids, strategy_summary,
-    TOTAL_MILEAGE, MAX_BID_PER_COURSE
-)
-from strategy_engine import get_strategy_for_ranked_list, format_strategy_for_chat
+from survival_model import load_applicant_data, load_course_meta, build_curve, confidence_label
+from allocator import build_strategy, TOTAL_MILEAGE, MAX_BID
+from strategy_engine_v2 import get_strategy_for_ranked_list, format_strategy_for_chat
 
 JSON_PATH = "segmented_cs_courses.json"
-
-# ── Cached loaders ─────────────────────────────────────────────────────────────
-
-@st.cache_resource
-def get_model():
-    return load_model()
-
-@st.cache_data
-def get_features(json_path):
-    return load_features(json_path)
-
-@st.cache_data
-def get_flat(json_path):
-    return flatten_json(json_path)
+RAW_CSV   = "mileage_history_all.csv"
 
 # ── Styling ────────────────────────────────────────────────────────────────────
 
@@ -57,9 +36,12 @@ st.markdown("""
         margin-bottom: 0.8rem;
         border-left: 4px solid #3b82f6;
     }
-    .bid-card.safe     { border-left-color: #22c55e; }
-    .bid-card.moderate { border-left-color: #f59e0b; }
-    .bid-card.risky    { border-left-color: #ef4444; }
+    .bid-card.secured  { border-left-color: #22c55e; }
+    .bid-card.likely   { border-left-color: #f59e0b; }
+    .bid-card.risky    { border-left-color: #f97316; }
+    .bid-card.stretch  { border-left-color: #f97316; }
+    .bid-card.drop     { border-left-color: #ef4444; }
+    .bid-card.unfunded { border-left-color: #ef4444; }
     .rule-box {
         background: #0f172a;
         border: 1px solid #334155;
@@ -70,32 +52,66 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ── Load data ──────────────────────────────────────────────────────────────────
+# ── Cached loaders ─────────────────────────────────────────────────────────────
 
-try:
-    model, explainer = get_model()
-    df_features      = get_features(JSON_PATH)
-    flat_courses     = get_flat(JSON_PATH)
-except Exception as e:
-    st.error(f"Failed to load model or data: {e}")
-    st.info("Run: python3 model.py --train")
-    st.stop()
+@st.cache_data
+def get_course_list():
+    """All courses from JSON + their most recent professor from raw CSV."""
+    import json as _json
+    with open(JSON_PATH) as f:
+        data = _json.load(f)
+
+    courses = {}
+    for _, yr_data in data.items():
+        for _, cat_data in yr_data.items():
+            for code, course in cat_data.items():
+                if code not in courses:
+                    m = course.get("metadata", {})
+                    courses[code] = {"name": m.get("name", code), "professor": ""}
+
+    # Overlay most recent professor from raw CSV
+    if Path(RAW_CSV).exists():
+        df = pd.read_csv(RAW_CSV, encoding="utf-8-sig")
+        df = df.dropna(subset=["professor"])
+        latest = (df.sort_values(["year", "semester"], ascending=False)
+                    .groupby("course_code")["professor"].first())
+        for code, prof in latest.items():
+            if code in courses:
+                courses[code]["professor"] = prof
+
+    return courses
+
+@st.cache_data
+def get_survival_data():
+    return load_applicant_data(RAW_CSV)
+
+@st.cache_data
+def get_meta():
+    return load_course_meta(JSON_PATH, RAW_CSV)
 
 # ── Header ─────────────────────────────────────────────────────────────────────
 
 st.title("🎯 Mileage Strategy Engine")
-
-# Fixed rules banner — always visible
 st.markdown(
-    f"""
-    <div class="rule-box">
-        <b>📋 Yonsei Mileage Rules (Fixed)</b> &nbsp;|&nbsp;
-        Total budget: <b>{TOTAL_MILEAGE} pts</b> per semester &nbsp;|&nbsp;
-        Maximum per course: <b>{MAX_BID_PER_COURSE} pts</b>
-    </div>
-    """,
+    f'<div class="rule-box">'
+    f'<b>📋 Yonsei Mileage Rules (Fixed)</b> &nbsp;|&nbsp;'
+    f'Total budget: <b>{TOTAL_MILEAGE} pts</b> per semester &nbsp;|&nbsp;'
+    f'Maximum per course: <b>{MAX_BID} pts</b>'
+    f'</div>',
     unsafe_allow_html=True
 )
+
+# ── Check data ─────────────────────────────────────────────────────────────────
+
+if not Path(RAW_CSV).exists():
+    st.error(f"**{RAW_CSV} not found.**")
+    st.info("Run `merge_scraped_csvs.py` in your mileage_csvs folder first, "
+            "then copy the output here.")
+    st.stop()
+
+courses = get_course_list()
+df_raw  = get_survival_data()
+meta    = get_meta()
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 
@@ -103,64 +119,48 @@ with st.sidebar:
     st.header("👤 Student Profile")
 
     student_year = st.selectbox(
-        "Your year", [1, 2, 3, 4],
-        index=1,
-        help="Affects which courses you're eligible for and competition patterns"
+        "Your year", [1, 2, 3, 4], index=2,
+        help="Affects year-quota dynamics (some courses favour certain years)"
     )
 
     st.divider()
-
-    # Fixed budget display — not an input anymore
-    st.markdown("### 💰 Mileage Budget")
-    st.metric("Total available", f"{TOTAL_MILEAGE} pts")
-    st.metric("Max per course",  f"{MAX_BID_PER_COURSE} pts")
-    st.caption("These are fixed Yonsei university rules.")
+    st.markdown("### 💰 Budget")
+    st.metric("Total",       f"{TOTAL_MILEAGE} pts")
+    st.metric("Max/course",  f"{MAX_BID} pts")
+    st.caption("Fixed Yonsei rules — not adjustable.")
 
     st.divider()
-
-    safety_margin = st.slider(
-        "Safety buffer (%)",
-        min_value=0, max_value=30, value=15,
-        help="Extra % above predicted threshold. Higher = safer but spreads budget thinner."
-    ) / 100.0
-
-    st.divider()
-
-    if st.button("🔄 Retrain model", use_container_width=True):
-        from model import train
-        with st.spinner("Training..."):
-            train(save=True)
-        st.cache_resource.clear()
-        st.success("Model retrained!")
-        st.rerun()
+    st.markdown("### 📊 Data loaded")
+    years = sorted(df_raw["year"].unique())
+    sems  = df_raw.groupby(["year","semester"]).size()
+    for (yr, sem), cnt in sems.items():
+        st.caption(f"{yr}-{sem}: {cnt:,} applicant rows")
 
 # ── Tabs ───────────────────────────────────────────────────────────────────────
 
-tab_select, tab_api, tab_insights = st.tabs([
-    "🖱️ Select Courses",
+tab_select, tab_api, tab_explore = st.tabs([
+    "🖱️ Build Strategy",
     "🔗 Integration Mode",
-    "📊 Model Insights"
+    "📊 Explore Courses"
 ])
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 1: Course Selection
+# TAB 1: Build Strategy
 # ══════════════════════════════════════════════════════════════════════════════
 
 with tab_select:
     st.subheader("Select and rank your courses")
-    st.caption(
-        "In the full system this list comes from the Part 1 chatbot. "
-        "Use this tab to test Part 2 independently."
-    )
+    st.caption("In the full system this list comes from the Part 1 chatbot. "
+               "Use this tab to test Part 2 independently.")
 
-    # Build display options
+    # Build dropdown labels
     course_options = {}
-    for code, c in flat_courses.items():
-        prof = c.get("professor") or c.get("metadata", {}).get("professor", "")
-        name = c.get("name", code)
+    for code, c in courses.items():
+        prof  = c.get("professor", "")
+        name  = c.get("name", code)
         label = f"{code} — {name}"
         if prof:
-            label += f" (Prof. {prof})"
+            label += f" ({prof})"
         course_options[label] = code
 
     selected_labels = st.multiselect(
@@ -171,136 +171,118 @@ with tab_select:
     )
 
     if not selected_labels:
-        st.info("Select at least 2 courses to see a strategy.")
+        st.info("Select at least 2 courses above to see a strategy.")
         st.stop()
 
     selected_codes = [course_options[l] for l in selected_labels]
 
     # Rank assignment
-    st.markdown("#### Set priority rank for each course")
-    st.caption("Rank 1 = most important to you.")
+    st.markdown("#### Set priority rank")
+    st.caption("Rank 1 = most important to you. Lower-ranked courses get funded last.")
 
     rank_data = []
-    for label, code in zip(selected_labels, selected_codes):
+    for i, (label, code) in enumerate(zip(selected_labels, selected_codes)):
         c1, c2 = st.columns([5, 1])
         with c1:
             st.text(label)
         with c2:
             rank = st.number_input(
                 "Rank", min_value=1, max_value=len(selected_codes),
-                value=len(rank_data) + 1,
-                key=f"rank_{code}",
+                value=i + 1, key=f"rank_{code}",
                 label_visibility="collapsed"
             )
-        rank_data.append((code, rank))
+        rank_data.append({"code": code, "name": courses[code]["name"],
+                           "rank": rank, "professor": courses[code]["professor"]})
 
     st.divider()
 
     if st.button("🚀 Generate Strategy", type="primary", use_container_width=True):
 
-        with st.spinner("Predicting competition and allocating bids..."):
-
-            course_inputs = []
-            for code, rank in rank_data:
-                if code not in df_features.index:
-                    st.warning(f"Course {code} not in feature set — skipping")
-                    continue
-
-                feat = df_features.loc[code].to_dict()
-                feat.update({
-                    "student_year":       float(student_year),
-                    "student_mileage":    float(TOTAL_MILEAGE),
-                    "num_courses_wanted": float(len(rank_data)),
-                    "rank_in_list":       float(rank),
-                    "priority_ratio":     (len(rank_data) - rank + 1) / len(rank_data),
-                    "budget_ratio":       1.0,
-                })
-
-                threshold, shap = predict_threshold(model, explainer, feat)
-                c_info = flat_courses.get(code, {})
-
-                course_inputs.append(CourseInput(
-                    code                = code,
-                    name                = c_info.get("name", code),
-                    rank                = rank,
-                    predicted_threshold = threshold,
-                    is_major_req        = (c_info.get("category") == "major_requirement"),
-                    shap_breakdown      = shap,
-                ))
-
-            results = allocate_bids(
-                course_inputs,
-                total_mileage  = TOTAL_MILEAGE,
-                max_per_course = MAX_BID_PER_COURSE,
-                safety_margin  = safety_margin,
+        with st.spinner("Building survival curves and allocating bids..."):
+            results = build_strategy(
+                rank_data,
+                student_year=student_year,
+                target_conf=0.90,
+                raw_csv=RAW_CSV,
+                json_path=JSON_PATH,
             )
 
         # ── Summary metrics ────────────────────────────────────────────────
-        total_used  = sum(r.recommended_bid for r in results)
-        remaining   = TOTAL_MILEAGE - total_used
+        total_used = sum(r.bid for r in results)
+        n_good     = sum(1 for r in results if r.status in ("Secured", "Likely"))
+        n_risky    = sum(1 for r in results if r.status == "Risky")
+        n_drop     = sum(1 for r in results if r.status in ("Drop", "Unfunded"))
 
         c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Budget",       f"{TOTAL_MILEAGE} pts")
-        c2.metric("Used",         f"{total_used} pts")
-        c3.metric("Remaining",    f"{remaining} pts")
-        c4.metric("Max/course",   f"{MAX_BID_PER_COURSE} pts")
+        c1.metric("Budget used",   f"{total_used}/{TOTAL_MILEAGE} pts")
+        c2.metric("Good+ odds",    f"{n_good}/{len(results)}")
+        c3.metric("Risky",         f"{n_risky}",
+                  delta="needs caution" if n_risky else "none",
+                  delta_color="inverse" if n_risky else "normal")
+        c4.metric("Drop/Unfunded", f"{n_drop}",
+                  delta="reprioritize" if n_drop else "none",
+                  delta_color="inverse" if n_drop else "normal")
 
         st.divider()
         st.subheader("📋 Recommended Bids")
 
-        RISK_CSS   = {"Safe": "safe", "Moderate": "moderate", "Risky": "risky"}
-        RISK_EMOJI = {"Safe": "🟢",   "Moderate": "🟡",       "Risky": "🔴"}
+        STATUS_CSS   = {"Secured": "secured", "Likely": "likely",
+                        "Risky": "risky", "Stretch": "stretch",
+                        "Drop": "drop", "Unfunded": "unfunded"}
+        STATUS_EMOJI = {"Secured": "🟢", "Likely": "🟡",
+                        "Risky": "🟠", "Stretch": "🟠",
+                        "Drop": "⛔", "Unfunded": "⛔"}
+        CONF_EMOJI   = {"High": "📊", "Medium": "🔍", "Low": "❓"}
 
         for r in results:
-            css = RISK_CSS.get(r.risk_level, "")
-            em  = RISK_EMOJI.get(r.risk_level, "⚪")
+            css = STATUS_CSS.get(r.status, "")
+            em  = STATUS_EMOJI.get(r.status, "⚪")
+            ce  = CONF_EMOJI.get(r.confidence, "")
 
             st.markdown(f'<div class="bid-card {css}">', unsafe_allow_html=True)
 
-            ca, cb, cc, cd = st.columns([1, 5, 3, 3])
+            ca, cb, cc, cd, ce_col = st.columns([1, 4, 2, 2, 2])
             ca.markdown(f"**#{r.rank}**")
-            cb.markdown(f"**{r.name}**  \n`{r.code}`")
-            cc.metric(
-                "Recommended Bid",
-                f"{r.recommended_bid} pts",
-                delta=f"est. threshold: ~{int(r.predicted_threshold)} pts",
-                delta_color="off"
-            )
-            cd.metric(
-                "Risk",
-                f"{em} {r.risk_level}",
-                delta=f"{r.confidence_pct:.0f}% confidence",
-                delta_color="off"
-            )
+            cb.markdown(f"**{r.name}**  \n`{r.code}` · {r.professor}")
+            cc.metric("Bid",         f"{r.bid} pts",
+                      delta=f"min safe: {r.min_safe_bid} pts", delta_color="off")
+            cd.metric("Calibrated odds", f"{r.win_prob:.0%}",
+                      delta=r.competition, delta_color="off")
+            ce_col.metric("Status",  f"{em} {r.status}",
+                          delta=f"{ce} {r.confidence} ({r.confidence_pct:.0f}%)",
+                          delta_color="off")
 
-            if r.note:
-                st.caption(r.note)
+            for line in r.note.split("\n"):
+                if line.strip():
+                    st.caption(line.strip())
 
-            with st.expander("Why this bid?"):
-                st.markdown(explain_threshold(
-                    r.recommended_bid, r.shap_breakdown, r.name
-                ))
-
-                shap_df = pd.DataFrame([
-                    {"factor": FEATURE_LABELS.get(k, k), "impact": v}
-                    for k, v in r.shap_breakdown.items()
-                    if abs(v) > 0.3
-                ]).sort_values("impact", key=abs, ascending=False).head(8)
-
-                if not shap_df.empty:
-                    st.bar_chart(
-                        shap_df.set_index("factor")["impact"],
-                        height=200
+            # Survival curve mini-chart
+            with st.expander("📈 Bid vs win probability curve"):
+                curve = build_curve(df_raw, r.code, r.professor,
+                                    student_year=student_year, meta=meta)
+                if len(curve.bids) > 0:
+                    chart_df = pd.DataFrame({
+                        "bid":     curve.bids,
+                        "P(win)":  curve.p_enroll,
+                    }).set_index("bid")
+                    st.line_chart(chart_df, height=200)
+                    st.caption(
+                        f"Data source: **{curve.source}** · "
+                        f"Years: {curve.data_years} · "
+                        f"Effective sample: {curve.n_effective:.0f} weighted rows"
                     )
                     st.caption(
-                        "Positive = increases competition (bid more needed) | "
-                        "Negative = decreases competition"
+                        f"The recommended bid of **{r.bid}pt** sits at "
+                        f"**{r.win_prob:.0%} calibrated odds**. "
+                        f"Min safe bid (90% target): **{r.min_safe_bid}pt**."
                     )
+                else:
+                    st.caption("No curve data — demand proxy used.")
 
             st.markdown("</div>", unsafe_allow_html=True)
 
-        with st.expander("📄 Raw strategy text"):
-            st.code(strategy_summary(results, TOTAL_MILEAGE))
+        with st.expander("📄 Copy strategy text (for chatbot)"):
+            st.code(format_strategy_for_chat(results))
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 2: Integration Mode
@@ -309,88 +291,125 @@ with tab_select:
 with tab_api:
     st.subheader("🔗 How Part 1 chatbot calls Part 2")
     st.markdown(f"""
-    Part 1 passes the student's ranked list and year.
-    Mileage is **not** passed — it's always {TOTAL_MILEAGE}pts.
+Part 1 passes the student's ranked list and year. Mileage is **not** passed — always {TOTAL_MILEAGE}pts.
 
-    ```python
-    from strategy_engine import get_strategy_for_ranked_list, format_strategy_for_chat
+```python
+from strategy_engine_v2 import get_strategy_for_ranked_list, format_strategy_for_chat
 
-    ranked_list = [
-        {{"code": "CAS3120-02",    "name": "Machine Learning",       "rank": 1}},
-        {{"code": "CAS4160-01-00", "name": "Reinforcement Learning", "rank": 2}},
-        {{"code": "CAS3205-01",    "name": "Computer Graphics",      "rank": 3}},
-    ]
+ranked_list = [
+    {{"code": "CAS3120-02", "name": "Machine Learning",       "rank": 1}},
+    {{"code": "CAS4160-01", "name": "Reinforcement Learning", "rank": 2}},
+    {{"code": "CAS3205-01", "name": "Computer Graphics",      "rank": 3}},
+]
 
-    # No "mileage" key — it's always {TOTAL_MILEAGE}pts
-    strategy = get_strategy_for_ranked_list(ranked_list, {{"year": 3}})
-    print(format_strategy_for_chat(strategy))
-    ```
-    """)
+results = get_strategy_for_ranked_list(ranked_list, {{"year": 3}})
+print(format_strategy_for_chat(results))
+```
+
+Professor is **optional** — auto-resolved from the most recent scraped data if not supplied.
+""")
 
     st.divider()
-    st.subheader("Test the API")
+    st.subheader("Test the integration")
 
     json_input = st.text_area(
         "Paste ranked list JSON",
         value=json.dumps([
-            {"code": "CAS3120-02",    "name": "Machine Learning",       "rank": 1},
-            {"code": "CAS4160-01-00", "name": "Reinforcement Learning", "rank": 2},
-            {"code": "CAS3205-01",    "name": "Computer Graphics",      "rank": 3},
+            {"code": "CAS3101-02", "name": "Operating System",         "rank": 1},
+            {"code": "CAS3116-01", "name": "Computer Vision",          "rank": 2},
+            {"code": "CAS4127-01", "name": "Human-AI Interaction",     "rank": 3},
         ], indent=2),
-        height=200
+        height=220
     )
     api_year = st.number_input("Student year", 1, 4, 3)
+    api_conf = st.slider("Target confidence", 80, 97, 90) / 100.0
 
     if st.button("Run strategy engine", type="primary"):
         try:
             ranked = json.loads(json_input)
-            results = get_strategy_for_ranked_list(ranked, {"year": api_year})
-            total   = sum(r.recommended_bid for r in results)
+            results = get_strategy_for_ranked_list(
+                ranked, {"year": api_year},
+                target_confidence=api_conf
+            )
+            total = sum(r.bid for r in results)
 
-            st.success(f"Total: {total}/{TOTAL_MILEAGE} pts | "
-                       f"Max per course: {MAX_BID_PER_COURSE} pts")
+            STATUS_EMOJI = {"Secured":"🟢","Likely":"🟡","Risky":"🟠","Stretch":"🟠","Drop":"⛔","Unfunded":"⛔"}
+            st.success(f"Total: {total}/{TOTAL_MILEAGE} pts used")
 
             for r in results:
-                em = {"Safe":"🟢","Moderate":"🟡","Risky":"🔴"}.get(r.risk_level,"⚪")
+                em = STATUS_EMOJI.get(r.status, "⚪")
                 st.markdown(
-                    f"**#{r.rank} {r.name}** — Bid: `{r.recommended_bid} pts` | "
-                    f"{em} {r.risk_level} ({r.confidence_pct:.0f}%) | "
-                    f"est. threshold: ~{int(r.predicted_threshold)} pts"
+                    f"**#{r.rank} {r.name}** ({r.professor}) — "
+                    f"Bid: `{r.bid}pt` | {em} {r.status} | "
+                    f"calibrated odds: {r.win_prob:.0%} | "
+                    f"safe bid: {r.min_safe_bid}pt [{r.competition}]"
                 )
-                if r.note:
-                    st.caption(r.note)
+                for line in r.note.split("\n"):
+                    if line.strip():
+                        st.caption(line.strip())
+
+            st.divider()
+            st.code(format_strategy_for_chat(results), language="markdown")
+
         except Exception as e:
             st.error(f"Error: {e}")
+            st.exception(e)
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 3: Model Insights
+# TAB 3: Explore Courses
 # ══════════════════════════════════════════════════════════════════════════════
 
-with tab_insights:
-    st.subheader("📊 What the model discovered")
+with tab_explore:
+    st.subheader("📊 Explore competition curves by course")
+    st.caption("See exactly what the model knows about each course — "
+               "the raw survival curve from historical data.")
 
-    from model import feature_importance_df
-    fi = feature_importance_df(model)
-
-    st.bar_chart(
-        fi.set_index("label")["importance"].head(12),
-        height=400
+    explore_label = st.selectbox(
+        "Select a course",
+        options=list(course_options.keys())
     )
+    explore_code = course_options[explore_label]
+    explore_prof = courses[explore_code]["professor"]
+    explore_year = st.selectbox("Your year (for personalisation)", [1,2,3,4], index=2)
 
-    st.dataframe(
-        fi[["label", "importance"]].rename(
-            columns={"label": "Factor", "importance": "Importance Score"}
-        ),
-        use_container_width=True,
-        hide_index=True
-    )
+    curve = build_curve(df_raw, explore_code, explore_prof,
+                        student_year=explore_year, meta=meta)
+    conf, conf_pct = confidence_label(curve)
 
-    st.markdown(f"""
-    ---
-    **Data summary**
-    - Training rows: check `training_final.csv`
-    - Yonsei budget: **{TOTAL_MILEAGE} pts** per semester (fixed)
-    - Per-course cap: **{MAX_BID_PER_COURSE} pts** (fixed)
-    - Most courses have low competition (threshold ≈ 1pt)
-    - Model quality improves as more semesters are scraped
-    """)
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Data source",     curve.source)
+    col2.metric("Confidence",      f"{conf} ({conf_pct:.0f}%)")
+    col3.metric("Years of data",   str(curve.data_years))
+
+    if len(curve.bids) > 0:
+        chart_df = pd.DataFrame({
+            "bid":    curve.bids,
+            "P(win)": curve.p_enroll,
+        }).set_index("bid")
+        st.line_chart(chart_df, height=300)
+
+        st.markdown("**Bid thresholds:**")
+        thresh_cols = st.columns(4)
+        for i, target in enumerate([0.70, 0.80, 0.90, 0.97]):
+            msb = curve.min_bid_for(target)
+            thresh_cols[i].metric(f"{target:.0%} confidence", f"{msb} pt")
+
+        st.markdown("**Max reachable win rate:** "
+                    f"`{curve.reachable_max():.0%}` "
+                    f"(bidding more than `{curve.min_bid_for(curve.reachable_max() - 0.01)}pt` adds nothing)")
+
+        # Raw distribution
+        with st.expander("Raw bid distribution from historical data"):
+            sub = df_raw[df_raw["course_code"] == explore_code].copy()
+            sub["enrolled_bool"] = (sub["enrolled"].astype(str).str.upper() == "Y").astype(int)
+            if len(sub) > 0:
+                dist = sub.groupby(["year","semester","professor"]).agg(
+                    applicants=("mileage_bid","count"),
+                    enrolled=("enrolled_bool","sum"),
+                    avg_bid=("mileage_bid","mean"),
+                    min_win_bid=("mileage_bid", lambda x: x[sub.loc[x.index,"enrolled_bool"]==1].min() if (sub.loc[x.index,"enrolled_bool"]==1).any() else None),
+                ).reset_index()
+                st.dataframe(dist, use_container_width=True, hide_index=True)
+    else:
+        st.warning("No historical data for this course. "
+                   "Predictions use ETA demand proxy only.")

@@ -1,156 +1,415 @@
 """
-strategy_engine.py
-------------------
-Integration seam between Part 1 (chatbot) and Part 2 (strategy).
+strategy_app.py
+---------------
+Standalone Streamlit UI for Part 2: Mileage Betting Strategy.
+Uses the survival-curve based system (no training required).
 
-YONSEI MILEAGE RULES (fixed — not user inputs):
-  - Every student gets exactly 72 points per semester
-  - Maximum bid on any single course: 36 points
-
-Part 1 chatbot calls get_strategy_for_ranked_list() with the
-student's ranked course list and year. Mileage is not needed.
+Run: streamlit run strategy_app.py
 """
 
-from __future__ import annotations
+import json
+import streamlit as st
+import pandas as pd
+from pathlib import Path
 
-from feature_extractor import load_features, flatten_json
-from model import load_model, predict_threshold, FEATURE_LABELS
-from optimizer import (
-    CourseInput, allocate_bids, BidResult,
-    TOTAL_MILEAGE, MAX_BID_PER_COURSE
+st.set_page_config(
+    page_title="Mileage Strategy Engine",
+    page_icon="🎯",
+    layout="wide"
 )
 
+from survival_model import load_applicant_data, load_course_meta, build_curve, confidence_label
+from allocator import build_strategy, TOTAL_MILEAGE, MAX_BID
+from strategy_engine_v2 import get_strategy_for_ranked_list, format_strategy_for_chat
+
 JSON_PATH = "segmented_cs_courses.json"
+RAW_CSV   = "mileage_history_all.csv"
 
+# ── Styling ────────────────────────────────────────────────────────────────────
 
-def get_strategy_for_ranked_list(
-    ranked_list:     list,   # [{"code": "CAS3205-01", "name": "...", "rank": 1}, ...]
-    student_profile: dict,   # {"year": 3}  — mileage no longer needed
-    json_path:       str   = JSON_PATH,
-    safety_margin:   float = 0.15,
-) -> list:                   # list[BidResult]
-    """
-    Main function called by Part 1 chatbot.
+st.markdown("""
+<style>
+    .bid-card {
+        background: #1e293b;
+        border-radius: 12px;
+        padding: 1.2rem 1.5rem;
+        margin-bottom: 0.8rem;
+        border-left: 4px solid #3b82f6;
+    }
+    .bid-card.secured  { border-left-color: #22c55e; }
+    .bid-card.likely   { border-left-color: #22c55e; }
+    .bid-card.stretch  { border-left-color: #f59e0b; }
+    .bid-card.unfunded { border-left-color: #ef4444; }
+    .rule-box {
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 0.8rem 1.2rem;
+        margin-bottom: 1rem;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-    Parameters
-    ----------
-    ranked_list     List of dicts, each needs "code", "name", "rank".
-                    rank=1 = most important to the student.
+# ── Cached loaders ─────────────────────────────────────────────────────────────
 
-    student_profile Dict with "year" (int 1-4).
-                    Mileage is NOT needed — it's always 72pts at Yonsei.
+@st.cache_data
+def get_course_list():
+    """All courses from JSON + their most recent professor from raw CSV."""
+    import json as _json
+    with open(JSON_PATH) as f:
+        data = _json.load(f)
 
-    Returns
-    -------
-    list[BidResult] sorted by rank. Each has:
-        .recommended_bid        (int, out of 72 total)
-        .predicted_threshold    (float, model estimate)
-        .risk_level             (Safe / Moderate / Risky)
-        .confidence_pct         (float)
-        .note                   (str, human-readable tip)
-        .shap_breakdown         (dict, for SHAP explanation)
-    """
-    model, explainer = load_model()
-    df_features      = load_features(json_path)
-    flat_courses     = flatten_json(json_path)
+    courses = {}
+    for _, yr_data in data.items():
+        for _, cat_data in yr_data.items():
+            for code, course in cat_data.items():
+                if code not in courses:
+                    m = course.get("metadata", {})
+                    courses[code] = {"name": m.get("name", code), "professor": ""}
 
-    student_year = float(student_profile.get("year", 2))
-    n_courses    = len(ranked_list)
+    # Overlay most recent professor from raw CSV
+    if Path(RAW_CSV).exists():
+        df = pd.read_csv(RAW_CSV, encoding="utf-8-sig")
+        df = df.dropna(subset=["professor"])
+        latest = (df.sort_values(["year", "semester"], ascending=False)
+                    .groupby("course_code")["professor"].first())
+        for code, prof in latest.items():
+            if code in courses:
+                courses[code]["professor"] = prof
 
-    course_inputs = []
-    skipped       = []
+    return courses
 
-    for item in ranked_list:
-        code = item.get("code", "")
-        name = item.get("name", code)
-        rank = int(item.get("rank", 99))
+@st.cache_data
+def get_survival_data():
+    return load_applicant_data(RAW_CSV)
 
-        if code not in df_features.index:
-            skipped.append(code)
-            continue
+@st.cache_data
+def get_meta():
+    return load_course_meta(JSON_PATH, RAW_CSV)
 
-        # Build feature row — mileage is always 72, budget_ratio always 1.0
-        feat = df_features.loc[code].to_dict()
-        feat.update({
-            "student_year": student_year,
-            # rank_in_list, priority_ratio, num_courses_wanted removed —
-            # model gave them 0% importance
-        })
+# ── Header ─────────────────────────────────────────────────────────────────────
 
-        threshold, shap = predict_threshold(model, explainer, feat)
+st.title("🎯 Mileage Strategy Engine")
+st.markdown(
+    f'<div class="rule-box">'
+    f'<b>📋 Yonsei Mileage Rules (Fixed)</b> &nbsp;|&nbsp;'
+    f'Total budget: <b>{TOTAL_MILEAGE} pts</b> per semester &nbsp;|&nbsp;'
+    f'Maximum per course: <b>{MAX_BID} pts</b>'
+    f'</div>',
+    unsafe_allow_html=True
+)
 
-        c_info = flat_courses.get(code, {})
+# ── Check data ─────────────────────────────────────────────────────────────────
 
-        # Check if 2026-1 holdout data says this course is tiebreak dominated
-        import pandas as pd
-        from pathlib import Path
-        is_tiebreak = False
-        holdout_path = Path("mileage_holdout_2026_1.csv")
-        if holdout_path.exists():
-            try:
-                df_h = pd.read_csv(holdout_path, encoding="utf-8-sig")
-                row_h = df_h[df_h["course_code"] == code]
-                if len(row_h) > 0 and "is_tiebreak_dominated" in df_h.columns:
-                    is_tiebreak = bool(row_h["is_tiebreak_dominated"].iloc[0])
-            except Exception:
-                pass
+if not Path(RAW_CSV).exists():
+    st.error(f"**{RAW_CSV} not found.**")
+    st.info("Run `merge_scraped_csvs.py` in your mileage_csvs folder first, "
+            "then copy the output here.")
+    st.stop()
 
-        course_inputs.append(CourseInput(
-            code                  = code,
-            name                  = name,
-            rank                  = rank,
-            predicted_threshold   = threshold,
-            is_major_req          = (c_info.get("category") == "major_requirement"),
-            is_tiebreak_dominated = is_tiebreak,
-            shap_breakdown        = shap,
-        ))
+courses = get_course_list()
+df_raw  = get_survival_data()
+meta    = get_meta()
 
-    if skipped:
-        print(f"[strategy_engine] Skipped unknown courses: {skipped}")
+# ── Sidebar ────────────────────────────────────────────────────────────────────
 
-    return allocate_bids(
-        course_inputs,
-        total_mileage  = TOTAL_MILEAGE,
-        max_per_course = MAX_BID_PER_COURSE,
-        safety_margin  = safety_margin,
+with st.sidebar:
+    st.header("👤 Student Profile")
+
+    student_year = st.selectbox(
+        "Your year", [1, 2, 3, 4], index=2,
+        help="Affects year-quota dynamics (some courses favour certain years)"
     )
 
+    st.divider()
+    st.markdown("### 💰 Budget")
+    st.metric("Total",       f"{TOTAL_MILEAGE} pts")
+    st.metric("Max/course",  f"{MAX_BID} pts")
+    st.caption("Fixed Yonsei rules — not adjustable.")
 
-def format_strategy_for_chat(results: list) -> str:
-    """
-    Converts BidResult list to markdown the chatbot appends to its response.
-    """
-    if not results:
-        return "No strategy could be generated."
+    st.divider()
+    target_conf = st.slider(
+        "Target win confidence",
+        min_value=80, max_value=97, value=90,
+        help="90% = cheapest safe bid. 97% = very safe but costs more points."
+    ) / 100.0
 
-    total = sum(r.recommended_bid for r in results)
-    EMOJI = {"Safe": "🟢", "Moderate": "🟡", "Risky": "🔴"}
+    st.divider()
+    st.markdown("### 📊 Data loaded")
+    years = sorted(df_raw["year"].unique())
+    sems  = df_raw.groupby(["year","semester"]).size()
+    for (yr, sem), cnt in sems.items():
+        st.caption(f"{yr}-{sem}: {cnt:,} applicant rows")
 
-    lines = [
-        "## 🎯 Recommended Mileage Strategy\n",
-        f"**Total: {total}/{TOTAL_MILEAGE} pts used**  "
-        f"*(max {MAX_BID_PER_COURSE}pts per course)*\n",
-    ]
+# ── Tabs ───────────────────────────────────────────────────────────────────────
 
-    for r in results:
-        e = EMOJI.get(r.risk_level, "⚪")
-        lines.append(
-            f"**{r.rank}. {r.name}**  →  Bid **{r.recommended_bid} pts**  "
-            f"{e} {r.risk_level} ({r.confidence_pct:.0f}% confidence)  "
-            f"*(est. threshold ~{int(r.predicted_threshold)} pts)*"
-        )
-        if r.note:
-            lines.append(f"   > {r.note}")
+tab_select, tab_api, tab_explore = st.tabs([
+    "🖱️ Build Strategy",
+    "🔗 Integration Mode",
+    "📊 Explore Courses"
+])
 
-        # Top 2 SHAP drivers
-        top = sorted(r.shap_breakdown.items(),
-                     key=lambda x: abs(x[1]), reverse=True)[:2]
-        if top:
-            drivers = "  |  ".join(
-                f"{'↑' if v > 0 else '↓'} {FEATURE_LABELS.get(k, k)}"
-                for k, v in top
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 1: Build Strategy
+# ══════════════════════════════════════════════════════════════════════════════
+
+with tab_select:
+    st.subheader("Select and rank your courses")
+    st.caption("In the full system this list comes from the Part 1 chatbot. "
+               "Use this tab to test Part 2 independently.")
+
+    # Build dropdown labels
+    course_options = {}
+    for code, c in courses.items():
+        prof  = c.get("professor", "")
+        name  = c.get("name", code)
+        label = f"{code} — {name}"
+        if prof:
+            label += f" ({prof})"
+        course_options[label] = code
+
+    selected_labels = st.multiselect(
+        "Choose courses you want to register for",
+        options=list(course_options.keys()),
+        max_selections=10,
+        help="Select 2–7 courses for a realistic strategy"
+    )
+
+    if not selected_labels:
+        st.info("Select at least 2 courses above to see a strategy.")
+        st.stop()
+
+    selected_codes = [course_options[l] for l in selected_labels]
+
+    # Rank assignment
+    st.markdown("#### Set priority rank")
+    st.caption("Rank 1 = most important to you. Lower-ranked courses get funded last.")
+
+    rank_data = []
+    for i, (label, code) in enumerate(zip(selected_labels, selected_codes)):
+        c1, c2 = st.columns([5, 1])
+        with c1:
+            st.text(label)
+        with c2:
+            rank = st.number_input(
+                "Rank", min_value=1, max_value=len(selected_codes),
+                value=i + 1, key=f"rank_{code}",
+                label_visibility="collapsed"
             )
-            lines.append(f"   *Key factors: {drivers}*")
-        lines.append("")
+        rank_data.append({"code": code, "name": courses[code]["name"],
+                           "rank": rank, "professor": courses[code]["professor"]})
 
-    return "\n".join(lines)
+    st.divider()
+
+    if st.button("🚀 Generate Strategy", type="primary", use_container_width=True):
+
+        with st.spinner("Building survival curves and allocating bids..."):
+            results = build_strategy(
+                rank_data,
+                student_year=student_year,
+                target_conf=target_conf,
+                raw_csv=RAW_CSV,
+                json_path=JSON_PATH,
+            )
+
+        # ── Summary metrics ────────────────────────────────────────────────
+        total_used = sum(r.bid for r in results)
+        n_secured  = sum(1 for r in results if r.status in ("Secured", "Likely"))
+        n_unfunded = sum(1 for r in results if r.status == "Unfunded")
+
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Budget used",   f"{total_used}/{TOTAL_MILEAGE} pts")
+        c2.metric("Likely wins",   f"{n_secured}/{len(results)}")
+        c3.metric("Unfunded",      f"{n_unfunded}",
+                  delta="not winnable with this list" if n_unfunded else "all funded ✓",
+                  delta_color="inverse" if n_unfunded else "normal")
+        c4.metric("Leftover",      f"{TOTAL_MILEAGE - total_used} pts")
+
+        st.divider()
+        st.subheader("📋 Recommended Bids")
+
+        STATUS_CSS   = {"Secured": "secured", "Likely": "likely",
+                        "Stretch": "stretch",  "Unfunded": "unfunded"}
+        STATUS_EMOJI = {"Secured": "🟢", "Likely": "🟢",
+                        "Stretch": "🟡", "Unfunded": "⛔"}
+        CONF_EMOJI   = {"High": "📊", "Medium": "🔍", "Low": "❓"}
+
+        for r in results:
+            css = STATUS_CSS.get(r.status, "")
+            em  = STATUS_EMOJI.get(r.status, "⚪")
+            ce  = CONF_EMOJI.get(r.confidence, "")
+
+            st.markdown(f'<div class="bid-card {css}">', unsafe_allow_html=True)
+
+            ca, cb, cc, cd, ce_col = st.columns([1, 4, 2, 2, 2])
+            ca.markdown(f"**#{r.rank}**")
+            cb.markdown(f"**{r.name}**  \n`{r.code}` · {r.professor}")
+            cc.metric("Bid",         f"{r.bid} pts",
+                      delta=f"min safe: {r.min_safe_bid} pts", delta_color="off")
+            cd.metric("Win odds",    f"{r.win_prob:.0%}",
+                      delta=r.competition, delta_color="off")
+            ce_col.metric("Status",  f"{em} {r.status}",
+                          delta=f"{ce} {r.confidence} ({r.confidence_pct:.0f}%)",
+                          delta_color="off")
+
+            for line in r.note.split("\n"):
+                if line.strip():
+                    st.caption(line.strip())
+
+            # Survival curve mini-chart
+            with st.expander("📈 Bid vs win probability curve"):
+                curve = build_curve(df_raw, r.code, r.professor,
+                                    student_year=student_year, meta=meta)
+                if len(curve.bids) > 0:
+                    chart_df = pd.DataFrame({
+                        "bid":     curve.bids,
+                        "P(win)":  curve.p_enroll,
+                    }).set_index("bid")
+                    st.line_chart(chart_df, height=200)
+                    st.caption(
+                        f"Data source: **{curve.source}** · "
+                        f"Years: {curve.data_years} · "
+                        f"Effective sample: {curve.n_effective:.0f} weighted rows"
+                    )
+                    st.caption(
+                        f"The recommended bid of **{r.bid}pt** sits at "
+                        f"**{r.win_prob:.0%}** on this curve. "
+                        f"Min safe bid ({target_conf:.0%} target): **{r.min_safe_bid}pt**."
+                    )
+                else:
+                    st.caption("No curve data — demand proxy used.")
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        with st.expander("📄 Copy strategy text (for chatbot)"):
+            st.code(format_strategy_for_chat(results))
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 2: Integration Mode
+# ══════════════════════════════════════════════════════════════════════════════
+
+with tab_api:
+    st.subheader("🔗 How Part 1 chatbot calls Part 2")
+    st.markdown(f"""
+Part 1 passes the student's ranked list and year. Mileage is **not** passed — always {TOTAL_MILEAGE}pts.
+
+```python
+from strategy_engine_v2 import get_strategy_for_ranked_list, format_strategy_for_chat
+
+ranked_list = [
+    {{"code": "CAS3120-02", "name": "Machine Learning",       "rank": 1}},
+    {{"code": "CAS4160-01", "name": "Reinforcement Learning", "rank": 2}},
+    {{"code": "CAS3205-01", "name": "Computer Graphics",      "rank": 3}},
+]
+
+results = get_strategy_for_ranked_list(ranked_list, {{"year": 3}})
+print(format_strategy_for_chat(results))
+```
+
+Professor is **optional** — auto-resolved from the most recent scraped data if not supplied.
+""")
+
+    st.divider()
+    st.subheader("Test the integration")
+
+    json_input = st.text_area(
+        "Paste ranked list JSON",
+        value=json.dumps([
+            {"code": "CAS3101-02", "name": "Operating System",         "rank": 1},
+            {"code": "CAS3116-01", "name": "Computer Vision",          "rank": 2},
+            {"code": "CAS4127-01", "name": "Human-AI Interaction",     "rank": 3},
+        ], indent=2),
+        height=220
+    )
+    api_year = st.number_input("Student year", 1, 4, 3)
+    api_conf = st.slider("Target confidence", 80, 97, 90) / 100.0
+
+    if st.button("Run strategy engine", type="primary"):
+        try:
+            ranked = json.loads(json_input)
+            results = get_strategy_for_ranked_list(
+                ranked, {"year": api_year},
+                target_confidence=api_conf
+            )
+            total = sum(r.bid for r in results)
+
+            STATUS_EMOJI = {"Secured":"🟢","Likely":"🟢","Stretch":"🟡","Unfunded":"⛔"}
+            st.success(f"Total: {total}/{TOTAL_MILEAGE} pts used")
+
+            for r in results:
+                em = STATUS_EMOJI.get(r.status, "⚪")
+                st.markdown(
+                    f"**#{r.rank} {r.name}** ({r.professor}) — "
+                    f"Bid: `{r.bid}pt` | {em} {r.status} | "
+                    f"win odds: {r.win_prob:.0%} | "
+                    f"safe bid: {r.min_safe_bid}pt [{r.competition}]"
+                )
+                for line in r.note.split("\n"):
+                    if line.strip():
+                        st.caption(line.strip())
+
+            st.divider()
+            st.code(format_strategy_for_chat(results), language="markdown")
+
+        except Exception as e:
+            st.error(f"Error: {e}")
+            st.exception(e)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 3: Explore Courses
+# ══════════════════════════════════════════════════════════════════════════════
+
+with tab_explore:
+    st.subheader("📊 Explore competition curves by course")
+    st.caption("See exactly what the model knows about each course — "
+               "the raw survival curve from historical data.")
+
+    explore_label = st.selectbox(
+        "Select a course",
+        options=list(course_options.keys())
+    )
+    explore_code = course_options[explore_label]
+    explore_prof = courses[explore_code]["professor"]
+    explore_year = st.selectbox("Your year (for personalisation)", [1,2,3,4], index=2)
+
+    curve = build_curve(df_raw, explore_code, explore_prof,
+                        student_year=explore_year, meta=meta)
+    conf, conf_pct = confidence_label(curve)
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Data source",     curve.source)
+    col2.metric("Confidence",      f"{conf} ({conf_pct:.0f}%)")
+    col3.metric("Years of data",   str(curve.data_years))
+
+    if len(curve.bids) > 0:
+        chart_df = pd.DataFrame({
+            "bid":    curve.bids,
+            "P(win)": curve.p_enroll,
+        }).set_index("bid")
+        st.line_chart(chart_df, height=300)
+
+        st.markdown("**Bid thresholds:**")
+        thresh_cols = st.columns(4)
+        for i, target in enumerate([0.70, 0.80, 0.90, 0.97]):
+            msb = curve.min_bid_for(target)
+            thresh_cols[i].metric(f"{target:.0%} confidence", f"{msb} pt")
+
+        st.markdown("**Max reachable win rate:** "
+                    f"`{curve.reachable_max():.0%}` "
+                    f"(bidding more than `{curve.min_bid_for(curve.reachable_max() - 0.01)}pt` adds nothing)")
+
+        # Raw distribution
+        with st.expander("Raw bid distribution from historical data"):
+            sub = df_raw[df_raw["course_code"] == explore_code].copy()
+            sub["enrolled_bool"] = (sub["enrolled"].astype(str).str.upper() == "Y").astype(int)
+            if len(sub) > 0:
+                dist = sub.groupby(["year","semester","professor"]).agg(
+                    applicants=("mileage_bid","count"),
+                    enrolled=("enrolled_bool","sum"),
+                    avg_bid=("mileage_bid","mean"),
+                    min_win_bid=("mileage_bid", lambda x: x[sub.loc[x.index,"enrolled_bool"]==1].min() if (sub.loc[x.index,"enrolled_bool"]==1).any() else None),
+                ).reset_index()
+                st.dataframe(dist, use_container_width=True, hide_index=True)
+    else:
+        st.warning("No historical data for this course. "
+                   "Predictions use ETA demand proxy only.")
