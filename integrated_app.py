@@ -427,9 +427,9 @@ def render_strategy_panel(results, student_year: int):
             st.markdown(explain_threshold(r.recommended_bid, r.shap_breakdown, r.name))
 
             shap_df = pd.DataFrame([
-                {"factor": FEATURE_LABELS.get(k, k), "impact": v}
+                {"factor": FEATURE_LABELS.get(k, k), "impact": float(v)}
                 for k, v in r.shap_breakdown.items()
-                if abs(v) > 0.3
+                if isinstance(v, (int, float)) and abs(v) > 0.3
             ]).sort_values("impact", key=abs, ascending=False).head(8)
 
             if not shap_df.empty:

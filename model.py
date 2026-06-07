@@ -35,10 +35,21 @@ from build_training_data import build, FEATURE_COLS, TARGET_COL
 
 MODEL_PATH    = Path("mileage_model.pkl")
 EXPLAINER_PATH = Path("shap_explainer.pkl")
+CAPACITY_FEATURE_COLS = {
+    "max_capacity",
+    "demand_proxy",
+    "demand_capacity_ratio",
+    "capacity_demand_gap",
+}
+LEGACY_FEATURE_COLS = [col for col in FEATURE_COLS if col not in CAPACITY_FEATURE_COLS]
 
 # Human-readable labels for SHAP explanations shown to users
 FEATURE_LABELS = {
     "eta_added":            "historical demand (ETA adds)",
+    "max_capacity":         "classroom/applicant capacity",
+    "demand_proxy":         "demand proxy",
+    "demand_capacity_ratio":"demand pressure relative to capacity",
+    "capacity_demand_gap":  "demand minus capacity",
     "review_score":         "professor review score",
     "is_major_elective":    "popular elective status",
     "is_major_req":         "major requirement status",
@@ -62,6 +73,26 @@ FEATURE_LABELS = {
     "credits":              "credit count",
     "has_review":           "whether student reviews exist",
 }
+
+
+def _model_feature_count(model) -> int | None:
+    if hasattr(model, "n_features_in_"):
+        return int(model.n_features_in_)
+    if hasattr(model, "get_booster"):
+        try:
+            return int(model.get_booster().num_features())
+        except Exception:
+            return None
+    return None
+
+
+def _feature_cols_for_model(model) -> list:
+    feature_count = _model_feature_count(model)
+    if feature_count == len(LEGACY_FEATURE_COLS):
+        return LEGACY_FEATURE_COLS
+    if feature_count == len(FEATURE_COLS) or feature_count is None:
+        return FEATURE_COLS
+    return FEATURE_COLS[:feature_count]
 
 
 # ── Train ──────────────────────────────────────────────────────────────────────
@@ -129,6 +160,20 @@ def load_model():
         print(f"Saved model could not be loaded ({e}) - retraining now...")
         return train()
 
+    feature_count = _model_feature_count(model)
+    if feature_count is not None and feature_count != len(FEATURE_COLS):
+        if feature_count == len(LEGACY_FEATURE_COLS):
+            print(
+                f"Saved model expects legacy {feature_count}-feature input; "
+                "using compatibility feature subset."
+            )
+        else:
+            print(
+                f"Saved model expects {feature_count} features, "
+                f"but current extractor provides {len(FEATURE_COLS)} - retraining now..."
+            )
+            return train()
+
     explainer = None
     if EXPLAINER_PATH.exists():
         try:
@@ -157,16 +202,23 @@ def predict_threshold(model, explainer, feature_row: dict) -> tuple:
         predicted_threshold  (float)  — minimum bid likely needed
         shap_breakdown       (dict)   — feature → contribution in pts
     """
-    X = np.array([[feature_row[f] for f in FEATURE_COLS]])
+    feature_cols = _feature_cols_for_model(model)
+    X = np.array([[feature_row[f] for f in feature_cols]])
     pred = float(model.predict(X)[0])
     shap_vals = explainer.shap_values(X)[0]
-    breakdown = {f: float(v) for f, v in zip(FEATURE_COLS, shap_vals)}
+    breakdown = {f: float(v) for f, v in zip(feature_cols, shap_vals)}
     return max(1.0, pred), breakdown
 
 
 def top_reasons(breakdown: dict, n: int = 3) -> list:
     """Top N features by absolute SHAP value."""
-    return sorted(breakdown.items(), key=lambda x: abs(x[1]), reverse=True)[:n]
+    numeric_items = []
+    for feat, value in breakdown.items():
+        try:
+            numeric_items.append((feat, float(value)))
+        except (TypeError, ValueError):
+            continue
+    return sorted(numeric_items, key=lambda x: abs(x[1]), reverse=True)[:n]
 
 
 def explain_threshold(threshold: float, breakdown: dict, course_name: str) -> str:
@@ -185,9 +237,10 @@ def explain_threshold(threshold: float, breakdown: dict, course_name: str) -> st
 # ── Feature importance ─────────────────────────────────────────────────────────
 
 def feature_importance_df(model) -> pd.DataFrame:
+    feature_cols = _feature_cols_for_model(model)
     return pd.DataFrame({
-        "feature":    FEATURE_COLS,
-        "label":      [FEATURE_LABELS.get(f, f) for f in FEATURE_COLS],
+        "feature":    feature_cols,
+        "label":      [FEATURE_LABELS.get(f, f) for f in feature_cols],
         "importance": model.feature_importances_,
     }).sort_values("importance", ascending=False)
 

@@ -488,7 +488,7 @@
             "combination",
             "graphs"
           ],
-          "max_capacity": 69,
+          "max_capacity": 75,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -598,7 +598,7 @@
             "variance",
             "regression analysis"
           ],
-          "max_capacity": 52,
+          "max_capacity": 80,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -676,7 +676,7 @@
             "artificial intelligence",
             "theory of computation"
           ],
-          "max_capacity": 69,
+          "max_capacity": 100,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -709,7 +709,7 @@
             "javascript",
             "programming"
           ],
-          "max_capacity": 39,
+          "max_capacity": 100,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -752,7 +752,7 @@
             "linux",
             "c programming"
           ],
-          "max_capacity": 141,
+          "max_capacity": 160,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -793,7 +793,7 @@
             "multi-threading",
             "multi-core"
           ],
-          "max_capacity": 32,
+          "max_capacity": 80,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -824,7 +824,7 @@
             "cpu",
             "memory"
           ],
-          "max_capacity": 78,
+          "max_capacity": 75,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -857,7 +857,7 @@
             "computation",
             "theory"
           ],
-          "max_capacity": 68,
+          "max_capacity": 95,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -892,7 +892,7 @@
             "deep learning",
             "CNN"
           ],
-          "max_capacity": 68,
+          "max_capacity": 95,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -927,7 +927,7 @@
             "neural networks",
             "algorithms"
           ],
-          "max_capacity": 80,
+          "max_capacity": 75,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -962,7 +962,7 @@
             "neural networks",
             "models"
           ],
-          "max_capacity": 48,
+          "max_capacity": 75,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -998,7 +998,7 @@
             "rendering",
             "blender"
           ],
-          "max_capacity": 39,
+          "max_capacity": 100,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -1041,7 +1041,7 @@
             "ethics",
             "safety"
           ],
-          "max_capacity": 18,
+          "max_capacity": 50,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -1084,7 +1084,7 @@
             "llm",
             "large language models"
           ],
-          "max_capacity": 26,
+          "max_capacity": 50,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -1244,7 +1244,7 @@
             "unlearning",
             "watermarking"
           ],
-          "max_capacity": 35,
+          "max_capacity": 75,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -1283,7 +1283,7 @@
             "attack payloads",
             "defensive programming"
           ],
-          "max_capacity": 74,
+          "max_capacity": 75,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -1323,7 +1323,7 @@
             "reduction",
             "deep learning kernels"
           ],
-          "max_capacity": 63,
+          "max_capacity": 95,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -1358,7 +1358,7 @@
             "creativity",
             "education"
           ],
-          "max_capacity": 32,
+          "max_capacity": 50,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -1398,7 +1398,7 @@
             "AI agents",
             "multi-modality"
           ],
-          "max_capacity": 85,
+          "max_capacity": 80,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -1437,7 +1437,7 @@
             "perception",
             "color"
           ],
-          "max_capacity": 65,
+          "max_capacity": 60,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -1517,7 +1517,7 @@
             "RLHF",
             "PyTorch"
           ],
-          "max_capacity": 98,
+          "max_capacity": 95,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
@@ -1553,7 +1553,7 @@
             "DevOps",
             "media"
           ],
-          "max_capacity": 15,
+          "max_capacity": 30,
           "capacity_source": "holdout_exact",
           "capacity_source_column": "inferred_class_size"
         },
