@@ -1,0 +1,50 @@
+﻿python3 -m streamlit run app.py
+
+windows - python -m streamlit run app.py
+
+Storing personal API Keys
+
+1. Pull the latest updates
+Open your VS Code terminal and run:
+
+Bash
+git pull origin main
+2. Create your local secrets folder
+In the root directory of our project folder, create a new folder named exactly .streamlit and a file inside it named secrets.toml.
+
+3. Add your free Groq API Key
+Go to Groq Cloud Console, make a free account, grab a key, and paste it into your new secrets.toml file exactly like this:
+
+Ini, TOML
+GROQ_API_KEY = "gsk_your_actual_key_here"
+
+
+
+Model Framework
+1. pip3 install xgboost
+2. /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+3. eval "$(/opt/homebrew/bin/brew shellenv)"
+4. brew install libomp
+5. python3 install shap
+6. python3 model.py --train
+
+
+New Optimizer engine = strategy_engine_v2.py
+
+Model Testing Optimizer
+python3 -m streamlit run strategy_app.py
+
+
+Testing and Evaluator: evaluate_strategy_v2.py
+## Project Layout
+- `integrated_app.py` is the final Streamlit app entry point.
+- `database/` contains JSON, CSV, scraped mileage data, and saved model artifacts.
+- `part1/` contains the course-selection chatbot, retrieval, filters, guardrails, prompts, and timetable helpers.
+- `part2/` contains feature extraction, capacity/demand mileage prediction, strategy engines, optimizers, training, scraping, and evaluation scripts.
+- `assets/` contains UI media such as `eagle.gif` and `sonic.gif`.
+
+Run the final app from the project root with:
+
+```bash
+streamlit run integrated_app.py
+```

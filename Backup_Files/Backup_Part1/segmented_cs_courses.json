@@ -7,10 +7,11 @@
           "professor": "이시윤 (Lee Sheayun)",
           "language_medium": "Korean",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Tue 2, Thu 2,3",
+          "time": "Tue 2, Thu 2, Thu 3",
           "location": "공D504 (EngHD504)",
           "evaluation_type": "relative",
           "prerequisites": [],
@@ -39,10 +40,11 @@
           "professor": "안형찬 (An Hyung-Chan)",
           "language_medium": "English",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Wed 5, Fri 5,6",
+          "time": "Wed 5, Fri 5, Fri 6",
           "location": "EngHD408",
           "evaluation_type": "absolute",
           "prerequisites": [],
@@ -74,10 +76,11 @@
           "professor": "황성재 (Hwang Seong Jae)",
           "language_medium": "English",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Wed 5, Fri 5,6",
+          "time": "Wed 5, Fri 5, Fri 6",
           "location": "EngHD504",
           "evaluation_type": "absolute",
           "prerequisites": [],
@@ -111,10 +114,11 @@
           "professor": "이시윤 (Lee Sheayun)",
           "language_medium": "Korean",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Tue 2, Thu 2,3",
+          "time": "Tue 2, Thu 2, Thu 3",
           "location": "공D504 (EngHD504)",
           "evaluation_type": "relative",
           "prerequisites": [],
@@ -143,10 +147,11 @@
           "professor": "안형찬 (An Hyung-Chan)",
           "language_medium": "English",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Wed 5, Fri 5,6",
+          "time": "Wed 5, Fri 5, Fri 6",
           "location": "EngHD408",
           "evaluation_type": "absolute",
           "prerequisites": [],
@@ -178,10 +183,11 @@
           "professor": "황성재 (Hwang Seong Jae)",
           "language_medium": "English",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Wed 5, Fri 5,6",
+          "time": "Wed 5, Fri 5, Fri 6",
           "location": "EngHD504",
           "evaluation_type": "absolute",
           "prerequisites": [],
@@ -213,10 +219,11 @@
           "professor": "김지응 (Kim Jieung)",
           "language_medium": "English",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Wed 5, Fri 5,6",
+          "time": "Wed 5, Fri 5, Fri 6",
           "location": "공D508 (EngHD508)",
           "evaluation_type": "absolute",
           "prerequisites": [],
@@ -253,10 +260,11 @@
           "professor": "이진규 (Lee Jinkyu)",
           "language_medium": "English",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Tue 8,9, Thu 7",
+          "time": "Tue 8, Tue 9, Thu 7",
           "location": "공D508 (EngHD508)",
           "evaluation_type": "absolute",
           "prerequisites": [],
@@ -287,10 +295,11 @@
           "professor": "이종민 (Lee Jongmin)",
           "language_medium": "English",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Tue 8,9, Thu 7",
+          "time": "Tue 8, Tue 9, Thu 7",
           "location": "공D408 (EngHD408)",
           "evaluation_type": "absolute",
           "prerequisites": [],
@@ -315,16 +324,17 @@
           "alternative_professor_reviews": ""
         }
       },
-      "MAT2013-03-00": {
+      "MAT2013-03": {
         "metadata": {
-          "name": "확률통계학 (Probability and Statistics)",
+          "name": "확률통계학 (PROBABILITY AND STATISTICS)",
           "professor": "최장열 (Jangyeol Choi)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Mon 7,8 / Wed 8",
+          "time": "Mon 7, Mon 8, Wed 8",
           "location": "공학월170E",
           "evaluation_type": "relative",
           "prerequisites": [],
@@ -347,16 +357,17 @@
           "alternative_professor_reviews": ""
         }
       },
-      "MAT2013-04-00": {
+      "MAT2013-04": {
         "metadata": {
-          "name": "확률통계학 (Probability and Statistics)",
+          "name": "확률통계학 (PROBABILITY AND STATISTICS)",
           "professor": "김현정 (Hyunjung Kim)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
+          "course_type": "major requirement",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Fri 1,2,3",
+          "time": "Fri 1, Fri 2, Fri 3",
           "location": "공D408 (EngHD408)",
           "evaluation_type": "relative",
           "prerequisites": [],
@@ -379,18 +390,19 @@
           "alternative_professor_reviews": ""
         }
       },
-      "MAT2011-03-00": {
+      "MAT2011-03": {
         "metadata": {
-          "name": "선형대수와그응용 (Linear Algebra and Its Applications)",
+          "name": "선형대수와그응용 (LINEAR ALGEBRA AND ITS APPLICATIONS)",
           "professor": "최장열 (Jangyeol Choi)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Mon 9,10 / Wed 10",
+          "time": "Mon 9, Mon 10, Wed 10",
           "location": "공학월170E",
           "evaluation_type": "relative",
+          "course_type": "major requirement",
           "prerequisites": [],
           "mileage_historical_eta": 92,
           "keywords": [
@@ -421,11 +433,12 @@
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Tue 8,9, Thu 7",
+          "time": "Tue 8, Tue 9, Thu 7",
           "location": "공D508 (EngHD508)",
           "evaluation_type": "absolute",
           "prerequisites": [],
           "mileage_historical_eta": 70,
+          "course_type": "major requirement",
           "keywords": [
             "math",
             "discrete",
@@ -455,11 +468,12 @@
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Tue 8,9, Thu 7",
+          "time": "Tue 8, Tue 9, Thu 7",
           "location": "공D408 (EngHD408)",
           "evaluation_type": "absolute",
           "prerequisites": [],
           "mileage_historical_eta": 85,
+          "course_type": "major requirement",
           "keywords": [
             "math",
             "discrete",
@@ -480,20 +494,21 @@
           "alternative_professor_reviews": ""
         }
       },
-      "MAT2013-03-00": {
+      "MAT2013-03": {
         "metadata": {
-          "name": "확률통계학 (Probability and Statistics)",
+          "name": "확률통계학 (PROBABILITY AND STATISTICS)",
           "professor": "최장열 (Jangyeol Choi)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Mon 7,8 / Wed 8",
+          "time": "Mon 7, Mon 8, Wed 8",
           "location": "공학월170E",
           "evaluation_type": "relative",
           "prerequisites": [],
           "mileage_historical_eta": 93,
+          "course_type": "major requirement",
           "keywords": [
             "probability",
             "statistics",
@@ -512,20 +527,21 @@
           "alternative_professor_reviews": ""
         }
       },
-      "MAT2013-04-00": {
+      "MAT2013-04": {
         "metadata": {
-          "name": "확률통계학 (Probability and Statistics)",
+          "name": "확률통계학 (PROBABILITY AND STATISTICS)",
           "professor": "김현정 (Hyunjung Kim)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Fri 1,2,3",
+          "time": "Fri 1, Fri 2, Fri 3",
           "location": "공D408 (EngHD408)",
           "evaluation_type": "relative",
           "prerequisites": [],
           "mileage_historical_eta": 74,
+          "course_type": "major requirement",
           "keywords": [
             "probability",
             "statistics",
@@ -544,20 +560,21 @@
           "alternative_professor_reviews": ""
         }
       },
-      "MAT2011-03-00": {
+      "MAT2011-03": {
         "metadata": {
-          "name": "선형대수와그응용 (Linear Algebra and Its Applications)",
+          "name": "선형대수와그응용 (LINEAR ALGEBRA AND ITS APPLICATIONS)",
           "professor": "최장열 (Jangyeol Choi)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Mon 9,10 / Wed 10",
+          "time": "Mon 9, Mon 10, Wed 10",
           "location": "공학월170E",
           "evaluation_type": "relative",
           "prerequisites": [],
           "mileage_historical_eta": 92,
+          "course_type": "major requirement",
           "keywords": [
             "linear algebra",
             "vector space",
@@ -586,11 +603,12 @@
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Tue 7 / Thu 12,13",
+          "time": "Tue 7, Thu 12, Thu 13",
           "location": "공D504 (EngHD504) / Pre-recorded lecture",
           "evaluation_type": "relative",
           "prerequisites": [],
           "mileage_historical_eta": 108,
+          "course_type": "major elective",
           "keywords": [
             "computer science",
             "intro",
@@ -623,11 +641,12 @@
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Tue 5,6 / Thu 11",
+          "time": "Tue 5, Tue 6, Thu 11",
           "location": "공D504 (EngHD504) / Pre-recorded lecture",
           "evaluation_type": "relative",
           "prerequisites": [],
           "mileage_historical_eta": 47,
+          "course_type": "major elective",
           "keywords": [
             "web",
             "internet",
@@ -656,11 +675,12 @@
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Mon 7,8, Wed 8",
+          "time": "Mon 7, Mon 8, Wed 8",
           "location": "EngHB039",
           "evaluation_type": "relative",
           "prerequisites": [],
           "mileage_historical_eta": 169,
+          "course_type": "major requirement",
           "keywords": [
             "os",
             "operating system",
@@ -691,11 +711,12 @@
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Mon 5,6 / Wed 6",
+          "time": "Mon 5, Mon 6, Wed 6",
           "location": "공D504 (EngHD504) / Pre-recorded lecture",
           "evaluation_type": "relative",
           "prerequisites": [],
           "mileage_historical_eta": 80,
+          "course_type": "major requirement",
           "keywords": [
             "architecture",
             "computer architecture",
@@ -721,18 +742,19 @@
       },
       "CAS3102-02": {
         "metadata": {
-          "name": "Architecture of Computers",
+          "name": "컴퓨터아키텍쳐 (ARCHITECTURE OF COMPUTERS)",
           "professor": "Park Kwanghyun",
           "language_medium": "English",
           "lecture_type": "Offline",
           "credits": 3,
           "workload": "Light",
           "difficulty": "Low",
-          "time": "Mon 5,6 / Wed 6",
+          "time": "Mon 5, Mon 6, Wed 6",
           "location": "EngHD408",
           "evaluation_type": "Absolute",
           "prerequisites": [],
           "mileage_historical_eta": 14,
+          "course_type": "major requirement",
           "keywords": [
             "hardware",
             "processor",
@@ -750,18 +772,19 @@
     "major_elective": {
       "CAS3109-01": {
         "metadata": {
-          "name": "Automata and Formal Languages",
+          "name": "AUTOMATA AND FORMAL LANGUAGES",
           "professor": "Han Yo-Sub",
           "language_medium": "English",
           "lecture_type": "Offline",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "High",
-          "time": "Tue 4 / Thu 5,6",
+          "time": "Tue 4, Thu 5, Thu 6",
           "location": "EngHD504",
           "evaluation_type": "Absolute",
           "prerequisites": [],
           "mileage_historical_eta": 74,
+          "course_type": "major elective",
           "keywords": [
             "automata",
             "turing machines",
@@ -777,14 +800,14 @@
       },
       "CAS3116-01": {
         "metadata": {
-          "name": "Computer Vision",
+          "name": "COMPUTER VISION",
           "professor": "Kim Seon Joo",
           "language_medium": "English",
           "lecture_type": "Offline",
           "credits": 3,
           "workload": "Heavy",
           "difficulty": "Medium",
-          "time": "Tue 8,9 / Thu 7",
+          "time": "Tue 8, Tue 9, Thu 7",
           "location": "EngHD504",
           "evaluation_type": "Absolute",
           "prerequisites": [
@@ -793,6 +816,7 @@
             "Probability"
           ],
           "mileage_historical_eta": 84,
+          "course_type": "major elective",
           "keywords": [
             "vision",
             "image processing",
@@ -808,14 +832,14 @@
       },
       "CAS3120-01": {
         "metadata": {
-          "name": "Machine Learning",
+          "name": "MACHINE LEARNING",
           "professor": "Lee Dongha",
           "language_medium": "English",
           "lecture_type": "Offline",
           "credits": 3,
           "workload": "Heavy",
           "difficulty": "High",
-          "time": "Wed 9 / Fri 9,10",
+          "time": "Wed 9, Fri 9, Fri 10",
           "location": "EngHD404",
           "evaluation_type": "Absolute",
           "prerequisites": [
@@ -824,6 +848,7 @@
             "Python"
           ],
           "mileage_historical_eta": 45,
+          "course_type": "major elective",
           "keywords": [
             "math",
             "regression",
@@ -839,14 +864,14 @@
       },
       "CAS3120-02": {
         "metadata": {
-          "name": "Machine Learning",
+          "name": "MACHINE LEARNING",
           "professor": "Jeon Hae-Gon",
           "language_medium": "English",
           "lecture_type": "Offline",
           "credits": 3,
           "workload": "Light",
           "difficulty": "Medium",
-          "time": "Wed 9 / Fri 9,10",
+          "time": "Wed 9, Fri 9, Fri 10",
           "location": "EngHD408",
           "evaluation_type": "Absolute",
           "prerequisites": [
@@ -855,6 +880,7 @@
             "Programming"
           ],
           "mileage_historical_eta": 60,
+          "course_type": "major elective",
           "keywords": [
             "pytorch",
             "classification",
@@ -870,14 +896,14 @@
       },
       "CAS3205-01": {
         "metadata": {
-          "name": "Computer Graphics",
+          "name": "COMPUTER GRAPHICS",
           "professor": "Lee In Kwon",
           "language_medium": "Korean",
           "lecture_type": "On-Off Blended (Video Recorded)",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "High",
-          "time": "Tue 11 / Thu 8,9",
+          "time": "Tue 11, Thu 8, Thu 9",
           "location": "Pre-recorded lecture / EngHD504",
           "evaluation_type": "Relative",
           "prerequisites": [
@@ -886,6 +912,7 @@
             "Calculus"
           ],
           "mileage_historical_eta": 52,
+          "course_type": "major elective",
           "keywords": [
             "graphics",
             "webgl",
@@ -902,14 +929,14 @@
       },
       "CAS3208-01": {
         "metadata": {
-          "name": "Artificial Intelligence",
+          "name": "ARTIFICIAL INTELLIGENCE",
           "professor": "CHO Sung-Bae",
           "language_medium": "Korean",
           "lecture_type": "On-Off Blended (Pre-recorded & Offline)",
           "credits": 3,
           "workload": "Light",
           "difficulty": "Low",
-          "time": "Mon 2 / Wed 11,12",
+          "time": "Mon 2, Wed 11, Wed 12",
           "location": "EngHD408 / Pre-recorded lecture",
           "evaluation_type": "Relative",
           "prerequisites": [
@@ -917,6 +944,7 @@
             "Discrete Mathematics"
           ],
           "mileage_historical_eta": 41,
+          "course_type": "major elective",
           "keywords": [
             "ai",
             "search algorithms",
@@ -941,18 +969,19 @@
       },
       "CAS3301-01": {
         "metadata": {
-          "name": "Natural Language Processing",
+          "name": "NATURAL LANGUAGE PROCESSING",
           "professor": "Yeo Jinyoung",
           "language_medium": "Korean",
           "lecture_type": "Offline",
           "credits": 3,
           "workload": "Heavy",
           "difficulty": "High",
-          "time": "Tue 5,6 / Thu 6",
+          "time": "Tue 5, Tue 6, Thu 6",
           "location": "ERC170E",
           "evaluation_type": "Relative",
           "prerequisites": [],
           "mileage_historical_eta": 42,
+          "course_type": "major elective",
           "keywords": [
             "nlp",
             "natural language processing",
@@ -980,14 +1009,14 @@
       },
       "CAS3400-01": {
         "metadata": {
-          "name": "AI Systems",
+          "name": "AI SYSTEMS",
           "professor": "Han Dong-Jun",
           "language_medium": "English",
           "lecture_type": "Offline",
           "credits": 3,
           "workload": "Light",
           "difficulty": "High",
-          "time": "Wed 5 / Fri 5,6",
+          "time": "Wed 5, Fri 5, Fri 6",
           "location": "ERC170E",
           "evaluation_type": "Absolute",
           "prerequisites": [
@@ -995,6 +1024,7 @@
             "Deep Learning"
           ],
           "mileage_historical_eta": 14,
+          "course_type": "major elective",
           "keywords": [
             "ai systems",
             "on-device training",
@@ -1022,20 +1052,21 @@
   },
   "major_year_4": {
     "major_requirement": {
-      "CAS4102-01-00": {
+      "CAS4102-01": {
         "metadata": {
-          "name": "인공지능종합설계 (AI Capstone Design)",
+          "name": "인공지능종합설계 (AI CAPSTONE DESIGN)",
           "professor": "이봉신 (Bongshin Lee)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Wed 7 / Fri 7,8",
+          "time": "Wed 7, Fri 7, Fri 8",
           "location": "공D508 (EngHD508)",
           "evaluation_type": "absolute",
           "prerequisites": [],
           "mileage_historical_eta": 40,
+          "course_type": "major requirement",
           "keywords": [
             "capstone design",
             "team project",
@@ -1052,20 +1083,21 @@
       },
       "CAS4101-01": {
         "metadata": {
-          "name": "Computer Capstone Design",
+          "name": "COMPUTER CAPSTONE DESIGN",
           "professor": "Han Seungjae",
           "language_medium": "Korean",
           "lecture_type": "Offline",
           "credits": 3,
           "workload": "Heavy",
           "difficulty": "High",
-          "time": "Wed 7 / Fri 7,8",
+          "time": "Wed 7, Fri 7, Fri 8",
           "location": "EngHD504",
           "evaluation_type": "Absolute",
           "prerequisites": [
             "Data Structures"
           ],
           "mileage_historical_eta": 30,
+          "course_type": "major requirement",
           "keywords": [
             "capstone",
             "design",
@@ -1087,16 +1119,16 @@
       }
     },
     "major_elective": {
-      "CAS4108-01-00": {
+      "CAS4108-01": {
         "metadata": {
-          "name": "데이터프라이버시학 (Data Privacy)",
+          "name": "데이터프라이버시학 (DATA PRIVACY)",
           "professor": "노일버트 (Albert No)",
           "language_medium": "English",
           "lecture_type": "In-person",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Tue 4 / Thu 5,6",
+          "time": "Tue 4, Thu 5, Thu 6",
           "location": "공D508 (EngHD508)",
           "evaluation_type": "absolute",
           "prerequisites": [
@@ -1105,6 +1137,7 @@
             "Calculus"
           ],
           "mileage_historical_eta": 37,
+          "course_type": "major elective",
           "keywords": [
             "differential privacy",
             "generative diffusion models",
@@ -1122,16 +1155,16 @@
           "alternative_professor_reviews": ""
         }
       },
-      "CAS4109-01-00": {
+      "CAS4109-01": {
         "metadata": {
-          "name": "컴퓨터보안학 (Computer Security)",
+          "name": "컴퓨터보안학 (COMPUTER SECURITY)",
           "professor": "송도경 (Dokyung Song)",
           "language_medium": "English",
           "lecture_type": "On-Off Blended (Flipped Classroom)",
           "credits": 3,
           "workload": "High",
           "difficulty": "High",
-          "time": "Tue 7 / Thu 12,13",
+          "time": "Tue 7, Thu 12, Thu 13",
           "location": "공D408 (EngHD408) / online video (duplicate registration not allowed)",
           "evaluation_type": "absolute",
           "prerequisites": [
@@ -1139,6 +1172,7 @@
             "Computer Architecture"
           ],
           "mileage_historical_eta": 87,
+          "course_type": "major elective",
           "keywords": [
             "computer security",
             "threat modeling",
@@ -1157,16 +1191,16 @@
           "alternative_professor_reviews": "lots of assignments with high technical difficulty but class content is interesting, professor mostly just reads through powerpoint slides, professor pronunciation is spot on, gives good grades"
         }
       },
-      "CAS4119-01-00": {
+      "CAS4119-01": {
         "metadata": {
-          "name": "멀티코어및GPU프로그래밍 (Multi-core and GPU Programming)",
+          "name": "멀티코어및GPU프로그래밍 (MULTICORE AND GPU PROGRAMMING)",
           "professor": "박영준 (Yongjun Park)",
           "language_medium": "English",
           "lecture_type": "In-person",
           "credits": 3,
           "workload": "High",
           "difficulty": "High",
-          "time": "Wed 3 / Fri 3,4",
+          "time": "Wed 3, Fri 3, Fri 4",
           "location": "공D504 (EngHD504)",
           "evaluation_type": "absolute",
           "prerequisites": [
@@ -1175,6 +1209,7 @@
             "Algorithm"
           ],
           "mileage_historical_eta": 97,
+          "course_type": "major elective",
           "keywords": [
             "multi-core",
             "GPU",
@@ -1193,20 +1228,21 @@
           "alternative_professor_reviews": ""
         }
       },
-      "CAS4127-01-00": {
+      "CAS4127-01": {
         "metadata": {
-          "name": "인간-인공지능상호작용학 (Human-AI Interaction)",
+          "name": "인간-인공지능상호작용학 (HUMAN-AI INTERACTION)",
           "professor": "김대현 (Daehyun Kim)",
           "language_medium": "English",
           "lecture_type": "In-person",
           "credits": 3,
           "workload": "High",
           "difficulty": "Medium",
-          "time": "Tue 2,3 / Thu 1",
+          "time": "Tue 2, Tue 3, Thu 1",
           "location": "공D408 (EngHD504)",
           "evaluation_type": "absolute",
           "prerequisites": [],
           "mileage_historical_eta": 41,
+          "course_type": "major elective",
           "keywords": [
             "human-AI interaction",
             "HCI",
@@ -1224,16 +1260,16 @@
           "alternative_professor_reviews": "very generous with grades, passionate teaching, open and adaptive to course feedback from students, professor is good at answering questions"
         }
       },
-      "CAS4133-01-00": {
+      "CAS4133-01": {
         "metadata": {
-          "name": "거대언어모델학 (Large Language Models)",
+          "name": "거대언어모델학 (LARGE LANGUAGE MODELS)",
           "professor": "김재형 (Jaehyung Kim)",
           "language_medium": "English",
           "lecture_type": "In-person",
           "credits": 3,
           "workload": "High",
           "difficulty": "High",
-          "time": "Mon 5,6 / Wed 6",
+          "time": "Mon 5, Mon 6, Wed 6",
           "location": "공D508 (EngHD508)",
           "evaluation_type": "absolute",
           "prerequisites": [
@@ -1241,6 +1277,7 @@
             "Deep learning"
           ],
           "mileage_historical_eta": 93,
+          "course_type": "major elective",
           "keywords": [
             "large language models",
             "LLM",
@@ -1260,16 +1297,16 @@
           "alternative_professor_reviews": ""
         }
       },
-      "CAS4150-01-00": {
+      "CAS4150-01": {
         "metadata": {
-          "name": "데이터시각화입문 (Introduction to Data Visualization)",
+          "name": "데이터시각화입문 (INTRODUCTION TO DATA VISUALISATION)",
           "professor": "강민석 (Minsuk Kang)",
           "language_medium": "English",
           "lecture_type": "In-person",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Tue 12 / Thu 8,9",
+          "time": "Tue 12, Thu 8, Thu 9",
           "location": "동영상콘텐츠 / 공D408 (EngHD408) (video content + room D408)",
           "evaluation_type": "absolute",
           "prerequisites": [
@@ -1277,6 +1314,7 @@
             "HTML/CSS (recommended)"
           ],
           "mileage_historical_eta": 81,
+          "course_type": "major elective",
           "keywords": [
             "data visualization",
             "interactive visualization",
@@ -1295,22 +1333,23 @@
           "alternative_professor_reviews": ""
         }
       },
-      "CAS4151-01-00": {
+      "CAS4151-01": {
         "metadata": {
-          "name": "SW-AI비즈니스응용설계 (SW-AI Business Application Design)",
+          "name": "SW-AI비즈니스응용설계 (SW-AI BUSINESS APPLICATION DESIGN)",
           "professor": "김현수 (Hyunsoo Kim)",
           "language_medium": "Korean (no explicit English label)",
           "lecture_type": "In-person",
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Wed 5 / Fri 5,6",
+          "time": "Wed 5, Fri 5, Fri 6",
           "location": "공A343 / 공D507 (EngHA343/EngHD507)",
           "evaluation_type": "absolute",
           "prerequisites": [
             "Basic coding skills (coding methods not taught in class)"
           ],
           "mileage_historical_eta": 31,
+          "course_type": "major elective",
           "keywords": [
             "business",
             "AI",
@@ -1329,16 +1368,16 @@
           "alternative_professor_reviews": ""
         }
       },
-      "CAS4160-01-00": {
+      "CAS4160-01": {
         "metadata": {
-          "name": "강화학습 (Reinforcement Learning)",
+          "name": "강화학습 (REINFORCEMENT LEARNING)",
           "professor": "이영운 (Youngwoon Lee)",
           "language_medium": "English",
           "lecture_type": "In-person",
           "credits": 3,
           "workload": "High",
           "difficulty": "High",
-          "time": "Wed 4 / Fri 11, 12",
+          "time": "Wed 4, Fri 11, Fri 12",
           "location": "공D504 (EngHD504) / online video (duplicate registration not allowed)",
           "evaluation_type": "absolute",
           "prerequisites": [
@@ -1347,6 +1386,7 @@
             "PyTorch"
           ],
           "mileage_historical_eta": 110,
+          "course_type": "major elective",
           "keywords": [
             "reinforcement learning",
             "deep RL",
@@ -1367,7 +1407,7 @@
           "alternative_professor_reviews": ""
         }
       },
-      "CAS4131-01-00": {
+      "CAS4131-01": {
         "metadata": {
           "name": "커넥티드플랫폼이론과실제 (THEORY AND PRACTICE OF CONNECTED PLATFORM)",
           "professor": "이경우 (Kyoungwoo Lee)",
@@ -1376,11 +1416,12 @@
           "credits": 3,
           "workload": "Medium",
           "difficulty": "Medium",
-          "time": "Mon 2,3,4",
+          "time": "Mon 2, Mon 3, Mon 4",
           "location": "공D508 (EngHD508)",
           "evaluation_type": "absolute",
           "prerequisites": [],
           "mileage_historical_eta": 25,
+          "course_type": "major elective",
           "keywords": [
             "webOS",
             "LG Smart TV",

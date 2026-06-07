@@ -1,5 +1,40 @@
-"""Shared helpers for course text normalization and display formatting."""
+"""Shared helpers for course text normalization, display formatting, and time expansion."""
 
+import re
+
+
+PERIOD_TIME_RANGES = {
+    1: "9:00 AM-10:00 AM",
+    2: "10:00 AM-11:00 AM",
+    3: "11:00 AM-12:00 PM",
+    4: "12:00 PM-1:00 PM",
+    5: "1:00 PM-2:00 PM",
+    6: "2:00 PM-3:00 PM",
+    7: "3:00 PM-4:00 PM",
+    8: "4:00 PM-5:00 PM",
+    9: "5:00 PM-6:00 PM",
+    10: "6:00 PM-7:00 PM",
+    11: "7:00 PM-8:00 PM",
+    12: "8:00 PM-9:00 PM",
+    13: "9:00 PM-10:00 PM",
+}
+
+DAY_PATTERN = re.compile(r"\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b\s*([^A-Za-z]*)")
+
+def extract_time_slots(time_value):
+    """Extracts a set of specific day-period slots for overlap comparison."""
+    raw_time = str(time_value or "").strip()
+    if not raw_time:
+        return set()
+
+    slots = set()
+    # This existing regex handles both your old "Thu 2,3" and new "Thu 2, Thu 3" formats perfectly
+    for day, period_text in DAY_PATTERN.findall(raw_time):
+        periods = [int(value) for value in re.findall(r"\d+", period_text)]
+        for period in periods:
+            slots.add(f"{day} {period}")
+            
+    return slots
 
 def normalize_text(value):
     if value is None:
@@ -13,10 +48,39 @@ def clean_focus_area(area):
     return normalize_text(str(area).split(" (")[0])
 
 
+def period_to_time(period):
+    try:
+        period_num = int(period)
+    except (TypeError, ValueError):
+        return "Unknown time"
+    return PERIOD_TIME_RANGES.get(period_num, "Unknown time")
+
+
+def expand_course_time(time_value):
+    raw_time = str(time_value or "").strip()
+    if not raw_time:
+        return "Not listed"
+
+    expanded_days = []
+    for day, period_text in DAY_PATTERN.findall(raw_time):
+        periods = [int(value) for value in re.findall(r"\d+", period_text)]
+        if not periods:
+            continue
+        expanded_periods = [
+            f"period {period} ({period_to_time(period)})"
+            for period in periods
+        ]
+        expanded_days.append(f"{day}: " + ", ".join(expanded_periods))
+
+    if not expanded_days:
+        return raw_time
+    return "; ".join(expanded_days)
+
+
 def course_search_blob(code, course_obj):
     meta = course_obj.get("metadata", {})
     chunks = course_obj.get("text_chunks", {})
-    parts = [code]
+    parts = [code, normalize_text(expand_course_time(meta.get("time")))]
     for value in meta.values():
         parts.append(normalize_text(value))
     for value in chunks.values():
