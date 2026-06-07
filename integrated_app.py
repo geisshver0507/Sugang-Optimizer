@@ -38,16 +38,11 @@ from schedule_utils import (
     schedule_total_credits,
 )
 
-# Strategy engine imports (Part 2)
-from feature_extractor import load_features, flatten_json
-from model import load_model, predict_threshold, explain_threshold, FEATURE_LABELS, feature_importance_df
-from optimizer import (
-    CourseInput, allocate_bids, strategy_summary,
-    TOTAL_MILEAGE, MAX_BID_PER_COURSE,
-)
-from strategy_engine import get_strategy_for_ranked_list, format_strategy_for_chat
-
-import pandas as pd
+# Strategy engine imports (Part 2 - V2 Survival Curve)
+from survival_model import load_applicant_data, load_course_meta, build_curve, confidence_label
+# Strategy engine imports (Part 2 - V2 Survival Curve)
+from allocator import TOTAL_MILEAGE, MAX_BID
+from strategy_engine_v2 import get_strategy_for_ranked_list, format_strategy_for_chat
 
 # ── 0. Page config ──────────────────────────────────────────────────────────
 st.set_page_config(
@@ -56,20 +51,8 @@ st.set_page_config(
     layout="wide",
 )
 
+# Use dynamic paths for V2 files
 JSON_PATH = str(DATABASE_DIR / "segmented_cs_courses.json")
-
-# ── Cached loaders (Part 2) ─────────────────────────────────────────────────
-@st.cache_resource
-def get_strategy_model():
-    return load_model()
-
-@st.cache_data
-def get_df_features(json_path):
-    return load_features(json_path)
-
-@st.cache_data
-def get_flat_courses(json_path):
-    return flatten_json(json_path)
 
 # ── 1. Groq client ──────────────────────────────────────────────────────────
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
@@ -349,45 +332,45 @@ def normalize_priority_recommendation(reply, selected_schedule):
 # PART 2: STRATEGY ENGINE HELPERS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def run_strategy_engine(priority_rankings: dict, selected_schedule: dict, student_year: int):
-    """
-    Convert confirmed schedule + priority rankings into BidResult list.
-    priority_rankings: {course_code: rank_number}
-    """
-    try:
-        model, explainer = get_strategy_model()
-        df_features      = get_df_features(JSON_PATH)
-        flat_courses     = get_flat_courses(JSON_PATH)
-    except Exception as e:
-        st.error(f"Strategy model unavailable: {e}")
-        st.info("Run: python3 model.py --train")
-        return None
+# ═══════════════════════════════════════════════════════════════════════════════
+# PART 2: STRATEGY ENGINE HELPERS
+# ═══════════════════════════════════════════════════════════════════════════════
 
-    # Build ranked list for strategy_engine API
+def run_strategy_engine(priority_rankings: dict, selected_schedule: dict, student_year: int, target_conf: float = 0.90):
+    """
+    Convert confirmed schedule + priority rankings into V2 BidResult list.
+    """
     ranked_list = []
     for code, rank in sorted(priority_rankings.items(), key=lambda x: x[1]):
         course_obj = selected_schedule.get(code, {})
         name = display_course_name(course_obj.get("course_name", code))
         ranked_list.append({"code": code, "name": name, "rank": rank})
 
-    results = get_strategy_for_ranked_list(ranked_list, {"year": student_year})
-    return results
-
+    try:
+        results = get_strategy_for_ranked_list(
+            ranked_list, 
+            {"year": student_year},
+            target_confidence=target_conf
+        )
+        return results
+    except Exception as e:
+        st.error(f"Strategy engine failed: {e}")
+        return None
 
 def render_strategy_panel(results, student_year: int):
-    """Render the full mileage strategy UI inline (adapted from strategy_app.py)."""
+    """Render the full mileage strategy UI inline for V2."""
 
-    RISK_CSS   = {"Safe": "safe", "Moderate": "moderate", "Risky": "risky"}
-    RISK_EMOJI = {"Safe": "🟢",   "Moderate": "🟡",       "Risky": "🔴"}
+    STATUS_CSS   = {"Secured": "safe", "Likely": "safe", "Stretch": "moderate", "Unfunded": "risky"}
+    STATUS_EMOJI = {"Secured": "🟢", "Likely": "🟢", "Stretch": "🟡", "Unfunded": "⛔"}
 
     # Banner
     st.markdown(
         f"""
         <div class="strategy-banner">
-            <h2 style="margin:0;color:#f8fafc;">🎯 Mileage Betting Strategy</h2>
+            <h2 style="margin:0;color:#f8fafc;">🎯 Mileage Betting Strategy (V2 Engine)</h2>
             <p style="margin:0.4rem 0 0 0;color:#94a3b8;">
                 Budget: <b style="color:#38bdf8;">{TOTAL_MILEAGE} pts</b> &nbsp;|&nbsp;
-                Max per course: <b style="color:#38bdf8;">{MAX_BID_PER_COURSE} pts</b> &nbsp;|&nbsp;
+                Max per course: <b style="color:#38bdf8;">{MAX_BID} pts</b> &nbsp;|&nbsp;
                 Year: <b style="color:#38bdf8;">{student_year}</b>
             </p>
         </div>
@@ -395,63 +378,48 @@ def render_strategy_panel(results, student_year: int):
         unsafe_allow_html=True,
     )
 
-    total_used = sum(r.recommended_bid for r in results)
+    total_used = sum(r.bid for r in results)
     remaining  = TOTAL_MILEAGE - total_used
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Budget",     f"{TOTAL_MILEAGE} pts")
     c2.metric("Used",       f"{total_used} pts")
     c3.metric("Remaining",  f"{remaining} pts")
-    c4.metric("Max/course", f"{MAX_BID_PER_COURSE} pts")
+    c4.metric("Max/course", f"{MAX_BID} pts")
 
     st.divider()
     st.subheader("📋 Recommended Bids")
 
     for r in results:
-        css = RISK_CSS.get(r.risk_level, "")
-        em  = RISK_EMOJI.get(r.risk_level, "⚪")
+        css = STATUS_CSS.get(r.status, "")
+        em  = STATUS_EMOJI.get(r.status, "⚪")
 
         st.markdown(f'<div class="bid-card {css}">', unsafe_allow_html=True)
 
         ca, cb, cc, cd = st.columns([1, 5, 3, 3])
         ca.markdown(f"**#{r.rank}**")
-        cb.markdown(f"**{r.name}**  \n`{r.code}`")
+        cb.markdown(f"**{r.name}** \n`{r.code}`")
         cc.metric(
             "Recommended Bid",
-            f"{r.recommended_bid} pts",
-            delta=f"est. threshold: ~{int(r.predicted_threshold)} pts",
+            f"{r.bid} pts",
+            delta=f"safe threshold: {r.min_safe_bid} pts",
             delta_color="off",
         )
         cd.metric(
-            "Risk",
-            f"{em} {r.risk_level}",
-            delta=f"{r.confidence_pct:.0f}% confidence",
+            "Win Odds",
+            f"{r.win_prob:.0%}",
+            delta=f"{em} {r.status}",
             delta_color="off",
         )
 
-        if r.note:
-            st.caption(r.note)
-
-        with st.expander("Why this bid?"):
-            st.markdown(explain_threshold(r.recommended_bid, r.shap_breakdown, r.name))
-
-            shap_df = pd.DataFrame([
-                {"factor": FEATURE_LABELS.get(k, k), "impact": float(v)}
-                for k, v in r.shap_breakdown.items()
-                if isinstance(v, (int, float)) and abs(v) > 0.3
-            ]).sort_values("impact", key=abs, ascending=False).head(8)
-
-            if not shap_df.empty:
-                st.bar_chart(shap_df.set_index("factor")["impact"], height=200)
-                st.caption(
-                    "Positive = increases competition (bid more needed) | "
-                    "Negative = decreases competition"
-                )
+        for line in r.note.split("\n"):
+            if line.strip():
+                st.caption(line.strip())
 
         st.markdown("</div>", unsafe_allow_html=True)
 
     with st.expander("📄 Raw strategy text"):
-        st.code(strategy_summary(results, TOTAL_MILEAGE))
+        st.code(format_strategy_for_chat(results))
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -735,13 +703,28 @@ else:
                     except Exception:
                         pass
 
+                    # 1. Scrub the LLM output so every value is guaranteed to be a raw integer
+                    clean_rankings = {}
+                    for c_code, val in suggested_rankings.items():
+                        if isinstance(val, (list, tuple)) and len(val) > 0:
+                            clean_rankings[c_code] = int(val[0])
+                        else:
+                            try:
+                                clean_rankings[c_code] = int(val)
+                            except (ValueError, TypeError):
+                                pass
+                    suggested_rankings = clean_rankings
+
+                    # 2. Safely build the used_ranks set
                     used_ranks = set(suggested_rankings.values())
+                    
+                    # 3. Assign missing courses
                     next_rank  = 1
-                    for code in selected_schedule.keys():
-                        if code not in suggested_rankings:
+                    for c_code in selected_schedule.keys():
+                        if c_code not in suggested_rankings:
                             while next_rank in used_ranks:
                                 next_rank += 1
-                            suggested_rankings[code] = next_rank
+                            suggested_rankings[c_code] = next_rank
                             used_ranks.add(next_rank)
 
                     st.session_state.messages.append({"role":"user","content":"Confirmed timetable."})
@@ -765,54 +748,20 @@ else:
         st.markdown("---")
 
         # Option to regenerate with a different safety margin
-        with st.expander("⚙️ Regenerate with custom safety buffer"):
-            safety_pct = st.slider("Safety buffer (%)", 0, 30, 15, key="regenerate_safety")
+        # Option to regenerate with a different confidence target
+        with st.expander("⚙️ Regenerate with custom target confidence"):
+            api_conf = st.slider("Target Win Probability (%)", 70, 99, 90, key="regen_conf")
             if st.button("Regenerate Strategy", key="regen_btn"):
-                try:
-                    model, explainer = get_strategy_model()
-                    df_features      = get_df_features(JSON_PATH)
-                    flat_courses     = get_flat_courses(JSON_PATH)
-
-                    course_inputs = []
-                    rankings = st.session_state.priority_rankings
-                    rank_data = sorted(rankings.items(), key=lambda x: x[1])
-
-                    for code, rank in rank_data:
-                        if code not in df_features.index:
-                            continue
-                        feat = df_features.loc[code].to_dict()
-                        feat.update({
-                            "student_year":       float(student_year),
-                            "student_mileage":    float(TOTAL_MILEAGE),
-                            "num_courses_wanted": float(len(rank_data)),
-                            "rank_in_list":       float(rank),
-                            "priority_ratio":     (len(rank_data) - rank + 1) / len(rank_data),
-                            "budget_ratio":       1.0,
-                        })
-                        threshold, shap = predict_threshold(model, explainer, feat)
-                        c_info = flat_courses.get(code, {})
-                        course_obj = selected_schedule.get(code, {})
-                        course_inputs.append(CourseInput(
-                            code                = code,
-                            name                = display_course_name(course_obj.get("course_name", code)),
-                            rank                = rank,
-                            predicted_threshold = threshold,
-                            is_major_req        = (c_info.get("category") == "major_requirement"),
-                            shap_breakdown      = shap,
-                        ))
-
-                    new_results = allocate_bids(
-                        course_inputs,
-                        total_mileage  = TOTAL_MILEAGE,
-                        max_per_course = MAX_BID_PER_COURSE,
-                        safety_margin  = safety_pct / 100.0,
+                with st.spinner("Re-calculating survival curves..."):
+                    new_results = run_strategy_engine(
+                        st.session_state.priority_rankings,
+                        selected_schedule,
+                        student_year,
+                        target_conf=api_conf / 100.0
                     )
-                    st.session_state.strategy_results = new_results
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Regeneration failed: {e}")
-
-        st.markdown("---")
+                    if new_results:
+                        st.session_state.strategy_results = new_results
+                        st.rerun()
 
     # ── Chat interface ───────────────────────────────────────────────────────
     st.title("NightHawk AI - Yonsei Course Assistant 🎓")
