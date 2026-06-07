@@ -2,6 +2,7 @@
 
 from course_utils import clean_focus_area, clip_text, display_course_name, expand_course_time, format_field, extract_time_slots
 
+
 def display_major_years(prefs):
     selected_years = prefs.get("major_years")
     if selected_years:
@@ -9,28 +10,41 @@ def display_major_years(prefs):
     return prefs.get("major_year", "Any")
 
 
+# ── NEW: review fallback helper ──────────────────────────────────────────────
+def get_review_text(text_chunks: dict) -> str:
+    """
+    Returns a labelled review string with explicit fallback chain:
+      1. student_reviews (if non-empty)
+      2. alternative_professor_reviews (if non-empty)
+      3. Hard 'new course' string — never blank so the LLM has no gap to fill.
+    """
+    student  = (text_chunks.get("student_reviews")             or "").strip()
+    alt      = (text_chunks.get("alternative_professor_reviews") or "").strip()
+
+    if student:
+        return f"[STUDENT REVIEWS] {clip_text(student, 700)}"
+    if alt:
+        return f"[ALTERNATIVE PROFESSOR REVIEWS — no student data yet] {clip_text(alt, 500)}"
+    return "[REVIEWS] This is a new course — no student or professor reviews are available yet."
+
+
 def build_candidate_catalog(filtered_courses):
     if not filtered_courses:
         return "No courses matched the active filters."
-        
-    # Step 1: Pre-calculate the time slot sets for every filtered course
+
     course_slots = {}
     for code, data in filtered_courses.items():
         course_slots[code] = extract_time_slots(data.get("metadata", {}).get("time"))
 
-    # Step 2: Build the rows with explicit conflict warnings
     rows = []
     for code, data in filtered_courses.items():
-        meta = data.get("metadata", {})
+        meta    = data.get("metadata", {})
         slots_a = course_slots[code]
 
-        # Find overlapping courses
-        conflicts = []
-        for other_code, slots_b in course_slots.items():
-            # If the sets intersect, there is a time conflict
-            if code != other_code and (slots_a & slots_b):
-                conflicts.append(other_code)
-
+        conflicts = [
+            other_code for other_code, slots_b in course_slots.items()
+            if code != other_code and (slots_a & slots_b)
+        ]
         conflict_str = f" | CONFLICTS WITH: {', '.join(conflicts)}" if conflicts else " | CONFLICTS WITH: None"
 
         rows.append(
@@ -46,14 +60,15 @@ def format_course_context(selected_courses):
     if not selected_courses:
         return "No retrieved course evidence is available for this turn."
 
-    chunks = []
+    chunks_list = []
     for code, data in selected_courses.items():
-        meta = data.get("metadata", {})
+        meta        = data.get("metadata", {})
         text_chunks = data.get("text_chunks", {})
-        reviews = clip_text(text_chunks.get("student_reviews"), 700)
-        alt_reviews = clip_text(text_chunks.get("alternative_professor_reviews"), 500)
-        syllabus = clip_text(text_chunks.get("grading_and_syllabus"), 650)
-        chunks.append(f"""
+
+        syllabus     = clip_text(text_chunks.get("grading_and_syllabus"), 650)
+        review_text  = get_review_text(text_chunks)   # ← replaces the two raw review lines
+
+        chunks_list.append(f"""
 [COURSE {code}]
 Name: {display_course_name(meta.get('name'))}
 Professor: {format_field(meta.get('professor'))}
@@ -72,11 +87,10 @@ Mileage ETA: {format_field(meta.get('mileage_historical_eta'))}
 Max capacity: {format_field(meta.get('max_capacity'))}
 Keywords: {format_field(meta.get('keywords'))}
 Syllabus/grading evidence: {syllabus}
-Student review evidence: {reviews}
-Alternative professor review evidence: {alt_reviews}
+Review evidence: {review_text}
 [/COURSE]
 """)
-    return "\n".join(chunks)
+    return "\n".join(chunks_list)
 
 
 def format_current_schedule(selected_schedule):
@@ -119,6 +133,13 @@ Grounding rules:
 - Avoid generic filler like "matches your interest in computer science" unless the user literally gave no more specific preference. Use the actual distinguishing evidence: workload, difficulty, language, professor/review sentiment, schedule, grading, prerequisites, course type, and keywords.
 - When two sections of the same course exist, explain concrete differences between the sections instead of recommending only one section.
 
+REVIEW POLICY (strictly follow):
+- Each course's "Review evidence:" field is pre-labelled with exactly one of three tags:
+    [STUDENT REVIEWS]                             → real student feedback; quote or summarise it directly.
+    [ALTERNATIVE PROFESSOR REVIEWS — no student data yet] → professor-sourced info only; note the distinction to the user.
+    [REVIEWS] This is a new course ...            → no reviews exist; say exactly that, do NOT invent any sentiment.
+- Never fabricate, infer, or extrapolate review content beyond what appears in the "Review evidence:" field.
+
 Response mode rules:
 - For comparison or "difference" questions, DO NOT start with "Here are the recommendations." Use a short comparison format such as:
     CAS3102-01 vs CAS3102-02
@@ -160,6 +181,7 @@ CRITICAL OUTPUT RULES:
 2. NEVER output standalone words, category headers, or preambles (like "Fit", "Evidence", "Schedule", "Workload", etc.) at the top of your message.
 3. If schedule actions are needed, put the raw JSON at the very end.
 """
+
 
 def build_priority_ranking_system_prompt(prefs, selected_schedule, filtered_courses):
     selected_evidence = {}
