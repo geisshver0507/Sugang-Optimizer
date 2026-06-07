@@ -703,16 +703,43 @@ else:
                     except Exception:
                         pass
 
-                    # 1. Scrub the LLM output so every value is guaranteed to be a raw integer
+                    # 1. Bulletproof LLM output scrubber
                     clean_rankings = {}
-                    for c_code, val in suggested_rankings.items():
-                        if isinstance(val, (list, tuple)) and len(val) > 0:
-                            clean_rankings[c_code] = int(val[0])
+                    valid_codes = set(selected_schedule.keys())
+
+                    for k, v in suggested_rankings.items():
+                        # Handle if LLM flipped keys/values (e.g., {"1": "CAS3120-02"})
+                        if isinstance(v, str) and v.strip() in valid_codes:
+                            course = v.strip()
+                            rank_val = k
+                        else:
+                            course = str(k).strip()
+                            rank_val = v
+
+                        if course not in valid_codes:
+                            continue
+
+                        # Find the integer safely
+                        extracted_rank = None
+                        if isinstance(rank_val, (list, tuple)):
+                            for item in rank_val:
+                                try:
+                                    extracted_rank = int(item)
+                                    break # Got the number, stop looking
+                                except (ValueError, TypeError):
+                                    pass
                         else:
                             try:
-                                clean_rankings[c_code] = int(val)
+                                extracted_rank = int(rank_val)
                             except (ValueError, TypeError):
-                                pass
+                                # Strip out letters (e.g. "1st" -> 1)
+                                match = re.search(r'\d+', str(rank_val))
+                                if match:
+                                    extracted_rank = int(match.group())
+
+                        if extracted_rank is not None:
+                            clean_rankings[course] = extracted_rank
+
                     suggested_rankings = clean_rankings
 
                     # 2. Safely build the used_ranks set
