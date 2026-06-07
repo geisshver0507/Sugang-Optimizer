@@ -1,4 +1,4 @@
-"""
+﻿"""
 app.py
 ------
 NightHawk AI — Yonsei Course Assistant
@@ -9,10 +9,19 @@ Flow:
 """
 
 import base64
+from pathlib import Path
+import sys
 from html import escape
 import json
 import re
 
+ROOT = Path(__file__).resolve().parent
+DATABASE_DIR = ROOT / "database"
+ASSETS_DIR = ROOT / "assets"
+for module_dir in (ROOT / "part1", ROOT / "part2"):
+    module_path = str(module_dir)
+    if module_path not in sys.path:
+        sys.path.insert(0, module_path)
 import streamlit as st
 from groq import Groq
 
@@ -47,7 +56,7 @@ st.set_page_config(
     layout="wide",
 )
 
-JSON_PATH = "segmented_cs_courses.json"
+JSON_PATH = str(DATABASE_DIR / "segmented_cs_courses.json")
 
 # ── Cached loaders (Part 2) ─────────────────────────────────────────────────
 @st.cache_resource
@@ -897,3 +906,5 @@ else:
 
         st.session_state.messages.append({"role":"assistant","content":display_reply})
         st.rerun()
+
+

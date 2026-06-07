@@ -1,4 +1,4 @@
-python3 -m streamlit run app.py
+﻿python3 -m streamlit run app.py
 
 windows - python -m streamlit run app.py
 
@@ -36,6 +36,15 @@ python3 -m streamlit run strategy_app.py
 
 
 Testing and Evaluator: evaluate_strategy_v2.py
+## Project Layout
+- `integrated_app.py` is the final Streamlit app entry point.
+- `database/` contains JSON, CSV, scraped mileage data, and saved model artifacts.
+- `part1/` contains the course-selection chatbot, retrieval, filters, guardrails, prompts, and timetable helpers.
+- `part2/` contains feature extraction, capacity/demand mileage prediction, strategy engines, optimizers, training, scraping, and evaluation scripts.
+- `assets/` contains UI media such as `eagle.gif` and `sonic.gif`.
 
+Run the final app from the project root with:
 
-
+```bash
+streamlit run integrated_app.py
+```

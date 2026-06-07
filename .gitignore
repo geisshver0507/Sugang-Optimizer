@@ -20,3 +20,4 @@ training_final.csv
 mileage_analysis.csv
 mileage_csvs/
 .streamlit/secrets.toml
+.venv/
