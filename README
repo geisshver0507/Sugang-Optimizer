@@ -1,5 +1,33 @@
-﻿Instruction to run program:
+﻿### Project Overview
 
+This project develops an AI-assisted course registration consultant for students in the Yonsei University Computer Science Department. The system assists students in planning their semester timetable and strategically allocating mileage points during Yonsei's mileage-based course registration process. By analyzing historical registration data, the system estimates enrollment success probabilities and recommends optimized mileage allocation strategies tailored to each student's course preferences and priorities.
+
+Unlike traditional mileage calculators, the system provides an interactive AI consultation experience. Students can receive personalized recommendations, explore alternative courses or professors, and refine their registration strategy through natural language interaction. The system is particularly designed to support international students, who often face additional challenges when navigating course registration.
+
+The core system combines a rule-based optimization engine with AI-driven conversational support. Historical mileage data is used to model course competitiveness, while a constrained allocation algorithm generates mileage strategies that maximize the likelihood of obtaining high-priority courses while satisfying Yonsei's mileage constraints.
+
+### Key Features
+
+* AI-powered conversational course registration assistant
+* Timetable planning support for Yonsei Computer Science students
+* Historical mileage-based enrollment probability estimation
+* Constrained mileage allocation optimization
+* Alternative course and professor recommendations
+* Fallback handling for courses with limited historical data
+* Personalized recommendations based on student preferences and academic status
+
+### Evaluation
+
+The system is evaluated using actual Yonsei registration outcomes as ground truth. Human-generated mileage allocations are compared against AI-generated allocations using metrics such as:
+
+* Total courses successfully enrolled
+* Priority-weighted enrollment score
+* Constraint satisfaction (72-point total budget and 36-point per-course limit)
+
+User studies are also conducted to evaluate satisfaction, trust, and advice acceptance rates, providing insights into the effectiveness of the AI-assisted consultation process.
+
+
+Instruction to run program:
 python3 -m streamlit run integrated_app.py
 
 
