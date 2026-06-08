@@ -140,19 +140,48 @@ def build_strategy(
             alloc[best_code] += 1
             leftover -= 1
 
-        # After smart distribution, if points STILL remain, push up bids
-        # anyway — unused points are wasted (don't carry over between
-        # semesters). At this point the remaining points are mostly symbolic
-        # insurance, so respect the user's stated priority order.
+        # Phase C — Insurance bidding: if points STILL remain after the
+        # marginal-gain pass, spend them as insurance rather than leave them
+        # unused (points don't carry over between semesters).
+        #
+        # KEY RULE: insurance goes to the HARDEST courses first, not the
+        # highest-priority courses. An extra point on OS (safe bid = 1pt,
+        # already at 100%) does nothing. An extra point on AI Systems
+        # (safe bid = 22pt, genuinely contested) matters as a real safety
+        # margin if this semester is more competitive than historical data.
+        #
+        # Pass C1: fill contested courses (msb > 3) up to MAX_BID,
+        #          sorted by contestedness desc, rank asc as tiebreaker.
+        # Pass C2: once contested courses are all maxed, distribute the
+        #          remaining points to easy courses by rank order so nothing
+        #          is left on the table (still better than unused points).
         if leftover > 0:
-            for it in items:
-                code = it["code"]
-                room = MAX_BID - alloc[code]
-                add = min(room, leftover)
-                alloc[code] += add
-                leftover -= add
-                if leftover <= 0:
-                    break
+            contested = sorted(
+                [it for it in items if msb[it["code"]] > 3],
+                key=lambda x: (-msb[x["code"]], x.get("rank", 99))
+            )
+            easy = sorted(
+                [it for it in items if msb[it["code"]] <= 3],
+                key=lambda x: x.get("rank", 99)
+            )
+            # Pass C1 — contested courses first
+            while leftover > 0:
+                placed = False
+                for it in contested:
+                    if leftover <= 0: break
+                    code = it["code"]
+                    if alloc[code] >= MAX_BID: continue
+                    alloc[code] += 1; leftover -= 1; placed = True
+                if not placed: break
+            # Pass C2 — easy courses absorb remainder by rank (round-robin)
+            while leftover > 0:
+                placed = False
+                for it in easy:
+                    if leftover <= 0: break
+                    code = it["code"]
+                    if alloc[code] >= MAX_BID: continue
+                    alloc[code] += 1; leftover -= 1; placed = True
+                if not placed: break
     else:
         remaining = TOTAL_MILEAGE
         funded_codes = set()
@@ -277,4 +306,3 @@ def format_strategy(results: list[CourseBid]) -> str:
                 lines.append(f"   > {ln.strip()}")
         lines.append("")
     return "\n".join(lines)
-
