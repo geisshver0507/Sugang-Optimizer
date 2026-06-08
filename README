@@ -48,3 +48,19 @@ Run the final app from the project root with:
 ```bash
 streamlit run integrated_app.py
 ```
+
+
+Check betting result:
+1. Create betting.txt:
+     3
+     CAS3400-01,20
+     CAS3116-01,18
+     CAS3102-02,15
+ 
+   First line = your year (1-4)
+   Each line after = course_code,mileage_bid
+ 
+2. Run:  python3 check_bets.py
+   Or:   python3 check_bets.py my_bets.txt
+ 
+3. Output: YES/NO per course checked against actual 2026-1 enrollment.
